@@ -21,7 +21,7 @@
 		current: $props.main
 	};
 
-	function toggleTheme() {
+	$effect(() => {
 		const currentTheme = document.documentElement.getAttribute('svelvet-theme');
 		let newTheme;
 		if (!currentTheme || currentTheme === $props.main) {
@@ -37,9 +37,9 @@
 		localStorage.setItem('currentTheme', newTheme);
 
 		if ($props.onToggleTheme) $props.onToggleTheme(newTheme);
-	}
+	});
 
-	onMount(() => {
+	$effect(() => {
 		const savedTheme = localStorage.getItem('currentTheme');
 		if (savedTheme) {
 			document.documentElement.setAttribute('svelvet-theme', savedTheme);
@@ -78,7 +78,7 @@
 	class:SE={$props.corner === 'SE'}
 	class:NW={$props.corner === 'NW'}
 >
-	<button onclick={toggleTheme} ontouchstart={toggleTheme}>
+	<button onclick={$effect} ontouchstart={$effect}>
 		<span class="material-symbols-outlined">{$state.current === $props.main ? $props.altIcon : $props.mainIcon}</span>
 	</button>
 

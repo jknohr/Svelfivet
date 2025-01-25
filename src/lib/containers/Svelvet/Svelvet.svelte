@@ -104,16 +104,15 @@
 	$effect(() => {
 		if ($state.edgeStore) {
 			$state.edgeStore.onEdgeChange((edge, type) => {
-				dispatchEvent(
-					new CustomEvent(type, {
-						detail: {
-							sourceAnchor: edge.source as Anchor,
-							targetAnchor: edge.target as Anchor,
-							sourceNode: edge.source.node as Node,
-							targetNode: edge.target.node as Node
-						}
-					})
-				);
+				const customEvent = new CustomEvent(type, {
+					detail: {
+						sourceAnchor: edge.source as Anchor,
+						targetAnchor: edge.target as Anchor,
+						sourceNode: edge.source.node as Node,
+						targetNode: edge.target.node as Node
+					}
+				});
+				dispatchEvent(customEvent);
 			});
 		}
 	});

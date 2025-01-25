@@ -25,6 +25,12 @@
 
 	$derived cursor = $graph.cursor;
 
+	$effect(() => {
+		if ($graph.editing) {
+			$state.editorPosition = { x: $cursor.x, y: $cursor.y };
+		}
+	});
+
 	function handleContextMenu(event: MouseEvent) {
 		event.preventDefault();
 		$state.editorPosition = { x: event.clientX, y: event.clientY };

@@ -13,16 +13,18 @@
 		isMovable: false
 	};
 
-	const activeGroup = graph.activeGroup;
-	const groups = graph.groups;
-	const initialNodePositions = graph.initialNodePositions;
-	const cursor = graph.cursor;
+	$state = {
+		activeGroup: graph.activeGroup,
+		groups: graph.groups,
+		initialNodePositions: graph.initialNodePositions,
+		cursor: graph.cursor
+	};
 
-	$derived activeGroup = graph.activeGroup;
+	$derived activeGroup = $state.activeGroup;
 	$derived tracking = tracking;
-	$derived cursor = cursor;
-	$derived initialNodePositions = initialNodePositions;
-	$derived groups = groups;
+	$derived cursor = $state.cursor;
+	$derived initialNodePositions = $state.initialNodePositions;
+	$derived groups = $state.groups;
 
 	$effect(() => {
 		if ($activeGroup && $tracking) {

@@ -452,7 +452,7 @@
 		);
 		background-color: var(
 			--prop-drawer-reset-button-color,
-			var(--drawer-reset-button-color, var(--default-drawer-reset-button-color))
+			var(--drawer-reset-button-color, var (--default-drawer-reset-button-color))
 		);
 		box-shadow: 0 0 0 var(--final-border-width) var(--final-border-color),
 			var(--default-node-shadow);

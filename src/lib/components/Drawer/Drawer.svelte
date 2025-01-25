@@ -5,50 +5,28 @@
 	import { defaultNodePropsStore } from './DrawerNode.svelte';
 	import { writable } from 'svelte/store';
 
-	export let width: number;
-	export let height: number;
-	export let minimap: boolean;
-	export let translation: XYPair;
-	export let controls: boolean;
-	export let edge: ComponentType;
-	export let edgeStyle: EdgeStyle;
-	export let snapTo: number;
-	export let editable: boolean;
-	export let fitView: boolean;
-	export let locked: boolean;
-	export let zoom: number;
-	export let theme: string;
-	export let mermaid: string;
-	export let mermaidConfig: object;
-	export let TD: boolean;
-	export let disableSelection: boolean;
-	export let raiseEdgesOnSelect: boolean;
-	export let modifier: string;
-	export let trackpadPan: boolean;
-	export let toggle: boolean;
-
 	$props = {
-		width,
-		height,
-		minimap,
-		translation,
-		controls,
-		edge,
-		edgeStyle,
-		snapTo,
-		editable,
-		fitView,
-		locked,
-		zoom,
-		theme,
-		mermaid,
-		mermaidConfig,
-		TD,
-		disableSelection,
-		raiseEdgesOnSelect,
-		modifier,
-		trackpadPan,
-		toggle
+		width: null,
+		height: null,
+		minimap: null,
+		translation: null,
+		controls: null,
+		edge: null,
+		edgeStyle: null,
+		snapTo: null,
+		editable: null,
+		fitView: null,
+		locked: null,
+		zoom: null,
+		theme: null,
+		mermaid: null,
+		mermaidConfig: null,
+		TD: null,
+		disableSelection: null,
+		raiseEdgesOnSelect: null,
+		modifier: null,
+		trackpadPan: null,
+		toggle: null
 	};
 
 	$state = {

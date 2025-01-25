@@ -20,10 +20,10 @@
 		moving: false
 	};
 
-	$: graphTranslation = $translation;
+	$derived graphTranslation = $translation;
 
 	// Reactive statement to update the transform attribute of the wrapper
-	$: transform = `translate(${graphTranslation.x}px, ${graphTranslation.y}px) scale(${$scale})`;
+	$derived transform = `translate(${graphTranslation.x}px, ${graphTranslation.y}px) scale(${$scale})`;
 
 	$effect(() => {
 		if ($props.isMovable && !$state.moving) {

@@ -13,21 +13,23 @@
 	export const defaultNodePropsStore = writable<Array<NodeDrawerConfig>>([]);
 
 	// types for node creation
-	let bgColor: CSSColorString | undefined;
-	let borderColor: CSSColorString | undefined;
-	let label: string | undefined;
-	let width = 200;
-	let height = 100;
-	let locked: boolean | undefined;
-	let center: boolean | undefined;
-	let inputs: number | undefined;
-	let outputs: number | undefined;
-	let rotation: number | undefined;
-	let zIndex: number | undefined;
-	let TD: boolean | undefined;
-	let LR: boolean | undefined;
-	let useDefaults: boolean | undefined;
-	let nodeDirection: string | undefined;
+	$state = {
+		bgColor: undefined,
+		borderColor: undefined,
+		label: undefined,
+		width: 200,
+		height: 100,
+		locked: undefined,
+		center: undefined,
+		inputs: undefined,
+		outputs: undefined,
+		rotation: undefined,
+		zIndex: undefined,
+		TD: undefined,
+		LR: undefined,
+		useDefaults: undefined,
+		nodeDirection: undefined
+	};
 
 	// Creates props and adds to customNodePropsStore if an anchor was created, defaultNodePropsStore if not
 	export const createNodeProps = (
@@ -54,20 +56,20 @@
 			'useDefaults'
 		];
 		const nodePropsArray: NodeProps = [
-			bgColor,
-			borderColor,
-			label,
-			width,
-			height,
-			locked,
-			center,
-			inputs,
-			outputs,
-			rotation,
-			zIndex,
-			TD,
-			LR,
-			useDefaults
+			$state.bgColor,
+			$state.borderColor,
+			$state.label,
+			$state.width,
+			$state.height,
+			$state.locked,
+			$state.center,
+			$state.inputs,
+			$state.outputs,
+			$state.rotation,
+			$state.zIndex,
+			$state.TD,
+			$state.LR,
+			$state.useDefaults
 		];
 
 		// Add props to node if they exist
@@ -79,20 +81,20 @@
 
 	// Button clicks for defaultNodes
 	const handleNodeResetButtonClick = (e: Event) => {
-		bgColor = undefined;
-		borderColor = undefined;
-		label = undefined;
-		width = 200;
-		height = 100;
-		inputs = undefined;
-		outputs = undefined;
-		locked = undefined;
-		center = undefined;
-		rotation = undefined;
-		zIndex = undefined;
-		TD = undefined;
-		LR = undefined;
-		useDefaults = undefined;
+		$state.bgColor = undefined;
+		$state.borderColor = undefined;
+		$state.label = undefined;
+		$state.width = 200;
+		$state.height = 100;
+		$state.inputs = undefined;
+		$state.outputs = undefined;
+		$state.locked = undefined;
+		$state.center = undefined;
+		$state.rotation = undefined;
+		$state.zIndex = undefined;
+		$state.TD = undefined;
+		$state.LR = undefined;
+		$state.useDefaults = undefined;
 
 		const formElement = e.target as HTMLFormElement;
 		formElement.reset();
@@ -100,30 +102,30 @@
 
 	const handleLockedButtonClick = (e: Event) => {
 		const target = e.target as HTMLInputElement;
-		locked = target.checked;
+		 $state.locked = target.checked;
 	};
 
 	const handleCenterButtonClick = (e: Event) => {
 		const target = e.target as HTMLInputElement;
-		center = target.checked;
+		 $state.center = target.checked;
 	};
 
 	const handleUseDefaultsButtonClick = (e: Event) => {
 		const target = e.target as HTMLInputElement;
-		useDefaults = target.checked;
+		 $state.useDefaults = target.checked;
 	};
 
 	const handleAnchorPositionButton = (e: Event) => {
 		const target = e.target as HTMLInputElement;
-		if (target.value == '') nodeDirection = undefined;
+		if (target.value == '')  $state.nodeDirection = undefined;
 		else {
-			nodeDirection = target.value;
-			if (nodeDirection === 'LR') {
-				LR = true;
-				TD = false;
+			 $state.nodeDirection = target.value;
+			if ( $state.nodeDirection === 'LR') {
+				 $state.LR = true;
+				 $state.TD = false;
 			} else {
-				TD = true;
-				LR = false;
+				 $state.TD = true;
+				 $state.LR = false;
 			}
 		}
 	};
@@ -135,18 +137,18 @@
 		<ul aria-labelledby="select_props">
 			<li class="list-item">
 				<label for="bgColor">Background: </label>
-				<input id="bgColor" class="colorWheel" type="color" bind:value={bgColor} />
+				<input id="bgColor" class="colorWheel" type="color" bind:value={$state.bgColor} />
 			</li>
 			<li class="list-item">
 				<label for="borderColor">Border: </label>
-				<input id="borderColor" class="colorWheel" type="color" bind:value={borderColor} />
+				<input id="borderColor" class="colorWheel" type="color" bind:value={$state.borderColor} />
 			</li>
 			<!-- <li class="list-item">
 				<label for="useDefaults">useDefaults: </label>
 				<input
 					id="useDefaults"
 					type="checkbox"
-					bind:value={useDefaults}
+					bind:value={$state.useDefaults}
 					onchange={handleUseDefaultsButtonClick}
 				/>
 			</li> -->
@@ -156,49 +158,49 @@
 			</li>
 			<li class="list-item">
 				<label for="width">Width:</label>
-				<input id="width" class="inputField" type="input" bind:value={width} />
+				<input id="width" class="inputField" type="input" bind:value={$state.width} />
 				<label for="height" style="margin-left: 6px">Height:</label>
-				<input id="height" class="inputField" type="input" bind:value={height} />
+				<input id="height" class="inputField" type="input" bind:value={$state.height} />
 			</li>
 			<li class="list-item">
 				<label for="locked">Locked: </label>
-				<input id="label" type="checkbox" bind:value={locked} onchange={handleLockedButtonClick} />
+				<input id="label" type="checkbox" bind:value={$state.locked} onchange={handleLockedButtonClick} />
 			</li>
 			<li class="list-item">
 				<label for="centered">Centered: </label>
 				<input
 					id="centered"
 					type="checkbox"
-					bind:value={center}
+					bind:value={$state.center}
 					onchange={handleCenterButtonClick}
 				/>
 			</li>
 			<li class="list-item">
 				<label for="rotation">Rotation:</label>
-				<input id="rotation" class="inputField" type="number" bind:value={rotation} />
+				<input id="rotation" class="inputField" type="number" bind:value={$state.rotation} />
 			</li>
 			<li class="list-item">
 				<label for="zIndex">zIndex:</label>
-				<input id="zIndex" class="inputField" type="number" bind:value={zIndex} />
+				<input id="zIndex" class="inputField" type="number" bind:value={$state.zIndex} />
 			</li>
 			<li class="list-item">
 				<label for="label">Label : </label>
-				<input id="label" type="text" bind:value={label} />
+				<input id="label" type="text" bind:value={$state.label} />
 			</li>
 			<li class="list-item">
 				<label for="defaultAnchors">Default Anchors:</label>
 			</li>
 			<li class="list-item">
 				<label for="inputAnchor">Input: </label>
-				<input id="inputAnchor" class="inputField" type="number" min="0" bind:value={inputs} />
+				<input id="inputAnchor" class="inputField" type="number" min="0" bind:value={$state.inputs} />
 				<label for="outputAnchor" style="margin-left: 6px">Output: </label>
-				<input id="outputAnchor" class="inputField" type="number" min="0" bind:value={outputs} />
+				<input id="outputAnchor" class="inputField" type="number" min="0" bind:value={$state.outputs} />
 			</li>
 			<li class="list-item">
 				<label for="anchorPositon">Anchor Position: </label>
 				<select
 					id="anchorPosition"
-					bind:value={nodeDirection}
+					bind:value={$state.nodeDirection}
 					onchange={handleAnchorPositionButton}
 				>
 					<option value="">-</option>

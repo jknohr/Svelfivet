@@ -1,6 +1,4 @@
 <script lang="ts">
-	import type { CustomWritable } from '$lib/types';
-
 	$props = {
 		options: [],
 		parameterStore: null
@@ -32,18 +30,20 @@
 </script>
 
 <div class="radio-group" role="radiogroup" onkeydown={cycleThroughGroup} tabindex={0}>
-	{#each $props.options as label, index}
-		<button
-			onmousedown|stopPropagation={() => {
-				$state.initial = index;
-			}}
-		>
-			<label class="option-wrapper">
-				<input class="option" type="radio" id={slugify(label)} bind:group={$state.initial} value={index} />
-				<p>{label}</p>
-			</label>
-		</button>
-	{/each}
+	{@render options={$props.options} initial={$state.initial}}
+		{#each $props.options as label, index}
+			<button
+				onmousedown|stopPropagation={() => {
+					$state.initial = index;
+				}}
+			>
+				<label class="option-wrapper">
+					<input class="option" type="radio" id={slugify(label)} bind:group={$state.initial} value={index} />
+					<p>{label}</p>
+				</label>
+			</button>
+		{/each}
+	{/render}
 </div>
 
 <style>
