@@ -8,17 +8,17 @@
 	import { addProps } from '$lib/utils';
 
 	//types for edge creation
-	let edgeWidth: number | undefined;
-	let color: CSSColorString | undefined;
-	let straight: boolean | undefined; // Stretch feature, requires additional logic
-	let step: boolean | undefined;
-	let cornerRadius: number | undefined;
-	let animate: boolean | undefined;
-	let edgeLabel: string | undefined;
-	let labelColor: CSSColorString | undefined;
-	let textColor: CSSColorString | undefined;
-	// let edgeClick: () => void | null; // Stretch feature, needs edgeClick to function
-	let targetColor: CSSColorString | undefined; // Stretch feature, needs edgeClick to function
+	$state.edgeWidth = undefined;
+	$state.color = undefined;
+	$state.straight = undefined; // Stretch feature, requires additional logic
+	$state.step = undefined;
+	$state.cornerRadius = undefined;
+	$state.animate = undefined;
+	$state.edgeLabel = undefined;
+	$state.labelColor = undefined;
+	$state.textColor = undefined;
+	// $state.edgeClick = null; // Stretch feature, needs edgeClick to function
+	$state.targetColor = undefined; // Stretch feature, needs edgeClick to function
 
 	export function createEdgeProps() {
 		// Object that stores properties for the created edge
@@ -37,16 +37,16 @@
 			'textColor'
 		];
 		const edgePropsArray: EdgeProps = [
-			edgeWidth,
-			targetColor,
-			color,
-			straight,
-			step,
-			cornerRadius,
-			animate,
-			edgeLabel,
-			labelColor,
-			textColor
+			 $state.edgeWidth,
+			 $state.targetColor,
+			 $state.color,
+			 $state.straight,
+			 $state.step,
+			 $state.cornerRadius,
+			 $state.animate,
+			 $state.edgeLabel,
+			 $state.labelColor,
+			 $state.textColor
 		];
 
 		// Add props to edge if they exist
@@ -59,24 +59,24 @@
 
 	const handleStepButtonClick = (e: Event) => {
 		const target = e.target as HTMLInputElement;
-		step = target.checked;
+		 $state.step = target.checked;
 	};
 	const handleAnimateButtonClick = (e: Event) => {
 		const target = e.target as HTMLInputElement;
-		animate = target.checked;
+		 $state.animate = target.checked;
 	};
 
 	const handleEdgeResetButtonClick = (e: Event) => {
-		edgeWidth = undefined;
-		targetColor = undefined;
-		color = undefined;
-		straight = undefined;
-		step = undefined;
-		cornerRadius = undefined;
-		animate = undefined;
-		edgeLabel = undefined;
-		labelColor = undefined;
-		textColor = undefined;
+		 $state.edgeWidth = undefined;
+		 $state.targetColor = undefined;
+		 $state.color = undefined;
+		 $state.straight = undefined;
+		 $state.step = undefined;
+		 $state.cornerRadius = undefined;
+		 $state.animate = undefined;
+		 $state.edgeLabel = undefined;
+		 $state.labelColor = undefined;
+		 $state.textColor = undefined;
 		//edgeClick: () => void | null;
 		const target = e.target as HTMLFormElement;
 		target.reset();
@@ -84,34 +84,34 @@
 
 	// Validation for edge properties
 	const validateEdgeProps = () => {
-		if (edgeWidth !== undefined && typeof edgeWidth !== 'number') {
+		if ( $state.edgeWidth !== undefined && typeof  $state.edgeWidth !== 'number') {
 			throw new Error('Invalid value for edgeWidth property');
 		}
-		if (color !== undefined && typeof color !== 'string') {
+		if ( $state.color !== undefined && typeof  $state.color !== 'string') {
 			throw new Error('Invalid value for color property');
 		}
-		if (straight !== undefined && typeof straight !== 'boolean') {
+		if ( $state.straight !== undefined && typeof  $state.straight !== 'boolean') {
 			throw new Error('Invalid value for straight property');
 		}
-		if (step !== undefined && typeof step !== 'boolean') {
+		if ( $state.step !== undefined && typeof  $state.step !== 'boolean') {
 			throw new Error('Invalid value for step property');
 		}
-		if (cornerRadius !== undefined && typeof cornerRadius !== 'number') {
+		if ( $state.cornerRadius !== undefined && typeof  $state.cornerRadius !== 'number') {
 			throw new Error('Invalid value for cornerRadius property');
 		}
-		if (animate !== undefined && typeof animate !== 'boolean') {
+		if ( $state.animate !== undefined && typeof  $state.animate !== 'boolean') {
 			throw new Error('Invalid value for animate property');
 		}
-		if (edgeLabel !== undefined && typeof edgeLabel !== 'string') {
+		if ( $state.edgeLabel !== undefined && typeof  $state.edgeLabel !== 'string') {
 			throw new Error('Invalid value for edgeLabel property');
 		}
-		if (labelColor !== undefined && typeof labelColor !== 'string') {
+		if ( $state.labelColor !== undefined && typeof  $state.labelColor !== 'string') {
 			throw new Error('Invalid value for labelColor property');
 		}
-		if (textColor !== undefined && typeof textColor !== 'string') {
+		if ( $state.textColor !== undefined && typeof  $state.textColor !== 'string') {
 			throw new Error('Invalid value for textColor property');
 		}
-		if (targetColor !== undefined && typeof targetColor !== 'string') {
+		if ( $state.targetColor !== undefined && typeof  $state.targetColor !== 'string') {
 			throw new Error('Invalid value for targetColor property');
 		}
 	};
@@ -123,40 +123,40 @@
 		<ul aria-labelledby="select_props">
 			<li class="list-item">
 				<label for="color">Background: </label>
-				<input id="color" class="colorWheel" type="color" bind:value={color} />
+				<input id="color" class="colorWheel" type="color" bind:value={$state.color} />
 			</li>
 			<li class="list-item">
 				<label for="labelColor">Label: </label>
-				<input id="labelColor" class="colorWheel" type="color" bind:value={labelColor} />
+				<input id="labelColor" class="colorWheel" type="color" bind:value={$state.labelColor} />
 			</li>
 			<li class="list-item">
 				<label for="textColor">Text: </label>
-				<input id="textColor" class="colorWheel" type="color" bind:value={textColor} />
+				<input id="textColor" class="colorWheel" type="color" bind:value={$state.textColor} />
 			</li>
 			<li class="list-item">
 				<label for="animate">Animate : </label>
 				<input
 					id="animate"
 					type="checkbox"
-					bind:value={animate}
+					bind:value={$state.animate}
 					onchange={handleAnimateButtonClick}
 				/>
 			</li>
 			<li class="list-item">
 				<label for="step">Step: </label>
-				<input id="step" type="checkbox" bind:value={step} onchange={handleStepButtonClick} />
+				<input id="step" type="checkbox" bind:value={$state.step} onchange={handleStepButtonClick} />
 			</li>
 			<li class="list-item">
 				<label for="cornerRadius">Corner Radius:</label>
-				<input id="cornerRadius" class="inputField" type="number" bind:value={cornerRadius} />
+				<input id="cornerRadius" class="inputField" type="number" bind:value={$state.cornerRadius} />
 			</li>
 			<li class="list-item">
 				<label for="width">Width:</label>
-				<input id="width" class="inputField" type="number" bind:value={edgeWidth} />
+				<input id="width" class="inputField" type="number" bind:value={$state.edgeWidth} />
 			</li>
 			<li class="list-item">
 				<label for="edgeLabel">Edge Label: </label>
-				<input id="edgeLabel" type="text" bind:value={edgeLabel} />
+				<input id="edgeLabel" type="text" bind:value={$state.edgeLabel} />
 			</li>
 			<li class="list-item">
 				<button class="edgeResetBtn btn" aria-label="Reset">Reset</button>
