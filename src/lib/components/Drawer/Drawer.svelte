@@ -12,9 +12,9 @@ https://svelte.dev/e/expected_token -->
 	$props = {
 		width: null,
 		height: null,
-		minimap: false,
+		minimap: null,
 		translation: null,
-		controls: false,
+		controls: null,
 		edge: null,
 		edgeStyle: null,
 		snapTo: 0,
@@ -30,8 +30,9 @@ https://svelte.dev/e/expected_token -->
 		raiseEdgesOnSelect: false,
 		modifier: '',
 		trackpadPan: false,
-		toggle: false,
-		position: '' // New customization option for position
+		toggle: null,
+		position: '',
+		children: null
 	};
 
 	$state = {
@@ -137,9 +138,9 @@ https://svelte.dev/e/expected_token -->
 			{/if}
 		{/each}
 
-		{@render children}
-		{@render $props.minimap as minimap}
-		{@render $props.controls as controls}
-		{@render $props.toggle as toggle}
+		{@render $props.children?.()}
+		{@render $props.minimap?.()}
+		{@render $props.controls?.()}
+		{@render $props.toggle?.()}
 	</Svelvet>
 </div>

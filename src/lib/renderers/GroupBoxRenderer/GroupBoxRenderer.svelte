@@ -4,15 +4,15 @@
 	import { getContext } from 'svelte';
 
 	const graph = getContext<Graph>('graph');
+	let { onclick } = $props();
 
-	const groupBoxes = graph.groupBoxes;
+	let groupBoxes = $state(graph.groupBoxes);
 
-	function handleGroupClick(event: CustomEvent) {
-		const { groupName } = event.detail;
-		// Handle the group click event here
+	function handleGroupClick(groupName: string) {
+		onclick?.(groupName);
 	}
 </script>
 
-{#each Array.from($groupBoxes) as [id, group] (id)}
-	<GroupBoundingBox {...group} groupName={id} groupClick={handleGroupClick} />
+{#each Array.from(groupBoxes) as [id, group] (id)}
+	<GroupBoundingBox {...group} groupName={id} onclick={handleGroupClick} />
 {/each}

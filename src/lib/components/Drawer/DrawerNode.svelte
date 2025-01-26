@@ -29,6 +29,9 @@
 	let useDefaults: boolean | undefined;
 	let nodeDirection: string | undefined;
 
+	// Let syntax for props in Svelte 5
+	let { children } = $props();
+
 	// Creates props and adds to customNodePropsStore if an anchor was created, defaultNodePropsStore if not
 	export const createNodeProps = (
 		edgeProps?: EdgeDrawerConfig,
@@ -181,6 +184,7 @@
 <div id="nodeContainer">
 	<!-- On submit resets all the values on the input field in the form to default -->
 	<form onreset={handleNodeResetButtonClick}>
+		{@render children?.()}
 		<ul aria-labelledby="select_props">
 			<li class="list-item">
 				<label for="bgColor">Background: </label>

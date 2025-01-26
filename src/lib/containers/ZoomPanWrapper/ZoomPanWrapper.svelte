@@ -1,7 +1,3 @@
-<!-- @migration-task Error while migrating Svelte code: Cannot use rune without parentheses
-https://svelte.dev/e/rune_missing_parentheses -->
-<!-- @migration-task Error while migrating Svelte code: Cannot use rune without parentheses
-https://svelte.dev/e/rune_missing_parentheses -->
 <script lang="ts">
 	import type { Graph } from '$lib/types';
 	import { getContext } from 'svelte';
@@ -10,38 +6,36 @@ https://svelte.dev/e/rune_missing_parentheses -->
 	import { get } from 'svelte/store';
 
 	const graph = getContext<Graph>('graph');
-	const transforms = graph.transforms;
-	const scale = transforms.scale;
-	const translation = transforms.translation;
-	const cursor = graph.cursor;
+	let { isMovable = false, children } = $props();
 
-	$props = {
-		isMovable: false
-	};
+	let transforms = $state(graph.transforms);
+	let translation = $state(transforms.translation);
+	let scale = $state(transforms.scale);
+	let cursor = $state(graph.cursor);
+	let animationFrameId = $state(0);
+	let moving = $state(false);
 
-	$state = {
-		animationFrameId: 0,
-		moving: false
-	};
-
-	$: graphTranslation = $translation;
-
-	// Reactive statement to update the transform attribute of the wrapper
-	$: transform = `translate(${graphTranslation.x}px, ${graphTranslation.y}px) scale(${$scale})`;
+	let transform = $derived(
+		`translate(${translation.x}px, ${translation.y}px) scale(${scale})`
+	);
 
 	$effect(() => {
-		if ($props.isMovable && !$state.moving) {
-			$state.moving = true;
-			$state.animationFrameId = requestAnimationFrame(translate);
-		} else if (!$props.isMovable || !$state.moving) {
-			$state.moving = false;
-			cancelAnimationFrame($state.animationFrameId);
+		if (isMovable && !moving) {
+			moving = true;
+			animationFrameId = requestAnimationFrame(translate);
+		} else if (!isMovable || !moving) {
+			moving = false;
+			cancelAnimationFrame(animationFrameId);
 		}
 	});
 
 	function translate() {
-		$translation = updateTranslation(get(initialClickPosition), $cursor, transforms);
-		$state.animationFrameId = requestAnimationFrame(translate);
+		translation = updateTranslation(get(initialClickPosition), cursor, transforms);
+		animationFrameId = requestAnimationFrame(translate);
+	}
+
+	function preventDefault(e: Event) {
+		e.preventDefault();
 	}
 </script>
 
@@ -49,11 +43,12 @@ https://svelte.dev/e/rune_missing_parentheses -->
 	role="presentation"
 	class="svelvet-graph-wrapper"
 	style:transform
-	oncontextmenu={event => event.preventDefault()}
-	onclick={event => event.preventDefault()}
-	ontouchstart={event => event.preventDefault()}
+	{...$$restProps}
+	onclick={preventDefault}
+	oncontextmenu={preventDefault}
+	ontouchstart={preventDefault}
 >
-	<slot />
+	{@render children?.()}
 </div>
 
 <style>

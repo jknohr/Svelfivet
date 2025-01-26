@@ -30,6 +30,10 @@ https://svelte.dev/e/rune_missing_parentheses -->
 		currentComponent: 'Node' // Indicates the current component being displayed
 	};
 
+	$props = {
+		children: null // Add children prop for content
+	};
+
 	// Handle the drag start event for creating node props
 	const handleDragStart = (e: DragEvent) => {
 		if (!e.dataTransfer) return;
@@ -144,74 +148,73 @@ https://svelte.dev/e/rune_missing_parentheses -->
 </script>
 
 <nav id="drawerWrapper" bind:this={$state.nav}>
-	<slot>
-		<button
-			class="drawerBtn"
-			bind:this={$state.drawerBtn}
-			onclick={handleDrawer}
-			aria-label="Open/Close Drawer"
-		>
-			<Icon icon={$state.isOpen ? 'south_east' : 'north_west'} />
-		</button>
-		<ul class="drawerContents" bind:this={$state.drawerContents}>
-			<li class="list-item">
-				<div class="menu">
-					<button
-						class="dropdown"
-						bind:this={$state.nodeBtn}
-						onclick={handleNodeContainer}
-						aria-label="Component"
-					>
-						Node
-					</button>
-					<button
-						class="dropdown"
-						bind:this={$state.anchorBtn}
-						onclick={handleAnchorContainer}
-						aria-label="Component"
-					>
-						Anchor
-					</button>
-					<button
-						class="dropdown"
-						bind:this={$state.edgeBtn}
-						onclick={handleEdgeContainer}
-						aria-label="Component"
-					>
-						Edge
-					</button>
-				</div>
-			</li>
-			<!-- Handle Node Dropdown -->
-			<li class="list-item">
-				<div class="propsContainer nodeContainer" bind:this={$state.nodeContainer}>
-					<DrawerNode />
-				</div>
-			</li>
-			<!-- Handle Anchor Dropdown -->
-			<li class="list-item">
-				<div class="propsContainer anchorContainer" bind:this={$state.anchorContainer}>
-					<DrawerAnchor />
-				</div>
-			</li>
-			<!-- Handle Edge Dropdown -->
-			<li class="list-item">
-				<div class="propsContainer edgeContainer" bind:this={$state.edgeContainer}>
-					<DrawerEdge />
-				</div>
-			</li>
-			<li class="list-item">
-				<div
-					role="presentation"
-					class="defaultNodes"
-					draggable="true"
-					ondragstart={handleDragStart}
+	{@render $props.children?.()}
+	<button
+		class="drawerBtn"
+		bind:this={$state.drawerBtn}
+		onclick={handleDrawer}
+		aria-label="Open/Close Drawer"
+	>
+		<Icon icon={$state.isOpen ? 'south_east' : 'north_west'} />
+	</button>
+	<ul class="drawerContents" bind:this={$state.drawerContents}>
+		<li class="list-item">
+			<div class="menu">
+				<button
+					class="dropdown"
+					bind:this={$state.nodeBtn}
+					onclick={handleNodeContainer}
+					aria-label="Component"
 				>
 					Node
-				</div>
-			</li>
-		</ul>
-	</slot>
+				</button>
+				<button
+					class="dropdown"
+					bind:this={$state.anchorBtn}
+					onclick={handleAnchorContainer}
+					aria-label="Component"
+				>
+					Anchor
+				</button>
+				<button
+					class="dropdown"
+					bind:this={$state.edgeBtn}
+					onclick={handleEdgeContainer}
+					aria-label="Component"
+				>
+					Edge
+				</button>
+			</div>
+		</li>
+		<!-- Handle Node Dropdown -->
+		<li class="list-item">
+			<div class="propsContainer nodeContainer" bind:this={$state.nodeContainer}>
+				<DrawerNode />
+			</div>
+		</li>
+		<!-- Handle Anchor Dropdown -->
+		<li class="list-item">
+			<div class="propsContainer anchorContainer" bind:this={$state.anchorContainer}>
+				<DrawerAnchor />
+			</div>
+		</li>
+		<!-- Handle Edge Dropdown -->
+		<li class="list-item">
+			<div class="propsContainer edgeContainer" bind:this={$state.edgeContainer}>
+				<DrawerEdge />
+			</div>
+		</li>
+		<li class="list-item">
+			<div
+				role="presentation"
+				class="defaultNodes"
+				draggable="true"
+				ondragstart={handleDragStart}
+			>
+				Node
+			</div>
+		</li>
+	</ul>
 </nav>
 
 <style>
