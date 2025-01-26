@@ -1,7 +1,3 @@
-<!-- @migration-task Error while migrating Svelte code: Cannot use rune without parentheses
-https://svelte.dev/e/rune_missing_parentheses -->
-<!-- @migration-task Error while migrating Svelte code: Cannot use rune without parentheses
-https://svelte.dev/e/rune_missing_parentheses -->
 <script lang="ts">
 	import type { Graph, NodeConfig, NodeKey, Node as NodeType } from '$lib/types';
 	import type { FlowChart } from '$lib/types/parser';
@@ -12,7 +8,8 @@ https://svelte.dev/e/rune_missing_parentheses -->
 
 	$props = {
 		mermaid: '',
-		mermaidConfig: {}
+		mermaidConfig: {},
+		nodeTemplate: null // Add optional node template snippet
 	};
 
 	const flowChart: FlowChart = flowChartParser($props.mermaid);
@@ -55,18 +52,23 @@ https://svelte.dev/e/rune_missing_parentheses -->
 			y += maxHeight + MIN_Y_SPACE;
 		}
 	});
+
+	// Define default node rendering snippet
+	{#snippet defaultNode(node)}
+		<Node
+			label={node.label}
+			id={node.id}
+			TD={true}
+			{...$props.mermaidConfig[node.id]}
+			connections={node.children.map((id) => [id, '1'])}
+		/>
+	{/snippet}
 </script>
 
 {#each grid as row}
 	{#each row as node}
 		{#if !node.ignore}
-			<Node
-				label={node.label}
-				id={node.id}
-				TD={true}
-				{...$props.mermaidConfig[node.id]}
-				connections={node.children.map((id) => [id, '1'])}
-			/>
+			{@render $props.nodeTemplate?.(node) ?? defaultNode(node)}
 		{/if}
 	{/each}
 {/each}

@@ -1,5 +1,3 @@
-<!-- @migration-task Error while migrating Svelte code: Cannot read properties of undefined (reading 'end') -->
-<!-- @migration-task Error while migrating Svelte code: Cannot read properties of undefined (reading 'end') -->
 <script>
 	import { Edge } from '$lib';
 </script>

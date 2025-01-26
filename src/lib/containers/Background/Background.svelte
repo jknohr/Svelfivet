@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { run } from 'svelte/legacy';
-
 	import { DOT_WIDTH, GRID_SCALE } from '$lib/constants';
 	import { getContext } from 'svelte';
 	import type { Graph, CSSColorString } from '$lib/types';
@@ -8,34 +7,15 @@
 
 	const graph = getContext<Graph>('graph');
 
-	
-	
-	interface Props {
-		// Props
-		style?: BackgroundStyles;
-		gridWidth?: any; // Distance between dots when scale = 1
-		dotSize?: any; // Dot size when scale = 1
-		bgColor?: CSSColorString | null;
-		dotColor?: CSSColorString | null;
-		opacityThreshold?: number; // Scale after which the opacity of grid is reduced
-		majorGrid?: number;
-		/**
-	 * @default 0.4
-	 * @description The minimum opacity of the background grid
-	 */
-		minOpacity?: number;
-	}
-
-	let {
-		style = 'dots',
-		gridWidth = GRID_SCALE,
-		dotSize = DOT_WIDTH,
-		bgColor = null,
-		dotColor = null,
-		opacityThreshold = 3,
-		majorGrid = 0,
-		minOpacity = 0.4
-	}: Props = $props();
+	// Props definition
+	export let style: BackgroundStyles = 'dots';
+	export let gridWidth = GRID_SCALE;
+	export let dotSize = DOT_WIDTH;
+	export let bgColor: CSSColorString | null = null;
+	export let dotColor: CSSColorString | null = null;
+	export let opacityThreshold = 3;
+	export let majorGrid = 0;
+	export let minOpacity = 0.4;
 
 	// External stores
 	const transforms = graph.transforms;
@@ -43,13 +23,13 @@
 	const translationStore = transforms.translation;
 
 	// Reactive variables
-	let backgroundWrapper: HTMLDivElement = $state();
-	let svgWidth = $state();
-	let svgHeight = $state();
-	let backgroundOffsetX: number = $state();
-	let backgroundOffsetY: number = $state();
-	let gridOpacity = $state(1);
-	let majorGridOpacity = $state(1);
+	let backgroundWrapper: HTMLDivElement;
+	let svgWidth;
+	let svgHeight;
+	let backgroundOffsetX: number;
+	let backgroundOffsetY: number;
+	let gridOpacity = 1;
+	let majorGridOpacity = 1;
 
 	//Subscriptions
 	let graphTranslation = $derived($translationStore);

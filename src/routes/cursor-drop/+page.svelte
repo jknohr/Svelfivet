@@ -1,6 +1,4 @@
 <script lang="ts">
-	import { stopPropagation } from 'svelte/legacy';
-
 	import { getContext, onMount, setContext } from 'svelte';
 	import { Node, Svelvet, Anchor } from '$lib';
 	//import Graph from '$lib/containers/Graph/Graph.svelte';
@@ -9,7 +7,7 @@
 
 	const graph = getContext<Graph>('graph');
 
-	let dropZoneClass = $state('inactive');
+	let dropZoneClass = 'inactive';
 	let NODE_BG_TYPE = 'nodebg';
 	let NODE_HEIGHT_DIMENSIONS_TYPE = 'nodeHeight';
 	let NODE_WIDTH_DIMENSIONS_TYPE = 'nodeWidth';
@@ -20,22 +18,29 @@
 	let NODE_INPUTS = 'inputs';
 	let NODE_OUTPUTS = 'outputs';
 
-	// types for node creation
-	let bgColor: CSSColorString = $state('#F2F2F2');
-	let borderColor: CSSColorString = $state('#DEDEDE');
-	let width: number = $state(200);
-	let height: number = $state(100);
-	let nodeTD: boolean = $state(false);
-	let nodeLR: boolean = $state(false);
-	let inputs: number = $state(1);
-	let outputs: number = $state(1);
-	let borderWidth: number = $state(1);
-	let label: string = $state('');
-	let locked: boolean = $state(false);
-	let center: boolean = $state(false);
-	let direction: 'LR' | 'TD' | undefined;
+	function handleInputChange(e: Event, setter: (value: any) => void) {
+		const target = e.target as HTMLInputElement;
+		if (!target) return;
+		const value = target.type === 'number' ? Number(target.value) : target.value;
+		setter(value);
+	}
 
-	let nodes: NodeConfig[] = $state([]);
+	// Convert let declarations to $state
+	let bgColor = $state<CSSColorString>('#F2F2F2');
+	let borderColor = $state<CSSColorString>('#DEDEDE');
+	let width = $state(200);
+	let height = $state(100);
+	let nodeTD = $state(false);
+	let nodeLR = $state(false);
+	let inputs = $state(1);
+	let outputs = $state(1);
+	let borderWidth = $state(1);
+	let label = $state('');
+	let locked = $state(false);
+	let center = $state(false);
+	let direction = $state<'LR' | 'TD' | undefined>(undefined);
+	let nodes = $state<NodeConfig[]>([]);
+
 	const onDragStart = (e: any) => {
 		// e.dataTransfer.setData(NODE_BG_TYPE, nodeBackgroundColor);
 		//e.dataTransfer.setData(NODE_BORDER_TYPE, nodeBorderColor);
@@ -128,10 +133,10 @@
 
 <div
 	class={dropZoneClass}
-	ondragover={onDragOver}
-	ondragenter={onDragEnter}
-	ondragleave={onDragLeave}
-	ondrop={onDrop}
+	on:dragover={onDragOver}
+	on:dragenter={onDragEnter}
+	on:dragleave={onDragLeave}
+	on:drop={onDrop}
 >
 	<Svelvet height={800} zoom={0.75} minimap controls>
 		{#each nodes as node (node.id)}
@@ -144,42 +149,42 @@
 	<h1>Create Node</h1>
 	<div id="node">
 		<ul>
-			<li class="list-item">Background Color: <input type="color" bind:value={bgColor} /></li>
-			<li class="list-item">Border Color: <input type="color" bind:value={borderColor} /></li>
-			<li class="list-item">Label: <input type="text" bind:value={label} /></li>
-			<li class="list-item">Border Width: <input type="number" bind:value={borderWidth} /></li>
+			<li class="list-item">Background Color: <input type="color" value={bgColor} on:input={(e) => handleInputChange(e, v => bgColor = v)} /></li>
+			<li class="list-item">Border Color: <input type="color" value={borderColor} on:input={(e) => handleInputChange(e, v => borderColor = v)} /></li>
+			<li class="list-item">Label: <input type="text" value={label} on:input={(e) => handleInputChange(e, v => label = v)} /></li>
+			<li class="list-item">Border Width: <input type="number" value={borderWidth} on:input={(e) => handleInputChange(e, v => borderWidth = v)} /></li>
 			<li class="list-item">
 				<h3>Dimensions:</h3>
 				<label for="width">Height:</label>
-				<input id="width" type="input" bind:value={width} />
+				<input id="width" type="number" value={width} on:input={(e) => handleInputChange(e, v => width = v)} />
 				<label for="height">Width:</label>
-				<input id="height" type="input" bind:value={height} />
+				<input id="height" type="number" value={height} on:input={(e) => handleInputChange(e, v => height = v)} />
 			</li>
 			<li>
 				<h3>Default Anchors</h3>
 				<label for="#inputAnchor">Input Anchors: </label>
-				<input id="inputAnchor" type="number" bind:value={inputs} />
+				<input id="inputAnchor" type="number" value={inputs} on:input={(e) => handleInputChange(e, v => inputs = v)} />
 				<label for="#outputAnchor">Output Anchors: </label>
-				<input id="outputAnchor" type="number" bind:value={outputs} />
+				<input id="outputAnchor" type="number" value={outputs} on:input={(e) => handleInputChange(e, v => outputs = v)} />
 			</li>
 			<li class="list-item">
 				<h3>Anchor Position:</h3>
 				<label for="#td">TD: </label>
-				<input id="td" type="checkbox" bind:value={nodeTD} onchange={setPositionTD} />
+				<input id="td" type="checkbox" bind:value={nodeTD} on:change={setPositionTD} />
 				<label for="#lr">LR: </label>
-				<input id="lr" type="checkbox" bind:value={nodeLR} onchange={setPositionLR} />
+				<input id="lr" type="checkbox" bind:value={nodeLR} on:change={setPositionLR} />
 			</li>
 			<li class="list-item">
-				Locked: <input type="checkbox" bind:value={locked} onchange={handleLockedButtonClick} />
+				Locked: <input type="checkbox" bind:value={locked} on:change={handleLockedButtonClick} />
 			</li>
 			<li class="list-item">
-				Centered: <input type="checkbox" bind:value={center} onchange={handleCenterButtonClick} />
+				Centered: <input type="checkbox" bind:value={center} on:change={handleCenterButtonClick} />
 			</li>
 			<li class="list-item">
-				<div id="createNode" draggable="true" ondragstart={onDragStart}>Node</div>
+				<div id="createNode" draggable="true" on:dragstart={onDragStart}>Node</div>
 			</li>
 			<li>
-				<button onclick={stopPropagation(handleClick)}>Reset</button>
+				<button on:click|stopPropagation={handleClick}>Reset</button>
 			</li>
 		</ul>
 	</div>

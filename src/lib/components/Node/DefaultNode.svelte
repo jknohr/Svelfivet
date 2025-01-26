@@ -1,7 +1,3 @@
-<!-- @migration-task Error while migrating Svelte code: Cannot use rune without parentheses
-https://svelte.dev/e/rune_missing_parentheses -->
-<!-- @migration-task Error while migrating Svelte code: Cannot use rune without parentheses
-https://svelte.dev/e/rune_missing_parentheses -->
 <script context="module" lang="ts">
 	import Resizer from '$lib/components/Resizer/Resizer.svelte';
 	import Anchor from '$lib/components/Anchor/Anchor.svelte';
@@ -28,31 +24,34 @@ https://svelte.dev/e/rune_missing_parentheses -->
 
 	//Subscriptions
 	const direction = get(node.direction);
-
-	let top = direction === 'TD' ? true : false;
-	let bottom = direction === 'TD' ? true : false;
-
-	let left = direction === 'TD' ? false : true;
-	let right = direction === 'TD' ? false : true;
+	const isTopDown = direction === 'TD';
 </script>
+
+{#snippet anchorInput(direction)}
+	<Anchor onconnection ondisconnection input direction={direction} />
+{/snippet}
+
+{#snippet anchorOutput(direction)}
+	<Anchor onconnection ondisconnection output direction={direction} />
+{/snippet}
 
 <div class:selected class="default-node" style:border-radius="{$borderRadius}px">
 	{#if dynamic}
 		{#each { length: $inputs } as _}
-			<Anchor onconnection ondisconnection />
+			{@render anchorInput(isTopDown ? 'north' : 'west')}
 		{/each}
 		{#each { length: $outputs } as _}
-			<Anchor onconnection ondisconnection />
+			{@render anchorOutput(isTopDown ? 'south' : 'east')}
 		{/each}
 	{:else}
-		<div class="input-anchors" class:top class:left>
+		<div class="input-anchors" class:top={isTopDown} class:left={!isTopDown}>
 			{#each { length: $inputs } as _, i (i)}
-				<Anchor onconnection ondisconnection input direction={top ? 'north' : 'west'} />
+				{@render anchorInput(isTopDown ? 'north' : 'west')}
 			{/each}
 		</div>
-		<div class="output-anchors" class:bottom class:right>
+		<div class="output-anchors" class:bottom={isTopDown} class:right={!isTopDown}>
 			{#each { length: $outputs } as _, i (i)}
-				<Anchor onconnection ondisconnection output direction={top ? 'south' : 'east'} />
+				{@render anchorOutput(isTopDown ? 'south' : 'east')}
 			{/each}
 		</div>
 	{/if}

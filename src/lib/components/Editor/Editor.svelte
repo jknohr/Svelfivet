@@ -1,7 +1,3 @@
-<!-- @migration-task Error while migrating Svelte code: Unexpected token
-https://svelte.dev/e/js_parse_error -->
-<!-- @migration-task Error while migrating Svelte code: Unexpected token
-https://svelte.dev/e/js_parse_error -->
 <script lang="ts">
 	import Slider from '../data/Slider/Slider.svelte';
 	import TextField from '../data/TextField/TextField.svelte';
@@ -9,35 +5,30 @@ https://svelte.dev/e/js_parse_error -->
 	import { writable, type Writable } from 'svelte/store';
 	import { Resizer } from '$lib';
 	import { getContext, setContext } from 'svelte';
-
 	import type { CSSColorString, Node as SvelvetNode } from '$lib/types';
-	import Node from '../Node/Node.svelte';
+	import Node from '$lib/components/Node/Node.svelte';
 
-	$props = {
-		editing: null
-	};
+	const { editing } = $props();
+	
+	// Convert position state to reactive declaration
+	let editorPosition = $state({ x: 150, y: 50 });
+	let resizeOptions = $state({ width: 10, height: 10 });
 
-	const graph = getContext<Graph>('graph');
-	setContext<Graph>('graph', graph);
-	setContext<Writable<string | null>>('textStore', $props.editing.label);
-	setContext<Writable<CSSColorString | null>>('colorStore', $props.editing.bgColor);
-
-	$state = {
-		editorPosition: { x: 150, y: 50 },
-		resizeOptions: { width: 10, height: 10 }
-	};
-
-	$derived cursor = $graph.cursor;
+	// Convert graph to proper store
+	const graph = getContext<Writable<Graph>>('graph');
+	setContext<Writable<Graph>>('graph', graph);
+	setContext<Writable<string | null>>('textStore', editing.label);
+	setContext<Writable<CSSColorString | null>>('colorStore', editing.bgColor);
 
 	function handleContextMenu(event: MouseEvent) {
 		event.preventDefault();
-		$state.editorPosition = { x: event.clientX, y: event.clientY };
-		$graph.editing.set($props.editing);
+		editorPosition = { x: event.clientX, y: event.clientY };
+		$graph.editing.set(editing);
 	}
 
 	function deleteNode() {
 		try {
-			$graph.nodes.delete($props.editing.id);
+			$graph.nodes.delete(editing.id);
 			$graph.editing.set(null);
 		} catch (error) {
 			console.error('Error deleting node:', error);
@@ -46,7 +37,7 @@ https://svelte.dev/e/js_parse_error -->
 
 	function resizeNode() {
 		try {
-			const nodeId = $props.editing.id;
+			const nodeId = editing.id;
 			const node = $graph.nodes.get(nodeId);
 
 			if (node) {
@@ -78,13 +69,13 @@ https://svelte.dev/e/js_parse_error -->
 	}
 </script>
 
-<Node zIndex={Infinity} position={$state.editorPosition} bgColor="white" id="editor">
-	<div oncontextmenu={handleContextMenu} class="editor">
+<Node zIndex={Infinity} position={editorPosition} bgColor="white" id="editor">
+	<div on:contextmenu={handleContextMenu} class="editor">
 		<span style="color:white; font-size:45px">Editor</span>
-		<button onclick={() => $graph.editing.set(null)} style="position:absolute; top:10px;right:10px;">X</button>
+		<button on:click={() => $graph.editing.set(null)} style="position:absolute; top:10px;right:10px;">X</button>
 		<TextField placeholder={'Node Label'} />
-		<button onclick={deleteNode}>Delete Node</button>
-		<button onclick={resizeNode}>Resize Node</button>
+		<button on:click={deleteNode}>Delete Node</button>
+		<button on:click={resizeNode}>Resize Node</button>
 	</div>
 </Node>
 

@@ -1,7 +1,3 @@
-<!-- @migration-task Error while migrating Svelte code: Unexpected token
-https://svelte.dev/e/js_parse_error -->
-<!-- @migration-task Error while migrating Svelte code: Unexpected token
-https://svelte.dev/e/js_parse_error -->
 <script lang="ts">
 	import GroupBoxRenderer from '$lib/renderers/GroupBoxRenderer/GroupBoxRenderer.svelte';
 	import ZoomPanWrapper from '$lib/containers/ZoomPanWrapper/ZoomPanWrapper.svelte';
@@ -13,37 +9,29 @@ https://svelte.dev/e/js_parse_error -->
 	const graph = getContext<Graph>('graph');
 	const snapTo = getContext<number>('snapTo');
 
-	$props = {
-		isMovable: false
-	};
+	let { isMovable = false, children } = $props();
 
-	const activeGroup = graph.activeGroup;
-	const groups = graph.groups;
-	const initialNodePositions = graph.initialNodePositions;
-	const cursor = graph.cursor;
-
-	$derived activeGroup = graph.activeGroup;
-	$derived tracking = tracking;
-	$derived cursor = cursor;
-	$derived initialNodePositions = initialNodePositions;
-	$derived groups = groups;
+	let activeGroup = $state(null);
+	let trackingState = $state(false);
+	let cursor = $state(graph.cursor);
+	let nodePositions = $state(graph.initialNodePositions);
+	let groups = $state(graph.groups);
 
 	$effect(() => {
-		if ($activeGroup && $tracking) {
+		if (activeGroup && trackingState) {
 			moveNodes(graph, snapTo);
 		}
 	});
 
-	function handleGroupClicked(event: CustomEvent) {
-		$tracking = true;
-		const { groupName } = event.detail;
-		$activeGroup = groupName;
-		$initialClickPosition = $cursor;
-		$initialNodePositions = captureGroup($groups[groupName].nodes);
+	function handleGroupClick(groupName: string) {
+		trackingState = true;
+		activeGroup = groupName;
+		initialClickPosition.set(cursor);
+		nodePositions = captureGroup(groups[groupName].nodes);
 	}
 </script>
 
-<ZoomPanWrapper {...$props}>
-	<slot />
-	<GroupBoxRenderer ongroupclick={handleGroupClicked} />
+<ZoomPanWrapper {isMovable}>
+	{@render children?.()}
+	<GroupBoxRenderer onclick={handleGroupClick} />
 </ZoomPanWrapper>
