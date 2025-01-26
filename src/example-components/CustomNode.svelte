@@ -2,7 +2,7 @@
 	import { Node, Anchor, Slider } from '$lib';
 	import { writable } from 'svelte/store';
 
-	const parameter = writable(10);
+	$state.parameter = writable(10);
 </script>
 
 <Node>
@@ -11,8 +11,8 @@
 			<Slider parameterStore={parameter} />
 			<div class="input-anchors">
 				<Anchor
-					on:disconnection={() => console.log('disconnection')}
-					on:connection={() => console.log('connection')}
+					ondisconnection={() => console.log('disconnection')}
+					onconnection={() => console.log('connection')}
 					input
 					id="1"
 				/>
