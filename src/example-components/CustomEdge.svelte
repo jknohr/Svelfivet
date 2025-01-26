@@ -2,8 +2,8 @@
 	import Edge from '$lib/components/Edge/Edge.svelte';
 	import type { CSSColorString } from '$lib/types';
 
-	let color: CSSColorString = 'yellow';
-	let edge: Edge = $state();
+	$state.color: CSSColorString = 'yellow';
+	$state.edge: Edge = $state();
 </script>
 
 <Edge

@@ -1,39 +1,46 @@
 <script lang="ts">
 	import { Anchor, Node } from '$lib';
 
-	let text = $state('Test');
-	let checked = $state(true);
-	let color = $state('#ff0000');
-	let date = $state(new Date());
-	let datetime = $state(new Date());
-	let email = $state('');
-	let month = $state('');
-	let number = $state(0);
-	let password = $state('');
-	let radio = $state('');
-	let range = $state(0);
-	let search = $state('');
-	let tel = $state('');
-	let url = '';
-	let week = '';
+	$state.text = 'Test';
+	$state.checked = true;
+	$state.color = '#ff0000';
+	$state.date = new Date();
+	$state.datetime = new Date();
+	$state.email = '';
+	$state.month = '';
+	$state.number = 0;
+	$state.password = '';
+	$state.radio = '';
+	$state.range = 0;
+	$state.search = '';
+	$state.tel = '';
+	$state.url = '';
+	$state.week = '';
+
+	$derived formattedDate = $state.date.toLocaleDateString();
+	$derived formattedDatetime = $state.datetime.toLocaleString();
+
+	$effect(() => {
+		console.log('Text changed:', $state.text);
+	});
 </script>
 
 <Node id="input" bgColor="black" label="StartNode" borderRadius={10} >
-	{#snippet children({ destroy })}
+	{@render children({ destroy })}
 		<div class="node">
-			<input id="text-test" type="text" bind:value={text} />
-			<input id="checkbox-test" type="checkbox" bind:checked />
-			<input type="color" bind:value={color} />
-			<input type="date" bind:value={date} />
-			<input type="datetime-local" bind:value={datetime} />
-			<input type="email" bind:value={email} />
-			<input type="month" bind:value={month} />
-			<input type="number" bind:value={number} />
-			<input type="password" bind:value={password} />
-			<input type="radio" bind:value={radio} />
-			<input type="range" bind:value={range} />
-			<input type="search" bind:value={search} />
-			<input type="tel" bind:value={tel} />
+			<input id="text-test" type="text" bind:value={$state.text} />
+			<input id="checkbox-test" type="checkbox" bind:checked={$state.checked} />
+			<input type="color" bind:value={$state.color} />
+			<input type="date" bind:value={$state.date} />
+			<input type="datetime-local" bind:value={$state.datetime} />
+			<input type="email" bind:value={$state.email} />
+			<input type="month" bind:value={$state.month} />
+			<input type="number" bind:value={$state.number} />
+			<input type="password" bind:value={$state.password} />
+			<input type="radio" bind:value={$state.radio} />
+			<input type="range" bind:value={$state.range} />
+			<input type="search" bind:value={$state.search} />
+			<input type="tel" bind:value={$state.tel} />
 			<select id="numberSelect">
 				<option value="1">1</option>
 				<option value="2">2</option>
@@ -47,9 +54,9 @@
 				<option value="10">10</option>
 			</select>
 			<textarea id="textarea-test"></textarea>
-			<button onclick={destroy}>Test</button>
+			<button onclick={$state.destroy}>Test</button>
 		</div>
-	{/snippet}
+	{@/render}
 </Node>
 
 <style>

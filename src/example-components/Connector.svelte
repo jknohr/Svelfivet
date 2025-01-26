@@ -2,10 +2,10 @@
 	import { Svelvet, Node, Anchor } from '$lib';
 	import { getContext } from 'svelte';
 	function addAndConnect(connect: (connections: string | number) => void) {
-		connect(totalNodes + 4);
-		totalNodes++;
+		connect($state.totalNodes + 4);
+		$state.totalNodes++;
 	}
-	let totalNodes = 0;
+	$state.totalNodes = 0;
 </script>
 
 <Node
