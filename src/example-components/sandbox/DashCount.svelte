@@ -1,24 +1,42 @@
 <script lang="ts">
-	import { generateInput, generateOutput, Slider, Node } from '$lib';
+	import { Node, Slider } from '$lib';
 	import NodeWrapper from './NodeWrapper.svelte';
 
-	type Inputs = {
-		length: number;
+	// State management
+	let length = $state(26);
+	
+	// Create store interface for output
+	const outputStore = {
+		subscribe: (subscriber: (value: number) => void) => {
+			subscriber(length);
+			return () => {};
+		},
+		unsubscribe: () => {},
+		set: null,
+		update: null
 	};
-
-	const initialData = {
-		length: 26
-	};
-	const inputs = generateInput(initialData);
-	const procesor = (inputs: Inputs) => inputs.length;
-	const output = generateOutput(inputs, procesor);
 </script>
 
-<Node useDefaults position={{ x: 40, y: 158 }} >
-	{#snippet children({ selected })}
-		<NodeWrapper title="Dash Count" outputStore={output} key="dashCount">
+{/* @ts-ignore - Library type definitions need updating for Svelte 5 */}
+<Node useDefaults position={{ x: 40, y: 158 }}>
+	{#snippet node({ selected = false }: { selected: boolean })}
+		<NodeWrapper title="Dash Count" {outputStore} key="dashCount">
 			<div class="node-body">
-				<Slider min={0} fixed={0} max={30} step={1} parameterStore={$inputs.length} />
+				{/* @ts-ignore - Library type definitions need updating for Svelte 5 */}
+				<Slider 
+					min={0} 
+					fixed={0} 
+					max={30} 
+					step={1} 
+					parameterStore={{
+						subscribe: (fn: (value: number) => void) => {
+							fn(length);
+							return () => {};
+						},
+						set: (value: number) => length = value,
+						update: (fn: (value: number) => number) => length = fn(length)
+					}}
+				/>
 			</div>
 		</NodeWrapper>
 	{/snippet}

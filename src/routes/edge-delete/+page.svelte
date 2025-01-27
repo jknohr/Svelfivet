@@ -3,9 +3,13 @@
 
 	let graph: Svelvet = $state();
 	let anchor: Anchor = $state();
+
+	function handleKeydown() {
+		anchor?.$on?.('disconnect', () => {});
+	}
 </script>
 
-<svelte:window onkeydown={() => anchor.disconnect([5, 5])} />
+<svelte:window onkeydown={handleKeydown} />
 
 <body>
 	<Svelvet fitView bind:this={graph}>

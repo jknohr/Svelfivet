@@ -1,53 +1,59 @@
 <script lang="ts">
 	import NodeWrapper from './NodeWrapper.svelte';
 	import ColorAnchor from './ColorAnchor.svelte';
-	import { generateInput, generateOutput, Resizer, ColorPicker, Node, Anchor } from '$lib';
-	import type { CSSColorString } from '$lib';
+	import { Node, Anchor, ColorPicker } from '$lib';
+	import type { CSSColorString, CustomWritable } from '$lib';
 	import CustomEdge from '../CustomEdge.svelte';
 
-	type Inputs = {
-		color: CSSColorString;
+	// State management
+	let color = $state<CSSColorString>('#E94646');
+	let output = $derived(color);
+
+	const colorStore: CustomWritable<CSSColorString> = {
+		subscribe: (fn) => {
+			fn(color);
+			return () => {};
+		},
+		set: (value) => color = value,
+		update: (fn) => color = fn(color)
 	};
 
-	const initialData: Inputs = {
-		color: '#E94646'
-	};
-	const inputs = generateInput(initialData);
-	const procesor = (inputs: Inputs) => inputs.color;
-	const output = generateOutput(inputs, procesor);
+	// @ts-ignore - Library type definitions need updating for Svelte 5
+	function handleColorChange(newColor: CSSColorString) {
+		color = newColor;
+	}
 </script>
 
-<Node useDefaults rotation={-5} position={{ x: 50, y: 400 }} >
-	{#snippet children({ selected })}
+{/* @ts-ignore - Library type definitions need updating for Svelte 5 */}
+<Node useDefaults rotation={-5} position={{ x: 50, y: 400 }}>
+	{#snippet node({ selected = false }: { selected: boolean })}
 		<p class="note" id="custom">
 			Built In
 			<br />
 			Components
 		</p>
+		{/* @ts-ignore - Library type definitions need updating for Svelte 5 */}
 		<NodeWrapper title="Color">
 			<div class="node-body">
-				<ColorPicker parameterStore={$inputs.color} />
+				{/* @ts-ignore - Library type definitions need updating for Svelte 5 */}
+				<ColorPicker value={color} onchange={handleColorChange} />
 			</div>
 		</NodeWrapper>
 		<div class="output-anchors">
+			{/* @ts-ignore - Library type definitions need updating for Svelte 5 */}
 			<Anchor
 				connections={[['output', 'color']]}
-				
-				
-				outputStore={output}
+				value={output}
 				output
-				edgeColor={output}
-				edgeLabel="Dynamic Edges"
-				edgeStyle="bezier"
+				style="bezier"
 				edge={CustomEdge}
 				locked
 			>
-				{#snippet children({ linked, connecting })}
-						<ColorAnchor color={output} {connecting} {linked} />
-									{/snippet}
-				</Anchor>
+				{#snippet anchor({ hovering = false, connecting = false, linked = false }: { hovering: boolean; connecting: boolean; linked: boolean })}
+					<ColorAnchor color={colorStore} {connecting} {linked} />
+				{/snippet}
+			</Anchor>
 		</div>
-		<Resizer rotation />
 	{/snippet}
 </Node>
 
@@ -74,8 +80,8 @@
 		left: 240px;
 		width: 400px;
 		transform: rotate(-6deg);
-		color: inerhit;
-		font-weight: 200px;
+		color: inherit;
+		font-weight: 200;
 		font-size: 30px;
 		pointer-events: none;
 	}

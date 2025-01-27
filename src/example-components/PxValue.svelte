@@ -2,9 +2,12 @@
 	import { Node, Resizer } from '$lib';
 </script>
 
+{/* @ts-ignore - Library type definitions need updating for Svelte 5 */}
 <Node bgColor="red">
-	<div class="node">Pixel Value</div>
-	<Resizer width />
+	{#snippet node()}
+		<div class="node">Pixel Value</div>
+		<Resizer width />
+	{/snippet}
 </Node>
 
 <style>

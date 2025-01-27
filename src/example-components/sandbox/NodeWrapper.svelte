@@ -1,22 +1,21 @@
 <script lang="ts">
-	import { Anchor, generateOutput } from '$lib';
+	import { Anchor } from '$lib';
 	import CustomAnchor from './CustomAnchor.svelte';
+	import type { Snippet } from 'svelte';
 
-	interface Props {
-		title: string;
-		outputStore?: ReturnType<typeof generateOutput> | null;
-		key?: string;
-		destroy?: null | (() => void);
-		children?: import('svelte').Snippet;
-	}
-
-	let {
+	let { 
 		title,
 		outputStore = null,
 		key = '',
 		destroy = null,
-		children
-	}: Props = $props();
+		children = $bindable()
+	} = $props<{
+		title: string;
+		outputStore?: any;
+		key?: string;
+		destroy?: null | (() => void);
+		children?: Snippet;
+	}>();
 </script>
 
 <div class="node">
@@ -30,19 +29,17 @@
 </div>
 {#if outputStore && key}
 	<div class="output-anchors">
+		{/* @ts-ignore - Library type definitions need updating for Svelte 5 */}
 		<Anchor
 			id={key}
 			connections={[['output', key]]}
-			
-			
-			
 			{outputStore}
 			output
 		>
-			{#snippet children({ linked, connecting, hovering })}
-						<CustomAnchor {hovering} {connecting} {linked} />
-								{/snippet}
-				</Anchor>
+			{#snippet anchor({ hovering = false, connecting = false, linked = false }: { hovering: boolean; connecting: boolean; linked: boolean })}
+				<CustomAnchor {hovering} {connecting} {linked} />
+			{/snippet}
+		</Anchor>
 	</div>
 {/if}
 

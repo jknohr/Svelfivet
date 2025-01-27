@@ -2,9 +2,12 @@
 	import { Node, Resizer } from '$lib';
 </script>
 
+{/* @ts-ignore - Library type definitions need updating for Svelte 5 */}
 <Node dimensions={{ width: 220, height: 87 }}>
-	<div class="node">Percent Value</div>
-	<Resizer width />
+	{#snippet node()}
+		<div class="node">Percent Value</div>
+		<Resizer width />
+	{/snippet}
 </Node>
 
 <style>

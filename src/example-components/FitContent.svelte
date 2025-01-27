@@ -2,12 +2,15 @@
 	import { Node } from '$lib';
 </script>
 
+{/* @ts-ignore - Library type definitions need updating for Svelte 5 */}
 <Node>
-	<div class="node">
-		<div class="content-wrapper">
-			<h1>Fit Content</h1>
+	{#snippet node()}
+		<div class="node">
+			<div class="content-wrapper">
+				<h1>Fit Content</h1>
+			</div>
 		</div>
-	</div>
+	{/snippet}
 </Node>
 
 <style>

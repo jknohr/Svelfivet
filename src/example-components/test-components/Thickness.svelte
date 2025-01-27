@@ -1,25 +1,47 @@
 <script lang="ts">
+	import { Node, Slider } from '$lib';
 	import NodeWrapper from './NodeWrapper.svelte';
-	import { generateInput, generateOutput, Slider, Node } from '$lib';
 
-	type Inputs = {
-		width: number;
+	// State management
+	let width = $state(2.5);
+	
+	// Create store interface for output
+	const outputStore = {
+		subscribe: (subscriber: (value: number) => void) => {
+			subscriber(width);
+			return () => {};
+		},
+		unsubscribe: () => {},
+		set: null,
+		update: null
 	};
 
-	const initialData = {
-		width: 2.5
-	};
-	const inputs = generateInput(initialData);
-	const procesor = (inputs: Inputs) => inputs.width;
-	const output = generateOutput(inputs, procesor);
+	// Handle width changes
+	function handleWidthChange(newValue: number) {
+		width = newValue;
+	}
 </script>
 
+// @ts-ignore - Library type definitions need updating for Svelte 5
 <Node useDefaults position={{ x: 40, y: 50 }} >
-	{#snippet children({ selected })}
+	{#snippet node({ selected = false })}
 		<span class="note" id="custom">Custom Nodes</span>
-		<NodeWrapper title="Line Thickness" outputStore={output} key="strokeWidth">
+		<NodeWrapper title="Line Thickness" {outputStore} key="strokeWidth">
 			<div class="node-body">
-				<Slider min={1} max={12} fixed={1} step={0.1} parameterStore={$inputs.width} />
+				<Slider 
+					min={1} 
+					max={12} 
+					fixed={1} 
+					step={0.1} 
+					parameterStore={{
+						subscribe: (fn) => {
+							fn(width);
+							return () => {};
+						},
+						set: (value) => width = value,
+						update: (fn) => width = fn(width)
+					}}
+				/>
 			</div>
 		</NodeWrapper>
 	{/snippet}

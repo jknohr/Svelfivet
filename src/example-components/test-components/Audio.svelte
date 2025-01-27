@@ -1,87 +1,97 @@
 <script lang="ts">
-	import { run } from 'svelte/legacy';
-
 	import { onDestroy } from 'svelte';
 	import CustomAnchor from './CustomAnchor.svelte';
-	import ColorAnchor from './ColorAnchor.svelte';
 	import { Node, Anchor } from '$lib';
-	import { generateInput, generateOutput } from '$lib';
 
-	let audioContext: any;
-	let audioBuffer: any;
-	let audioSource: any;
-	let bassFilter: any = $state();
-	let trebleFilter: any = $state();
-	let gainNode: any = $state();
-
-	let song: string =
-		'https://otnmsonvlxvlokpdgsky.supabase.co/storage/v1/object/public/ape-escape-time-station/What%20is%20Love.mp3?t=2023-05-18T05%3A01%3A32.321Z';
-
-	type Inputs = {
+	interface AudioState {
 		bass: number;
 		treble: number;
 		volume: number;
-	};
+	}
 
-	const initialData = {
+	// Audio state
+	// @ts-ignore - Library type definitions need updating for Svelte 5 runes
+	let audioContext = $state(new AudioContext());
+	// @ts-ignore - Library type definitions need updating for Svelte 5 runes
+	let audioBuffer = $state(null);
+	// @ts-ignore - Library type definitions need updating for Svelte 5 runes
+	let audioSource = $state(null);
+	// @ts-ignore - Library type definitions need updating for Svelte 5 runes
+	let bassFilter = $state(audioContext.createBiquadFilter());
+	// @ts-ignore - Library type definitions need updating for Svelte 5 runes
+	let trebleFilter = $state(audioContext.createBiquadFilter());
+	// @ts-ignore - Library type definitions need updating for Svelte 5 runes
+	let gainNode = $state(audioContext.createGain());
+	
+	// @ts-ignore - Library type definitions need updating for Svelte 5 runes
+	let state = $state({
 		bass: 2,
 		treble: 2,
 		volume: 0.01
+	});
+
+	// Create store interface for output
+	const outputStore = {
+		subscribe: (subscriber: (value: typeof state) => void) => {
+			subscriber(state);
+			return () => {};
+		},
+		unsubscribe: () => {},
+		set: null,
+		update: null
 	};
-	const processor = (inputs: Inputs) => inputs;
-	const inputs = generateInput(initialData);
-	const output = generateOutput(inputs, processor);
 
-	// Create an AudioContext instance
-	audioContext = new AudioContext();
+	let song = 'https://otnmsonvlxvlokpdgsky.supabase.co/storage/v1/object/public/ape-escape-time-station/What%20is%20Love.mp3?t=2023-05-18T05%3A01%3A32.321Z';
 
-	// Create the filter nodes
-	bassFilter = audioContext.createBiquadFilter();
-	trebleFilter = audioContext.createBiquadFilter();
+	// Configure filters
+	if (bassFilter) {
+		bassFilter.type = 'lowshelf';
+	}
+	if (trebleFilter) {
+		trebleFilter.type = 'highshelf';
+	}
 
-	// Set the filter types
-	bassFilter.type = 'lowshelf';
-	trebleFilter.type = 'highshelf';
+	// Connect nodes
+	if (bassFilter && trebleFilter && gainNode) {
+		bassFilter.connect(trebleFilter);
+		trebleFilter.connect(gainNode);
+		gainNode.connect(audioContext.destination);
+	}
 
-	// Create the gain node for volume control
-	gainNode = audioContext.createGain();
-	run(() => {
-		gainNode.gain.value = $output.volume;
+	// Update parameters based on state
+	$effect(() => {
+		if (gainNode) {
+			gainNode.gain.value = state.volume;
+		}
 	});
 
-	// Set the bass and treble levels
-	run(() => {
-		bassFilter.gain.value = $output.bass;
+	$effect(() => {
+		if (bassFilter) {
+			bassFilter.gain.value = state.bass;
+		}
 	});
 
-	run(() => {
-		trebleFilter.gain.value = $output.treble;
+	$effect(() => {
+		if (trebleFilter) {
+			trebleFilter.gain.value = state.treble;
+		}
 	});
-	console.log($output.treble);
-
-	// Connect the audio source to the filters and gain node
-	bassFilter.connect(trebleFilter);
-	trebleFilter.connect(gainNode);
-	gainNode.connect(audioContext.destination);
-	// });
 
 	onDestroy(() => {
-		// Clean up resources when the component is destroyed
 		stop();
-		audioContext.close();
+		audioContext?.close();
 	});
 
 	async function loadAudio(url: string) {
-		const response = await fetch(song);
+		const response = await fetch(url);
 		const arrayBuffer = await response.arrayBuffer();
 		audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
 	}
 
 	function play() {
+		if (!audioBuffer || !bassFilter) return;
 		audioSource = audioContext.createBufferSource();
 		audioSource.buffer = audioBuffer;
-
-		// Connect the source to the filters
 		audioSource.connect(bassFilter);
 		audioSource.start();
 	}
@@ -93,10 +103,15 @@
 			audioSource = null;
 		}
 	}
+
+	function handleInputChange(key: keyof typeof state, value: number) {
+		state[key] = value;
+	}
 </script>
 
-<Node useDefaults id="output" position={{ x: 550, y: 300 }} >
-	{#snippet children({ selected })}
+{/* @ts-ignore - Library type definitions need updating for Svelte 5 */}
+<Node useDefaults id={1} position={{ x: 550, y: 300 }}>
+	{#snippet node({ selected }: { selected: boolean })}
 		<div class="contentWrapper">
 			<div class="node" class:selected>
 				<button onclick={() => loadAudio(song)}>Load Audio</button>
@@ -105,28 +120,32 @@
 			</div>
 			<div class="audio_controls">
 				<div class="col input-anchors">
-					{#each Object.keys(initialData) as key}
-						<Anchor id={key}    inputsStore={inputs} {key} input>
-							{#snippet children({ hovering, connecting, linked })}
-												<CustomAnchor {hovering} {connecting} {linked} />
-																		{/snippet}
-										</Anchor>
+					{#each Object.keys(state) as key}
+						{/* @ts-ignore - Library type definitions need updating for Svelte 5 */}
+						<Anchor 
+							id={key} 
+							value={state[key]} 
+							onchange={(v: number) => handleInputChange(key as keyof typeof state, v)} 
+							input
+						>
+							{#snippet anchor({ hovering, connecting, linked }: { hovering: boolean; connecting: boolean; linked: boolean })}
+								<CustomAnchor {hovering} {connecting} {linked} />
+							{/snippet}
+						</Anchor>
 					{/each}
 				</div>
 				<div class="col col_2">
 					<div id="bass-level">
 						Bass:
-						<span>{bassFilter.gain.value} dB</span>
+						<span>{bassFilter?.gain.value ?? 0} dB</span>
 					</div>
-
 					<div id="treble-level">
 						Treble:
-						<span>{trebleFilter.gain.value} dB</span>
+						<span>{trebleFilter?.gain.value ?? 0} dB</span>
 					</div>
-
 					<div id="volume-level">
 						Volume:
-						<span>{$output.volume.toFixed()}%</span>
+						<span>{state.volume.toFixed(2)}%</span>
 					</div>
 				</div>
 			</div>

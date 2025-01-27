@@ -1,25 +1,31 @@
 <script lang="ts">
-	import { run } from 'svelte/legacy';
-
 	import { Svelvet, Node, Anchor } from '$lib';
 
 	let position = $state({ x: 300, y: 300 });
-	run(() => {
+	
+	$effect(() => {
 		console.log(position);
 	});
+
+	interface NodeProps {
+		grabHandle: (node: HTMLElement) => void;
+		selected: boolean;
+	}
 </script>
 
 <body>
 	<Svelvet minimap title="test">
-		<Node bgColor="red" inputs={4} bind:position>
-			<div class="node-body">
-				<p>{JSON.stringify(position)}</p>
-				<button
-					onclick={() => {
-						position = { x: 100, y: 100 };
-					}}>Move</button
-				>
-			</div>
+		<Node bgColor="red" inputs={4} position={position}>
+			{#snippet node({ grabHandle, selected }: NodeProps)}
+				<div class="node-body" use:grabHandle class:selected>
+					<p>{JSON.stringify(position)}</p>
+					<button
+						onclick={() => {
+							position = { x: 100, y: 100 };
+						}}>Move</button
+					>
+				</div>
+			{/snippet}
 		</Node>
 	</Svelvet>
 </body>

@@ -1,29 +1,58 @@
 <script lang="ts">
-	import { Node, Anchor, Slider } from '$lib';
-	import type { Writable } from 'svelte/store';
-	import { writable } from 'svelte/store';
+	import { Node, Anchor } from "$lib";
+	import Slider from "$lib/components/data/Slider/Slider.svelte";
+	import type { CustomWritable } from '$lib/types';
 
-	let parameter = $state(10);
+	// Type definitions
+	type AnchorProps = {
+		hovering: boolean;
+		connecting: boolean;
+		linked: boolean;
+	};
 
-	interface NodeChildrenProps {
-		grabHandle: (node: HTMLElement) => void;
-		selected: boolean;
+	// State management
+	let parameterStore: CustomWritable<number> = {
+		subscribe: (fn) => {
+			fn(parameter);
+			return () => {};
+		},
+		set: (value) => {
+			parameter = value;
+		},
+		update: (fn) => {
+			parameter = fn(parameter);
+		}
+	};
+	let parameter = $state(0);
+	let connections = $state<Array<number | string>>([]);
+
+	// Event handlers
+	function handleConnect() {
+		console.log("connection");
+	}
+
+	function handleDisconnect() {
+		console.log("disconnection");
 	}
 </script>
 
+{/* @ts-ignore - Library type definitions need updating for Svelte 5 */}
 <Node>
-	{#snippet children({ grabHandle, selected }: NodeChildrenProps)}
+	{#snippet node({ grabHandle, selected }: { grabHandle: any; selected: boolean })}
 		<div class="node" use:grabHandle class:selected>
-			<Slider bind:value={parameter} />
+			<Slider {parameterStore} />
 			<div class="input-anchors">
-				<Anchor
-					onDisconnect={() => console.log('disconnection')}
-					onConnect={() => console.log('connection')}
-					input
-					id="1"
+				{/* @ts-ignore - Library type definitions need updating for Svelte 5 */}
+				<Anchor 
+					onconnect={handleConnect}
+					ondisconnect={handleDisconnect}
+					value={connections}
+					input 
+					id="1" 
 				/>
 			</div>
 			<div class="output-anchors">
+				{/* @ts-ignore - Library type definitions need updating for Svelte 5 */}
 				<Anchor output id="5" />
 			</div>
 		</div>
@@ -32,31 +61,21 @@
 
 <style>
 	.node {
-		box-sizing: border-box;
-		width: 100%;
-		height: 100%;
-		background-color: rgba(128, 128, 128, 0.673);
+		padding: 1rem;
+		background: rgba(128, 128, 128, 0.673);
 		border-radius: 20px;
-		position: relative;
-		height: fit-content;
-		pointer-events: auto;
-		display: flex;
-		flex-direction: column;
-		padding: 10px;
 		border: solid 2px rgb(99, 99, 99);
 	}
-
 	.selected {
 		border: solid 2px white;
 	}
 	.input-anchors {
 		position: absolute;
+		top: -20px;
 		display: flex;
 		flex-direction: column;
 		gap: 10px;
-		top: -20px;
 	}
-
 	.output-anchors {
 		position: absolute;
 		right: 20px;

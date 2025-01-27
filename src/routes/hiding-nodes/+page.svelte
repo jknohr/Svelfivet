@@ -1,24 +1,35 @@
 <script lang="ts">
 	import { Svelvet, Minimap, Node, Anchor } from '$lib';
+	import type { NodeConfig } from '$lib/types';
 
 	let childrenHidden = $state(true);
+
+	interface NodeProps {
+		grabHandle: (node: HTMLElement) => void;
+		selected: boolean;
+	}
 </script>
 
 <body>
 	<div class="wrapper">
-		<Svelvet TD theme="dark" width={800} height={500} zoom={0.5} controls title="tests" minimap>
+		<Svelvet TD theme="dark" width={800} height={500} zoom={0.5} controls title="tests">
 			<Node connections={[2, 3]} useDefaults width={200} height={100}>
-				<button onclick={() => (childrenHidden = !childrenHidden)}>Hide Children</button>
-				<Anchor output />
+				{#snippet node({ grabHandle, selected }: NodeProps)}
+					<div class="node" use:grabHandle class:selected>
+						<button onclick={() => (childrenHidden = !childrenHidden)}>Hide Children</button>
+						<Anchor output />
+					</div>
+				{/snippet}
 			</Node>
 			{#if childrenHidden}
 				<Node position={{ x: 200, y: 300 }} />
 				<Node position={{ x: -100, y: 300 }} connections={[4]} />
 				<Node position={{ x: -100, y: 500 }} />
 			{/if}
-			<!-- @migration-task: migrate this slot by hand, `minimap` would shadow a prop on the parent component -->
-	<!-- @migration-task: migrate this slot by hand, `minimap` would shadow a prop on the parent component -->
-	<Minimap slot="minimap" />
+
+			{#snippet minimap()}
+				<Minimap width={100} corner="SE" />
+			{/snippet}
 		</Svelvet>
 	</div>
 </body>
@@ -89,5 +100,15 @@
 
 		--theme-toggle-text-color: hsl(0, 0%, 100%);
 		--theme-toggle-color: hsl(225, 20%, 27%);
+	}
+
+	.node {
+		padding: 1rem;
+		background: var(--node-color, #fff);
+		border-radius: var(--node-radius, 8px);
+	}
+
+	.node.selected {
+		outline: 2px solid var(--selection-color, #00ff00);
 	}
 </style>

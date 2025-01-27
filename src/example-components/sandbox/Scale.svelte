@@ -1,24 +1,40 @@
 <script lang="ts">
+	import { Node, Slider } from '$lib';
 	import NodeWrapper from './NodeWrapper.svelte';
-	import { generateInput, generateOutput, Slider, Node } from '$lib';
 
-	type Inputs = {
-		num: number;
+	// State management
+	let num = $state(56 - Math.random() * 4);
+	
+	// Create store interface for output
+	const outputStore = {
+		subscribe: (subscriber: (value: number) => void) => {
+			subscriber(num);
+			return () => {};
+		},
+		unsubscribe: () => {},
+		set: null,
+		update: null
 	};
-
-	const initialData = {
-		num: 56 - Math.random() * 4
-	};
-	const inputs = generateInput(initialData);
-	const procesor = (inputs: Inputs) => inputs.num;
-	const output = generateOutput(inputs, procesor);
 </script>
 
-<Node useDefaults id="numCircles" position={{ x: 40, y: 268 }} >
-	{#snippet children({ selected })}
-		<NodeWrapper title="Scale" outputStore={output} key="scale">
+// @ts-ignore - Library type definitions need updating for Svelte 5
+<Node useDefaults id={1} position={{ x: 40, y: 268 }} >
+	{#snippet node({ selected = false })}
+		<NodeWrapper title="Scale" {outputStore} key="scale">
 			<div class="node-body">
-				<Slider min={25} max={90} step={1} parameterStore={$inputs.num} />
+				<Slider 
+					min={25} 
+					max={90} 
+					step={1} 
+					parameterStore={{
+						subscribe: (fn) => {
+							fn(num);
+							return () => {};
+						},
+						set: (value) => num = value,
+						update: (fn) => num = fn(num)
+					}}
+				/>
 			</div>
 		</NodeWrapper>
 	{/snippet}

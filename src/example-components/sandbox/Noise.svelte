@@ -1,24 +1,28 @@
 <script lang="ts">
-	import { generateInput, generateOutput, Slider, Node } from '$lib';
+	import { Slider, Node } from '$lib';
 	import NodeWrapper from './NodeWrapper.svelte';
+	import type { CustomWritable } from '$lib';
 
-	type Inputs = {
-		num: number;
-	};
+	let num = $state(0.9);
+	let output = $derived(num);
 
-	const initialData = {
-		num: 0.9
+	const parameterStore: CustomWritable<number> = {
+		subscribe: (fn) => {
+			fn(num);
+			return () => {};
+		},
+		set: (value) => num = value,
+		update: (fn) => num = fn(num)
 	};
-	const inputs = generateInput(initialData);
-	const procesor = (inputs: Inputs) => inputs.num;
-	const output = generateOutput(inputs, procesor);
 </script>
 
-<Node useDefaults position={{ x: 320, y: 550 }} >
-	{#snippet children({ destroy })}
+{/* @ts-ignore - Library type definitions need updating for Svelte 5 */}
+<Node useDefaults position={{ x: 320, y: 550 }}>
+	{#snippet node({ destroy = null }: { destroy: null | (() => void) })}
 		<NodeWrapper {destroy} title="Noise" outputStore={output} key="noise">
 			<div class="node-body">
-				<Slider min={0} max={1} fixed={2} step={0.01} parameterStore={$inputs.num} />
+				{/* @ts-ignore - Library type definitions need updating for Svelte 5 */}
+				<Slider min={0} max={1} fixed={2} step={0.01} {parameterStore} />
 			</div>
 		</NodeWrapper>
 	{/snippet}

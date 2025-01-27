@@ -14,61 +14,65 @@
 		noise: number;
 	};
 
-	const initialData = {
+	// Initialize state
+	let inputs = $state<Inputs>({
 		strokeWidth: 2,
 		dashCount: 10,
 		scale: 5,
 		animation: 0,
 		color: 'red' as CSSColorString,
 		noise: 1
-	};
-	const processor = (inputs: Inputs) => inputs;
-	const inputs = generateInput(initialData);
-	const output = generateOutput(inputs, processor);
+	});
+
+	// Derived state for output
+	let output = $derived({ ...inputs });
+
+	// Handle animation reset
+	function resetAnimation() {
+		inputs.animation = 0;
+	}
 </script>
 
-<Node useDefaults id="output" position={{ x: 560, y: 30 }}  locked>
-	{#snippet children({ selected })}
-		<div class="node" class:selected>
-			<Visualizer {...$output} />
-			<div class="input-anchors">
-				{#each Object.keys(initialData) as key}
+<!-- @component
+Props:
+- id: number
+- position: { x: number, y: number }
+- locked: boolean
+-->
+{/* @ts-ignore - Library type definitions need updating for Svelte 5 */}
+<Node useDefaults id={2} position={{ x: 560, y: 30 }} locked>
+	<div class="node">
+		{/* @ts-ignore - Library type definitions need updating for Svelte 5 */}
+		<Visualizer {...output} />
+		<div class="input-anchors">
+			{#each Object.keys(inputs) as key}
+				{/* @ts-ignore - Library type definitions need updating for Svelte 5 */}
+				<Anchor 
+					id={key} 
+					{inputs} 
+					{key} 
+					input={true}
+					locked={key === 'color'}
+					onclick={key === 'animation' ? resetAnimation : undefined}
+				>
 					{#if key === 'color'}
-						<Anchor id={key}   inputsStore={inputs} {key} input locked>
-							{#snippet children({ connecting, linked })}
-												<ColorAnchor color={$inputs[key]} {connecting} {linked} />
-																		{/snippet}
-										</Anchor>
-					{:else if key === 'animation'}
-						<Anchor
-							id={key}
-							on:disconnection={() => {
-								if ($inputs && typeof $inputs.animation.set === 'function') {
-									$inputs.animation.set(0);
-								}
-							}}
-							
-							
-							
-							inputsStore={inputs}
-							{key}
-							input
-						>
-							{#snippet children({ hovering, connecting, linked })}
-														<CustomAnchor {hovering} {connecting} {linked} />
-																				{/snippet}
-												</Anchor>
+						{/* @ts-ignore - Library type definitions need updating for Svelte 5 */}
+						<ColorAnchor 
+							color={inputs.color} 
+							connecting={false} 
+							linked={false} 
+						/>
 					{:else}
-						<Anchor id={key}    inputsStore={inputs} {key} input>
-							{#snippet children({ hovering, connecting, linked })}
-														<CustomAnchor {hovering} {connecting} {linked} />
-																				{/snippet}
-												</Anchor>
+						<CustomAnchor 
+							hovering={false} 
+							connecting={false} 
+							linked={false} 
+						/>
 					{/if}
-				{/each}
-			</div>
+				</Anchor>
+			{/each}
 		</div>
-	{/snippet}
+	</div>
 </Node>
 
 <style>
@@ -85,9 +89,6 @@
 		gap: 10px;
 	}
 
-	.selected {
-		border: solid 2px white;
-	}
 	.input-anchors {
 		position: absolute;
 		display: flex;

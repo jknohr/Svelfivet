@@ -1,36 +1,56 @@
 <script lang="ts">
 	import { Node } from '$lib';
+	import { Knob } from '$lib';
+	import NodeWrapper from './NodeWrapper.svelte';
 
-	import { generateInput, generateOutput, Knob, Resizer } from '$lib';
-	import NodeWrapper from '../../example-components/test-components/NodeWrapper.svelte';
+	// State management
+	let volume = $state(2);
 
-	type Inputs = {
-		data: number;
+	// Create store interface for output
+	let outputStore = {
+		subscribe: (subscriber: (value: number) => void) => {
+			subscriber(volume);
+			return () => {};
+		},
+		unsubscribe: () => {},
+		set: null,
+		update: null
 	};
 
-	const initialData = {
-		data: 1
+	// Props for Knob component
+	const knobProps = {
+		fixed: 0,
+		min: 0,
+		max: 20,
+		step: 2,
+		minDegree: 30,
+		maxDegree: 330,
+		value: volume
 	};
-	const inputs = generateInput(initialData);
-	const procesor = (inputs: Inputs) => inputs.data;
-	const output = generateOutput(inputs, procesor);
+
+	// Event handlers
+	function handleKnobChange(newValue: number) {
+		volume = newValue;
+	}
 </script>
 
-<Node useDefaults position={{ x: 110, y: 550 }} >
-	{#snippet children({ selected })}
-		<NodeWrapper title="Volume" outputStore={output} key="volume">
+{/* @ts-ignore - Library type definitions need updating for Svelte 5 */}
+<Node useDefaults position={{ x: 110, y: 50 }}>
+	{#snippet node({ selected }: { selected: boolean })}
+		<NodeWrapper title="Volume" {outputStore} key="volume">
 			<div class="node-body">
-				<Knob
-					fixed={0}
-					min={0}
-					max={100}
-					step={1}
-					minDegree={30}
-					maxDegree={330}
-					parameterStore={$inputs.data}
-				/>
+				{/* @ts-ignore - Library type definitions need updating for Svelte 5 */}
+				<Knob {...knobProps} onchange={handleKnobChange} />
 			</div>
 		</NodeWrapper>
-		<Resizer width height rotation />
 	{/snippet}
 </Node>
+
+<style>
+	.node-body {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		padding: 1rem;
+	}
+</style>

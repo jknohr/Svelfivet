@@ -1,19 +1,29 @@
 <script lang="ts">
-	import { Svelvet, Minimap, Node } from '$lib';
+	import { Node } from '$lib';
+	import type { Node as NodeType } from '$lib/types';
 	import type { SvelvetConnectionEvent } from '$lib/types';
-	import CustomEdge from '../../example-components/CustomEdge.svelte';
-	let position = $state({ x: 300, y: 300 });
+
+	let selected = $state(false);
+	let position = $state({ x: 100, y: 100 });
 	let label = $state('test');
 
 	function handleConnection(e: CustomEvent<SvelvetConnectionEvent>) {
 		console.log(e.detail);
+	}
+
+	function handleNodeClick(e: CustomEvent<{ node: NodeType }>) {
+		console.log('Node clicked:', e.detail.node);
+	}
+
+	function handleNodeRelease(e: CustomEvent<{ node: NodeType }>) {
+		console.log('Node released:', e.detail.node);
 	}
 </script>
 
 <body>
 	<div class="wrapper">
 		<Svelvet
-			on:connection={handleConnection}
+			onconnection={handleConnection}
 			theme="dark"
 			width={800}
 			height={500}
@@ -21,25 +31,34 @@
 			title="tests"
 		>
 			<Node
-				id="node1"
-				{label}
-				resizable
-				on:nodeClicked={(e) => (label = e.detail.node.id)}
-				on:nodeReleased={(e) => (label = 'release')}
-			/>
+				id={1}
+				position={position}
+				onnodeClicked={handleNodeClick}
+				onnodeReleased={handleNodeRelease}
+			>
+				{#snippet node({ selected = false }: { selected: boolean })}
+					<div class="node" class:selected>
+						<p>Node 1</p>
+					</div>
+				{/snippet}
+			</Node>
+			{/* @ts-ignore - Library type definitions need updating for Svelte 5 */}
 			<Node
-				on:connection={() => console.log('node2 connected')}
-				on:disconnection={() => console.log('node2 disconnected')}
-				dimensions={{ width: 400, height: 100 }}
-				bind:position
-				id="node2"
-				label="test"
-				edge={CustomEdge}
-			/>
-			<Node label="what" position={{ x: 10, y: 200 }} inputs={3} TD />
+				id={2}
+				position={{ x: 300, y: 100 }}
+			>
+				{#snippet node({ selected = false }: { selected: boolean })}
+					<div class="node" class:selected>
+						<p>Node 2</p>
+					</div>
+				{/snippet}
+			</Node>
+			<Node label="what" position={{ x: 10, y: 200 }} inputs={3} TD id={3} />
 			{#snippet minimap()}
-						<Minimap  />
-					{/snippet}
+				<div class="minimap">
+					<!-- Minimap content -->
+				</div>
+			{/snippet}
 		</Svelvet>
 	</div>
 </body>
@@ -110,5 +129,27 @@
 
 		--theme-toggle-text-color: hsl(0, 0%, 100%);
 		--theme-toggle-color: hsl(225, 20%, 27%);
+	}
+
+	.node {
+		padding: 1rem;
+		background-color: white;
+		border-radius: 0.5rem;
+		border: 2px solid #ccc;
+	}
+
+	.selected {
+		border-color: #00f;
+	}
+
+	.minimap {
+		position: absolute;
+		bottom: 1rem;
+		right: 1rem;
+		width: 200px;
+		height: 150px;
+		background: rgba(255, 255, 255, 0.9);
+		border: 1px solid #ccc;
+		border-radius: 0.5rem;
 	}
 </style>

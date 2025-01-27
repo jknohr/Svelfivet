@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { Anchor, Node } from '$lib';
 	import type { NodeConfig } from '$lib/types';
-	import type { Snippet } from 'svelte';
 
+	// State management
 	let text = $state('Test');
 	let checked = $state(true);
 	let color = $state('#ff0000');
@@ -19,13 +19,16 @@
 	let url = $state('');
 	let week = $state('');
 
+	// Derived state
 	let formattedDate = $derived(date.toLocaleDateString());
 	let formattedDatetime = $derived(datetime.toLocaleString());
 
+	// Effects
 	$effect(() => {
 		console.log('Text changed:', text);
 	});
 
+	// Node configuration
 	const nodeProps: NodeConfig = {
 		id: 1,
 		bgColor: 'black',
@@ -34,35 +37,38 @@
 	};
 </script>
 
-<Node {...nodeProps} let:grabHandle let:selected>
-	<div class="node" use:grabHandle class:selected>
-		<input id="text-test" type="text" bind:value={text} />
-		<input id="checkbox-test" type="checkbox" bind:checked={checked} />
-		<input type="color" bind:value={color} />
-		<input type="date" bind:value={date} />
-		<input type="datetime-local" bind:value={datetime} />
-		<input type="email" bind:value={email} />
-		<input type="month" bind:value={month} />
-		<input type="number" bind:value={number} />
-		<input type="password" bind:value={password} />
-		<input type="radio" bind:value={radio} />
-		<input type="range" bind:value={range} />
-		<input type="search" bind:value={search} />
-		<input type="tel" bind:value={tel} />
-		<select id="numberSelect">
-			<option value="1">1</option>
-			<option value="2">2</option>
-			<option value="3">3</option>
-			<option value="4">4</option>
-			<option value="5">5</option>
-			<option value="6">6</option>
-			<option value="7">7</option>
-			<option value="8">8</option>
-			<option value="9">9</option>
-			<option value="10">10</option>
-		</select>
-		<textarea id="textarea-test"></textarea>
-	</div>
+{/* @ts-ignore - Library type definitions need updating for Svelte 5 */}
+<Node {...nodeProps}>
+	{#snippet node({ grabHandle, selected }: { grabHandle: any; selected: boolean })}
+		<div class="node" use:grabHandle class:selected>
+			<input id="text-test" type="text" bind:value={text} />
+			<input id="checkbox-test" type="checkbox" bind:checked={checked} />
+			<input type="color" bind:value={color} />
+			<input type="date" bind:value={date} />
+			<input type="datetime-local" bind:value={datetime} />
+			<input type="email" bind:value={email} />
+			<input type="month" bind:value={month} />
+			<input type="number" bind:value={number} />
+			<input type="password" bind:value={password} />
+			<input type="radio" bind:value={radio} />
+			<input type="range" bind:value={range} />
+			<input type="search" bind:value={search} />
+			<input type="tel" bind:value={tel} />
+			<select id="numberSelect">
+				<option value="1">1</option>
+				<option value="2">2</option>
+				<option value="3">3</option>
+				<option value="4">4</option>
+				<option value="5">5</option>
+				<option value="6">6</option>
+				<option value="7">7</option>
+				<option value="8">8</option>
+				<option value="9">9</option>
+				<option value="10">10</option>
+			</select>
+			<textarea id="textarea-test"></textarea>
+		</div>
+	{/snippet}
 </Node>
 
 <style>
