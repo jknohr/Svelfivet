@@ -2,6 +2,11 @@
 	import { Svelvet, Node, Anchor, Edge } from '$lib';
 	import ArrowEdge from './ArrowEdge.svelte';
 	import ArrowEdgeBlue from './ArrowEdgeBlue.svelte';
+
+	interface NodeSlotProps {
+		grabHandle: (node: HTMLElement) => void;
+		selected: boolean;
+	}
 </script>
 
 <Svelvet minimap controls theme={'dark'} width={1200} height={800} endStyles={[null, 'arrow']}>
@@ -26,7 +31,9 @@
 		TD
 		label={'TD-IN-B'}
 	/>
-	<Node position={{ x: 200, y: 100 }} dimensions={{ width: 100, height: 100 }} useDefaults>
-		<Anchor output />
+	<Node position={{ x: 200, y: 100 }} dimensions={{ width: 100, height: 100 }} useDefaults let:grabHandle let:selected>
+		<div class="node" use:grabHandle class:selected>
+			<Anchor output />
+		</div>
 	</Node>
 </Svelvet>

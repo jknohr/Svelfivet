@@ -1,17 +1,15 @@
 <script lang="ts">
 	import type { Graph } from '$lib/types';
 	import { getContext } from 'svelte';
-	import { initialClickPosition } from '$lib/stores/CursorStore';
 	import { updateTranslation } from '$lib/utils';
-	import { get } from 'svelte/store';
+	import { initialClickPosition, cursorPosition } from '$lib/stores/CursorStore';
 
 	const graph = getContext<Graph>('graph');
-	let { isMovable = false, children } = $props();
+	export let isMovable: boolean;
 
 	let transforms = $state(graph.transforms);
 	let translation = $state(transforms.translation);
 	let scale = $state(transforms.scale);
-	let cursor = $state(graph.cursor);
 	let animationFrameId = $state(0);
 	let moving = $state(false);
 
@@ -30,7 +28,7 @@
 	});
 
 	function translate() {
-		translation = updateTranslation(get(initialClickPosition), cursor, transforms);
+		translation = updateTranslation(initialClickPosition, cursorPosition, transforms);
 		animationFrameId = requestAnimationFrame(translate);
 	}
 
@@ -43,12 +41,11 @@
 	role="presentation"
 	class="svelvet-graph-wrapper"
 	style:transform
-	{...$$restProps}
 	onclick={preventDefault}
 	oncontextmenu={preventDefault}
 	ontouchstart={preventDefault}
 >
-	{@render children?.()}
+	<slot />
 </div>
 
 <style>

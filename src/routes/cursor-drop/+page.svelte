@@ -133,10 +133,10 @@
 
 <div
 	class={dropZoneClass}
-	on:dragover={onDragOver}
-	on:dragenter={onDragEnter}
-	on:dragleave={onDragLeave}
-	on:drop={onDrop}
+	ondragover={onDragOver}
+	ondragenter={onDragEnter}
+	ondragleave={onDragLeave}
+	ondrop={onDrop}
 >
 	<Svelvet height={800} zoom={0.75} minimap controls>
 		{#each nodes as node (node.id)}
@@ -149,42 +149,42 @@
 	<h1>Create Node</h1>
 	<div id="node">
 		<ul>
-			<li class="list-item">Background Color: <input type="color" value={bgColor} on:input={(e) => handleInputChange(e, v => bgColor = v)} /></li>
-			<li class="list-item">Border Color: <input type="color" value={borderColor} on:input={(e) => handleInputChange(e, v => borderColor = v)} /></li>
-			<li class="list-item">Label: <input type="text" value={label} on:input={(e) => handleInputChange(e, v => label = v)} /></li>
-			<li class="list-item">Border Width: <input type="number" value={borderWidth} on:input={(e) => handleInputChange(e, v => borderWidth = v)} /></li>
+			<li class="list-item">Background Color: <input type="color" value={bgColor} oninput={(e) => handleInputChange(e, v => bgColor = v)} /></li>
+			<li class="list-item">Border Color: <input type="color" value={borderColor} oninput={(e) => handleInputChange(e, v => borderColor = v)} /></li>
+			<li class="list-item">Label: <input type="text" value={label} oninput={(e) => handleInputChange(e, v => label = v)} /></li>
+			<li class="list-item">Border Width: <input type="number" value={borderWidth} oninput={(e) => handleInputChange(e, v => borderWidth = v)} /></li>
 			<li class="list-item">
 				<h3>Dimensions:</h3>
 				<label for="width">Height:</label>
-				<input id="width" type="number" value={width} on:input={(e) => handleInputChange(e, v => width = v)} />
+				<input id="width" type="number" value={width} oninput={(e) => handleInputChange(e, v => width = v)} />
 				<label for="height">Width:</label>
-				<input id="height" type="number" value={height} on:input={(e) => handleInputChange(e, v => height = v)} />
+				<input id="height" type="number" value={height} oninput={(e) => handleInputChange(e, v => height = v)} />
 			</li>
 			<li>
 				<h3>Default Anchors</h3>
 				<label for="#inputAnchor">Input Anchors: </label>
-				<input id="inputAnchor" type="number" value={inputs} on:input={(e) => handleInputChange(e, v => inputs = v)} />
+				<input id="inputAnchor" type="number" value={inputs} oninput={(e) => handleInputChange(e, v => inputs = v)} />
 				<label for="#outputAnchor">Output Anchors: </label>
-				<input id="outputAnchor" type="number" value={outputs} on:input={(e) => handleInputChange(e, v => outputs = v)} />
+				<input id="outputAnchor" type="number" value={outputs} oninput={(e) => handleInputChange(e, v => outputs = v)} />
 			</li>
 			<li class="list-item">
 				<h3>Anchor Position:</h3>
 				<label for="#td">TD: </label>
-				<input id="td" type="checkbox" bind:value={nodeTD} on:change={setPositionTD} />
+				<input id="td" type="checkbox" bind:value={nodeTD} onchange={setPositionTD} />
 				<label for="#lr">LR: </label>
-				<input id="lr" type="checkbox" bind:value={nodeLR} on:change={setPositionLR} />
+				<input id="lr" type="checkbox" bind:value={nodeLR} onchange={setPositionLR} />
 			</li>
 			<li class="list-item">
-				Locked: <input type="checkbox" bind:value={locked} on:change={handleLockedButtonClick} />
+				Locked: <input type="checkbox" bind:value={locked} onchange={handleLockedButtonClick} />
 			</li>
 			<li class="list-item">
-				Centered: <input type="checkbox" bind:value={center} on:change={handleCenterButtonClick} />
+				Centered: <input type="checkbox" bind:value={center} onchange={handleCenterButtonClick} />
 			</li>
 			<li class="list-item">
-				<div id="createNode" draggable="true" on:dragstart={onDragStart}>Node</div>
+				<div id="createNode" draggable="true" ondragstart={onDragStart}>Node</div>
 			</li>
 			<li>
-				<button on:click|stopPropagation={handleClick}>Reset</button>
+				<button onclick={stopPropagation(handleClick)}>Reset</button>
 			</li>
 		</ul>
 	</div>

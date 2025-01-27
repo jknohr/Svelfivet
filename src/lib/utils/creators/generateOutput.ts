@@ -1,45 +1,41 @@
-import { writable, get } from 'svelte/store';
-import type { Writable } from 'svelte/store';
 import type { WrappedWritable } from '$lib/types';
 import type { CSSColorString } from '$lib/types';
 
 export function generateOutput<
 	T extends Record<string, number | string | object | boolean | CSSColorString>,
 	R extends number | string | object | boolean | CSSColorString
->(inputs: Writable<WrappedWritable<T>>, processor: (inputs: T) => R) {
-	const outputStore = writable<R>();
+>(inputs: WrappedWritable<T>, processor: (inputs: T) => R) {
+	const state = $state({ value: null as R | null });
 
-	const updateOutputStore = () => {
-		const inputValues = get(inputs);
+	const updateOutputValue = () => {
 		const currentInputs = {} as T;
-
-		for (const key in inputValues) {
-			currentInputs[key as keyof T] = get(inputValues[key]) as T[keyof T];
+		for (const key in inputs) {
+			let value: T[keyof T];
+			inputs[key].subscribe((v) => (value = v))();
+			currentInputs[key as keyof T] = value!;
 		}
-
-		outputStore.set(processor(currentInputs));
+		state.value = processor(currentInputs);
 	};
 
+	// Initial calculation
+	updateOutputValue();
+
+	// Subscribe to all input changes
 	const unsubscribeFns: (() => void)[] = [];
-
-	const subscribeToNestedStores = (store: WrappedWritable<T>) => {
-		for (const key in store) {
-			store[key].subscribe(() => {
-				updateOutputStore();
-			});
-		}
-	};
-
-	const unsubscribeInputs = inputs.subscribe((wrappedInputs) => {
-		unsubscribeFns.forEach((fn) => fn());
-		unsubscribeFns.length = 0;
-		subscribeToNestedStores(wrappedInputs);
-	});
+	for (const key in inputs) {
+		unsubscribeFns.push(
+			inputs[key].subscribe(() => {
+				updateOutputValue();
+			})
+		);
+	}
 
 	return {
-		subscribe: outputStore.subscribe,
+		subscribe: (subscriber: (value: R | null) => void) => {
+			subscriber(state.value);
+			return () => {};
+		},
 		unsubscribe: () => {
-			unsubscribeInputs();
 			unsubscribeFns.forEach((fn) => fn());
 		},
 		set: null,

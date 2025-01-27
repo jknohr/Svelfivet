@@ -5,13 +5,19 @@
 	import { captureGroup, moveNodes } from '$lib/utils/movers/';
 	import { getContext } from 'svelte';
 	import type { Graph } from '$lib/types';
+	import type { XYPair } from '$lib/types';
 
 	const graph = getContext<Graph>('graph');
 	const snapTo = getContext<number>('snapTo');
 
-	let { isMovable = false, children } = $props();
+	interface Props {
+		isMovable: boolean;
+		children?: any;
+	}
 
-	let activeGroup = $state(null);
+	let { isMovable, children } = $props();
+
+	let activeGroup = $state<string | null>(null);
 	let trackingState = $state(false);
 	let cursor = $state(graph.cursor);
 	let nodePositions = $state(graph.initialNodePositions);
@@ -23,8 +29,9 @@
 		}
 	});
 
-	function handleGroupClick(groupName: string) {
+	function handleGroupClick(event: CustomEvent) {
 		trackingState = true;
+		const { groupName } = event.detail;
 		activeGroup = groupName;
 		initialClickPosition.set(cursor);
 		nodePositions = captureGroup(groups[groupName].nodes);
@@ -32,6 +39,6 @@
 </script>
 
 <ZoomPanWrapper {isMovable}>
-	{@render children?.()}
-	<GroupBoxRenderer onclick={handleGroupClick} />
+	{@render children()}
+	<GroupBoxRenderer on:groupClick={handleGroupClick} />
 </ZoomPanWrapper>

@@ -1,18 +1,24 @@
 <script lang="ts">
 	import { Node, Anchor, Slider } from '$lib';
+	import type { Writable } from 'svelte/store';
 	import { writable } from 'svelte/store';
 
-	$state.parameter = writable(10);
+	let parameter = $state(10);
+
+	interface NodeChildrenProps {
+		grabHandle: (node: HTMLElement) => void;
+		selected: boolean;
+	}
 </script>
 
 <Node>
-	{#snippet children({ grabHandle, selected })}
+	{#snippet children({ grabHandle, selected }: NodeChildrenProps)}
 		<div class="node" use:grabHandle class:selected>
-			<Slider parameterStore={parameter} />
+			<Slider bind:value={parameter} />
 			<div class="input-anchors">
 				<Anchor
-					ondisconnection={() => console.log('disconnection')}
-					onconnection={() => console.log('connection')}
+					onDisconnect={() => console.log('disconnection')}
+					onConnect={() => console.log('connection')}
 					input
 					id="1"
 				/>

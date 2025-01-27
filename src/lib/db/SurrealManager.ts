@@ -21,8 +21,16 @@ export class SurrealManager {
 		return this.instance;
 	}
 
-	static async transaction<T>(callback: (tx: Surreal) => Promise<T>): Promise<T> {
+	static async transaction<T>(callback: (db: Surreal) => Promise<T>): Promise<T> {
 		const db = await this.connect();
-		return await db.transaction(callback);
+		await db.query('BEGIN TRANSACTION');
+		try {
+			const result = await callback(db);
+			await db.query('COMMIT TRANSACTION');
+			return result;
+		} catch (error) {
+			await db.query('CANCEL TRANSACTION');
+			throw error;
+		}
 	}
 }

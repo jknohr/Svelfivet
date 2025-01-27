@@ -1,8 +1,6 @@
 <script lang="ts">
-	import { run } from 'svelte/legacy';
-
 	import { onMount } from 'svelte';
-	import { cursorPositionRaw } from '$lib/stores/CursorStore';
+	import { cursorPosition } from '$lib/stores/CursorStore';
 	import type { CSSColorString, Graph, Node, NodeDOMBounds, NodeKey } from '$lib/types';
 
 	interface Props {
@@ -23,11 +21,9 @@
 
 	const { groups } = graph;
 
-	let nodes: Array<NodeDOMBounds>;
-	let box: HTMLDivElement = $state();
-
-
-
+	let nodes: Array<NodeDOMBounds> = $state([]);
+	let box: HTMLDivElement | undefined = $state(undefined);
+	let selectedNodes = $state(new Set<Node>());
 
 	onMount(updateNodes);
 
@@ -36,7 +32,6 @@
 
 		nodes = DOMnodes.map((node) => {
 			const { top, left, width, height } = node.getBoundingClientRect();
-
 			return { id: node.id, top, left, width, height };
 		});
 	}
@@ -58,25 +53,28 @@
 			}
 			return accumulator;
 		}, [] as Array<Node>);
+
 		if (adding) {
 			nodesUnderSelection.forEach((node) => {
-				$selectedNodes.add(node);
+				selectedNodes.add(node);
 			});
 		} else {
-			$selectedNodes = new Set(nodesUnderSelection);
+			selectedNodes = new Set(nodesUnderSelection);
 		}
-		$selectedNodes = $selectedNodes;
+
+		groups.selected.nodes = selectedNodes;
 	}
-	let selectedNodes = $derived($groups.selected.nodes);
-	let height = $derived($cursorPositionRaw.y - anchor.y - anchor.top);
-	let width = $derived($cursorPositionRaw.x - anchor.x - anchor.left);
+
+	let height = $derived(cursorPosition.y - anchor.y - anchor.top);
+	let width = $derived(cursorPosition.x - anchor.x - anchor.left);
 	let top = $derived(Math.min(anchor.y, anchor.y + height));
 	let left = $derived(Math.min(anchor.x, anchor.x + width));
 	let CSStop = $derived(`${top}px`);
 	let CSSleft = $derived(`${left}px`);
 	let CSSheight = $derived(`${Math.abs(height)}px`);
 	let CSSwidth = $derived(`${Math.abs(width)}px`);
-	run(() => {
+
+	$effect(() => {
 		if (width || height) {
 			selectNodes();
 		}

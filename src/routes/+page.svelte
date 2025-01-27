@@ -1,28 +1,20 @@
 <script lang="ts">
-	import { Svelvet, Node, Anchor, Resizer, Group } from '$lib';
-	import Connector from '../example-components/Connector.svelte';
-	import ThemeToggle from '$lib/components/ThemeToggle/ThemeToggle.svelte';
+	import { Svelvet, Node, Anchor, Resizer, Group, ThemeToggle, Controls, Drawer, ContrastTheme } from '$lib';
 	import TextField from '$lib/components/data/TextField/TextField.svelte';
-	// Controls is not used on the canvas itself, but is part of the HUD of the dev homepage
-	// maybe not needed here
-	import Controls from '$lib/components/Controls/Controls.svelte';
-	import Drawer from '$lib/components/Drawer/Drawer.svelte';
+	import Connector from '../example-components/Connector.svelte';
 	import CircleColor from '../example-components/sandbox/CircleColor.svelte';
 	import DashCount from '../example-components/sandbox/DashCount.svelte';
 	import Noise from '../example-components/sandbox/Noise.svelte';
 	import Scale from '../example-components/sandbox/Scale.svelte';
 	import Thickness from '../example-components/sandbox/Thickness.svelte';
 	import Output from '../example-components/sandbox/Output.svelte';
-	// added getJSONState function
 	import { getJSONState } from '$lib/utils/savers/saveStore';
-	// added Graph interface import
 	import type { Graph } from '$lib/types';
-	// added getContext import
 	import { getContext } from 'svelte';
-	// added graphStore import
 	import { graphStore } from '$lib/stores';
-	import ContrastTheme from '$lib/components/ContrastTheme/ContrastTheme.svelte';
 	import { get } from 'svelte/store';
+	// Controls is not used on the canvas itself, but is part of the HUD of the dev homepage
+	// maybe not needed here
 
 	function addAndConnect(connect: (connections: string | number) => void) {
 		connect(totalNodes + 4);
@@ -54,7 +46,7 @@
 		<!-- buttons on lower level node -->
 		<Connector />
 		<Node bgColor="red" inputs={4} position={{ x: 600, y: 200 }}>
-			<button onclick={() => widthCount++} />
+			<button onclick={() => widthCount++} aria-label="Increment width"></button>
 			{#each { length: widthCount } as item}
 				<div>Height</div>
 			{/each}

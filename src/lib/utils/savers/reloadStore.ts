@@ -1,6 +1,6 @@
 import { createGraph, createNode, createAnchor, createEdge } from '../creators';
 import type { AnchorKey, GraphKey, NodeConfig, NodeKey, CustomEdgeKey, Anchor } from '$lib/types';
-import type { ComponentType } from 'svelte';
+import type { SvelteComponent } from 'svelte';
 import type { Graph } from '$lib/types/graph';
 
 export function reloadStore(store: string): Graph {
@@ -40,7 +40,7 @@ export function reloadStore(store: string): Graph {
 	});
 
 	Object.entries(object.edges).forEach(([id, edge]) => {
-		const edgeData = edge as { connection: { source: Anchor; target: Anchor }; component: ComponentType | null };
+		const edgeData = edge as { connection: { source: Anchor; target: Anchor }; component: typeof SvelteComponent | null };
 		const newEdge = createEdge(edgeData.connection, edgeData.component);
 		graph.edges.add(newEdge, id as CustomEdgeKey);
 	});

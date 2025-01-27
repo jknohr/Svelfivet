@@ -1,5 +1,8 @@
 <script lang="ts">
-	import { Svelvet, Group, ThemeToggle } from '$lib';
+	import { Svelvet, Node, Group } from '$lib';
+	import { graphStore } from '$lib/stores';
+	import { getContext } from 'svelte';
+	import type { Graph } from '$lib/types';
 	import DashCount from '../../example-components/test-components/DashCount.svelte';
 	import CircleColor from '../../example-components/test-components/CircleColor.svelte';
 	import Noise from '../../example-components/test-components/Noise.svelte';

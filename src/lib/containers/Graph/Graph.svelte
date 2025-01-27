@@ -1,196 +1,221 @@
-<script context="module" lang="ts">
+<script lang="ts">
 	import SelectionBox from '$lib/components/SelectionBox/SelectionBox.svelte';
 	import Background from '../Background/Background.svelte';
 	import GraphRenderer from '../../renderers/GraphRenderer/GraphRenderer.svelte';
 	import Editor from '$lib/components/Editor/Editor.svelte';
 	import { connectingFrom } from '$lib/components/Anchor/Anchor.svelte';
-	import { onMount, setContext, tick } from 'svelte';
+	import { tick, setContext, onMount } from 'svelte';
 	import { isArrow } from '$lib/types';
 	import { moveElementWithBounds, calculateRelativeBounds } from '$lib/utils/movers';
 	import { touchDistance, initialClickPosition, tracking } from '$lib/stores/CursorStore';
 	import { calculateFitView, calculateTranslation, calculateZoom, generateKey } from '$lib/utils';
-	import { get, writable, readable } from 'svelte/store';
 	import { getRandomColor } from '$lib/utils';
 	import { moveElement, zoomAndTranslate } from '$lib/utils/movers';
-	import type { Writable } from 'svelte/store';
-	import type { ComponentType } from 'svelte';
-	import type { Graph, GroupBox, GraphDimensions, CSSColorString } from '$lib/types';
+	import type { Graph, GroupBox, GraphDimensions, CSSColorString, Node, XYPair } from '$lib/types';
 	import type { Arrow, GroupKey, Group, CursorAnchor, ActiveIntervals } from '$lib/types';
-</script>
+	import type { SvelteComponent } from 'svelte';
 
-<script lang="ts">
-	export let graph: Graph;
-	export let width: number = 0;
-	export let height: number = 0;
-	export let minimap: boolean = false;
-	export let controls: boolean = false;
-	export let toggle: boolean = false;
-	export let fixedZoom: boolean = false;
-	export let pannable: boolean = true;
-	export let disableSelection: boolean = false;
-	export let ZOOM_INCREMENT: number = 0.1;
-	export let PAN_INCREMENT: number = 50;
-	export let PAN_TIME: number = 250;
-	export let MAX_SCALE: number = 3;
-	export let MIN_SCALE: number = 0.2;
-	export let selectionColor: CSSColorString | null = null;
-	export let backgroundExists: boolean = false;
-	export let fitView: boolean = false;
-	export let trackpadPan: boolean = false;
-	export let modifier: string = 'meta';
-	export let theme: string = 'light';
-	export let title: string = '';
-	export let drawer: boolean = false;
-	export let contrast: boolean = false;
+	interface Props {
+		graph: Graph;
+		width?: number;
+		height?: number;
+		minimap?: boolean;
+		controls?: boolean;
+		toggle?: boolean;
+		fixedZoom?: boolean;
+		pannable?: boolean;
+		disableSelection?: boolean;
+		ZOOM_INCREMENT?: number;
+		PAN_INCREMENT?: number;
+		PAN_TIME?: number;
+		MAX_SCALE?: number;
+		MIN_SCALE?: number;
+		selectionColor?: CSSColorString | null;
+		backgroundExists?: boolean;
+		fitView?: boolean;
+		trackpadPan?: boolean;
+		modifier?: string;
+		theme?: string;
+		title?: string;
+		drawer?: boolean;
+		contrast?: boolean;
+	}
 
-	let animationFrameId: number = 0;
-	let initialDistance: number = 0;
-	let initialScale: number = 1;
-	let anchor = { x: 0, y: 0, top: 0, left: 0 };
-	let selecting: boolean = false;
-	let creating: boolean = false;
-	let adding: boolean = false;
-	let isMovable: boolean = false;
-	let pinching: boolean = false;
-	let initialFit: boolean = false;
-	let graphDimensions: GraphDimensions | null = null;
-	let toggleComponent: ComponentType | null = null;
-	let minimapComponent: ComponentType | null = null;
-	let controlsComponent: ComponentType | null = null;
-	let drawerComponent: ComponentType | null = null;
-	let contrastComponent: ComponentType | null = null;
+	let { 
+		graph,
+		width = 0,
+		height = 0,
+		minimap = false,
+		controls = false,
+		toggle = false,
+		fixedZoom = false,
+		pannable = true,
+		disableSelection = false,
+		ZOOM_INCREMENT = 0.1,
+		PAN_INCREMENT = 50,
+		PAN_TIME = 250,
+		MAX_SCALE = 3,
+		MIN_SCALE = 0.2,
+		selectionColor = null,
+		backgroundExists = false,
+		fitView = false,
+		trackpadPan = false,
+		modifier = 'meta',
+		theme = 'light',
+		title = '',
+		drawer = false,
+		contrast = false
+	}: Props = $props();
 
-	const dispatch = (eventName, detail) => {
+	// Graph state
+	let graphState = $state({
+		animationFrameId: 0,
+		initialDistance: 0,
+		initialScale: 1,
+		anchor: { x: 0, y: 0, top: 0, left: 0 },
+		selecting: false,
+		creating: false,
+		adding: false,
+		isMovable: false,
+		pinching: false,
+		initialFit: false,
+		graphDimensions: null as GraphDimensions | null,
+		graphDOMElement: null as HTMLElement | null,
+		toggleComponent: null as typeof SvelteComponent | null,
+		minimapComponent: null as typeof SvelteComponent | null,
+		controlsComponent: null as typeof SvelteComponent | null,
+		drawerComponent: null as typeof SvelteComponent | null,
+		contrastComponent: null as typeof SvelteComponent | null,
+		duplicate: false,
+		mounted: 0,
+		selectedNodes: new Set<Node>(),
+		activeGroup: null as GroupKey | null,
+		initialNodePositions: [] as Array<Node>,
+		initialClickPosition: { x: 0, y: 0 },
+		tracking: false,
+		cursor: graph.cursor,
+		scale: graph.transforms.scale,
+		translation: graph.transforms.translation,
+		groups: graph.groups,
+		groupBoxes: graph.groupBoxes,
+		editing: graph.editing,
+		nodeBounds: graph.bounds.nodeBounds
+	});
+
+	const dispatch = (eventName: string, detail: any) => {
 		const event = new CustomEvent(eventName, { detail });
 		dispatchEvent(event);
 	};
 
 	const activeIntervals: ActiveIntervals = {};
 
-	const duplicate = writable(false);
-	const mounted = writable(0);
-	const graphDOMElement: Writable<HTMLElement | null> = writable(null);
-
-	const cursor = graph.cursor;
-	const scale = graph.transforms.scale;
-	const dimensionsStore = graph.dimensions;
-	const translation = graph.transforms.translation;
-	const groups = graph.groups;
-	const groupBoxes = graph.groupBoxes;
-	const selected = groups.selected.nodes;
-	const activeGroup = graph.activeGroup;
-	const initialNodePositions = graph.initialNodePositions;
-	const editing = graph.editing;
-	const nodeBounds = graph.bounds.nodeBounds;
-
-	$: dimensions = dimensionsStore;
-
-	$: {
+	// Effects
+	$effect(() => {
 		if (theme) document.documentElement.setAttribute('svelvet-theme', theme);
-	}
+	});
 
-	$: {
-		if (!initialFit && fitView) {
+	$effect(() => {
+		if (!graphState.initialFit && fitView) {
 			fitIntoView();
 		}
-	}
+	});
 
-	$: {
-		if (toggle && !toggleComponent) loadToggle();
-	}
+	$effect(() => {
+		if (toggle && !graphState.toggleComponent) loadToggle();
+	});
 
-	$: {
-		if (minimap && !minimapComponent) loadMinimap();
-	}
+	$effect(() => {
+		if (minimap && !graphState.minimapComponent) loadMinimap();
+	});
 
-	$: {
-		if (controls && !controlsComponent) loadControls();
-	}
+	$effect(() => {
+		if (controls && !graphState.controlsComponent) loadControls();
+	});
 
-	$: {
-		if (drawer && !drawerComponent) loadDrawer();
-	}
+	$effect(() => {
+		if (drawer && !graphState.drawerComponent) loadDrawer();
+	});
 
-	$: {
-		if (contrast && !contrastComponent) loadContrast();
-	}
+	$effect(() => {
+		if (contrast && !graphState.contrastComponent) loadContrast();
+	});
 
 	const cursorAnchor: CursorAnchor = {
 		id: null,
 		position: graph.cursor,
-		offset: writable({ x: 0, y: 0 }),
-		connected: writable(new Set()),
-		dynamic: writable(false),
+		offset: $state({ x: 0, y: 0 }),
+		connected: $state(new Set()),
+		dynamic: $state(false),
 		edge: null,
-			edgeColor: writable(null),
-		direction: writable('self'),
+		edgeColor: $state(null),
+		direction: $state('self'),
 		inputKey: null,
 		type: 'output',
-		moving: readable(false),
+		moving: $state(false),
 		store: null,
-		mounted: writable(true),
-		rotation: readable(0),
+		mounted: $state(true),
+		rotation: $state(0),
 		node: {
-			zIndex: writable(Infinity),
-			rotating: writable(false),
+			zIndex: $state(Infinity),
+			rotating: $state(false),
 			position: graph.cursor,
-			dimensions: { width: writable(0), height: writable(0) }
+			dimensions: { width: $state(0), height: $state(0) }
 		}
 	};
 
-	setContext('graphDOMElement', graphDOMElement);
+	setContext('graphDOMElement', graphState.graphDOMElement);
 	setContext('cursorAnchor', cursorAnchor);
-	setContext('duplicate', duplicate);
+	setContext('duplicate', graphState.duplicate);
 	setContext('graph', graph);
 	setContext('transforms', graph.transforms);
 	setContext('dimensions', graph.dimensions);
 	setContext('locked', graph.locked);
-	setContext('groups', graph.groups);
+	setContext('groups', graphState.groups);
 	setContext('bounds', graph.bounds);
 	setContext('edgeStore', graph.edges);
 	setContext('nodeStore', graph.nodes);
-	setContext('mounted', mounted);
+	setContext('mounted', graphState.mounted);
 
 	onMount(() => {
 		updateGraphDimensions();
 	});
 
 	async function fitIntoView() {
-		await tick();
+		if (!fitView) return;
 		tracking.set(true);
-		const { x, y, scale } = calculateFitView(graphDimensions, nodeBounds);
+		const { x, y, scale } = calculateFitView(graphState.graphDimensions, graphState.nodeBounds);
 		if (x !== null && y !== null && scale !== null) {
-			graph.transforms.scale.set(scale);
+			scale.set(scale);
 			translation.set({ x, y });
 		}
 		tracking.set(false);
-		initialFit = true;
+		graphState.initialFit = true;
 	}
 
 	async function loadMinimap() {
-		minimapComponent = (await import('$lib/components/Minimap/Minimap.svelte')).default;
+		graphState.minimapComponent = (await import('$lib/components/Minimap/Minimap.svelte')).default;
 	}
 
 	async function loadToggle() {
-		toggleComponent = (await import('$lib/components/ThemeToggle/ThemeToggle.svelte')).default;
+		graphState.toggleComponent = (await import('$lib/components/ThemeToggle/ThemeToggle.svelte')).default;
 	}
 
 	async function loadControls() {
-		controlsComponent = (await import('$lib/components/Controls/Controls.svelte')).default;
+		graphState.controlsComponent = (await import('$lib/components/Controls/Controls.svelte')).default;
 	}
 
 	async function loadDrawer() {
-		drawerComponent = (await import('$lib/components/Drawer/DrawerController.svelte')).default;
+		graphState.drawerComponent = (await import('$lib/components/Drawer/DrawerController.svelte')).default;
 	}
 
 	async function loadContrast() {
-		contrastComponent = (await import('$lib/components/ContrastTheme/ContrastTheme.svelte')).default;
+		graphState.contrastComponent = (await import('$lib/components/ContrastTheme/ContrastTheme.svelte')).default;
 	}
 
 	function updateGraphDimensions() {
-		if (!graphDOMElement) return;
-		const DOMRect = graphDOMElement.getBoundingClientRect();
-		graphDimensions = {
+		if (!graphState.graphDOMElement) return;
+		const DOMRect = graphState.graphDOMElement.getBoundingClientRect();
+		graphState.graphDimensions = {
 			top: DOMRect.top,
 			left: DOMRect.left,
 			bottom: DOMRect.bottom,
@@ -199,20 +224,20 @@
 			height: DOMRect.height
 		};
 
-		graph.dimensions.set(graphDimensions);
+		graph.dimensions.set(graphState.graphDimensions);
 		if (fitView === 'resize') fitIntoView();
 	}
 
 	function onMouseUp(e: MouseEvent | TouchEvent) {
 		try {
-			if (creating) {
+			if (graphState.creating) {
 				const groupName = generateKey();
 				const groupKey: GroupKey = `${groupName}/${graph.id}`;
-				const cursorPosition = get(cursor);
-				const width = cursorPosition.x - initialClickPosition.x;
-				const height = cursorPosition.y - initialClickPosition.y;
-				const top = Math.min(initialClickPosition.y, initialClickPosition.y + height);
-				const left = Math.min(initialClickPosition.x, initialClickPosition.x + width);
+				const cursorPosition = get(graphState.cursor);
+				const width = cursorPosition.x - graphState.initialClickPosition.x;
+				const height = cursorPosition.y - graphState.initialClickPosition.y;
+				const top = Math.min(graphState.initialClickPosition.y, graphState.initialClickPosition.y + height);
+				const left = Math.min(graphState.initialClickPosition.x, graphState.initialClickPosition.x + width);
 
 				const dimensions = {
 					width: writable(Math.abs(width)),
@@ -231,29 +256,29 @@
 					moving: writable(false)
 				};
 
-				groupBoxes.add(groupBox, groupKey);
+				graphState.groupBoxes.add(groupBox, groupKey);
 
-				Array.from(selected).forEach((node) => {
+				Array.from(get(graphState.selectedNodes)).forEach((node) => {
 					node.group.set(groupKey);
 				});
 
-				groups.update((groups) => {
+				graphState.groups.update((groups) => {
 					const newGroup: Group = {
 						parent: writable(groupBox),
-						nodes: writable(new Set([...selected, groupBox]))
+						nodes: writable(new Set([...get(graphState.selectedNodes), groupBox]))
 					};
 					groups[groupKey] = newGroup;
 					return groups;
 				});
 
-				selected = new Set();
+				graphState.selectedNodes.clear();
 
-				creating = false;
-				selecting = false;
+				graphState.creating = false;
+				graphState.selecting = false;
 			}
 
-			if (activeGroup) {
-				const nodeGroupArray = Array.from(get(groups[activeGroup].nodes));
+			if (graphState.activeGroup) {
+				const nodeGroupArray = Array.from(get(graphState.groups[graphState.activeGroup].nodes));
 				nodeGroupArray.forEach((node) => node.moving.set(false));
 			}
 			const cursorEdge = graph.edges.get('cursor');
@@ -262,26 +287,26 @@
 				graph.edges.delete('cursor');
 				if (!cursorEdge.disconnect)
 					dispatch('edgeDrop', {
-						cursor: get(cursor),
+						cursor: get(graphState.cursor),
 						source: {
 							node: connectingFrom?.anchor.node.id.slice(2),
 							anchor: connectingFrom?.anchor.id.split('/')[0].slice(2)
 						}
 					});
 			}
-			activeGroup = null;
-			initialClickPosition = { x: 0, y: 0 };
-			initialNodePositions = [];
-			selecting = false;
-			isMovable = false;
-			tracking = false;
+			graphState.activeGroup = null;
+			graphState.initialClickPosition = { x: 0, y: 0 };
+			graphState.initialNodePositions = [];
+			graphState.selecting = false;
+			graphState.isMovable = false;
+			graphState.tracking = false;
 
 			if (!e.shiftKey) {
 				connectingFrom.set(null);
 			}
 
-			anchor.y = 0;
-			anchor.x = 0;
+			graphState.anchor.y = 0;
+			graphState.anchor.x = 0;
 		} catch (error) {
 			console.error('Error handling mouse up event:', error);
 		}
@@ -291,35 +316,35 @@
 		try {
 			if (!pannable && !(e.shiftKey || e.metaKey)) return;
 			if (e.button === 2) return;
-			if (graphDOMElement) graphDOMElement.focus();
+			if (graphState.graphDOMElement) graphState.graphDOMElement.focus();
 
 			const { clientX, clientY } = e;
 
-			initialClickPosition = get(cursor);
+			graphState.initialClickPosition = get(graphState.cursor);
 
 			if (e.shiftKey || e.metaKey) {
 				e.preventDefault();
-				selecting = true;
-				const { top, left } = dimensions;
-				anchor.y = clientY - top;
-				anchor.x = clientX - left;
-				anchor.top = top;
-				anchor.left = left;
+				graphState.selecting = true;
+				const { top, left } = graphState.graphDimensions;
+				graphState.anchor.y = clientY - top;
+				graphState.anchor.x = clientX - left;
+				graphState.anchor.top = top;
+				graphState.anchor.left = left;
 				if (e.shiftKey && e.metaKey) {
-					creating = true;
+					graphState.creating = true;
 				} else {
-					creating = false;
+					graphState.creating = false;
 				}
 
 				if (e.metaKey && !e.shiftKey) {
-					adding = true;
+					graphState.adding = true;
 				} else {
-					adding = false;
+					graphState.adding = false;
 				}
 			} else {
-				isMovable = true;
-				selected = new Set();
-				selected = selected;
+				graphState.isMovable = true;
+				graphState.selectedNodes.clear();
+				graphState.selectedNodes = new Set();
 			}
 		} catch (error) {
 			console.error('Error handling mouse down event:', error);
@@ -328,16 +353,16 @@
 
 	function onTouchStart(e: TouchEvent) {
 		try {
-			selected = new Set();
-			selected = selected;
+			graphState.selectedNodes.clear();
+			graphState.selectedNodes = new Set();
 
-			initialClickPosition = get(cursor);
+			graphState.initialClickPosition = get(graphState.cursor);
 
-			isMovable = true;
+			graphState.isMovable = true;
 			if (e.touches.length === 2) {
 				startPinching();
-				initialDistance = touchDistance;
-				initialScale = scale;
+				graphState.initialDistance = touchDistance;
+				graphState.initialScale = get(graphState.scale);
 			}
 		} catch (error) {
 			console.error('Error handling touch start event:', error);
@@ -346,8 +371,8 @@
 
 	function onTouchEnd() {
 		try {
-			isMovable = false;
-			pinching = false;
+			graphState.isMovable = false;
+			graphState.pinching = false;
 		} catch (error) {
 			console.error('Error handling touch end event:', error);
 		}
@@ -355,9 +380,9 @@
 
 	function startPinching() {
 		try {
-			if (!pinching) {
-				pinching = true;
-				animationFrameId = requestAnimationFrame(handlePinch);
+			if (!graphState.pinching) {
+				graphState.pinching = true;
+				graphState.animationFrameId = requestAnimationFrame(handlePinch);
 			}
 		} catch (error) {
 			console.error('Error starting pinch:', error);
@@ -366,15 +391,15 @@
 
 	function handlePinch() {
 		try {
-			if (!pinching) {
-				cancelAnimationFrame(animationFrameId);
+			if (!graphState.pinching) {
+				cancelAnimationFrame(graphState.animationFrameId);
 				return;
 			}
 
 			const newDistance = touchDistance;
-			const scaleFactor = newDistance / initialDistance;
-			scale = initialScale * scaleFactor;
-			animationFrameId = requestAnimationFrame(handlePinch);
+			const scaleFactor = newDistance / graphState.initialDistance;
+			graphState.scale = graphState.initialScale * scaleFactor;
+			graphState.animationFrameId = requestAnimationFrame(handlePinch);
 		} catch (error) {
 			console.error('Error handling pinch:', error);
 		}
@@ -389,7 +414,8 @@
 
 			if (code === 'KeyA' && e[`${modifier}Key`]) {
 				const unlockedNodes = graph.nodes.getAll().filter((node) => !get(node.locked));
-				selected = new Set(unlockedNodes);
+				graphState.selectedNodes.clear();
+				graphState.selectedNodes = new Set(unlockedNodes);
 			} else if (isArrow(key)) {
 				handleArrowKey(key as Arrow, e);
 			} else if (key === '=') {
@@ -399,11 +425,11 @@
 			} else if (key === '0') {
 				fitIntoView();
 			} else if (key === 'Control') {
-				groups['selected'].nodes.set(new Set());
+				graphState.groups['selected'].nodes.set(new Set());
 			} else if (code === 'KeyD' && e[`${modifier}Key`]) {
-				duplicate.set(true);
+				graphState.duplicate = true;
 				setTimeout(() => {
-					duplicate.set(false);
+					graphState.duplicate = false;
 				}, 100);
 			} else if (key === 'Tab' && (e.altKey || e.ctrlKey)) {
 				selectNextNode();
@@ -416,7 +442,7 @@
 			} else if (key === 'c') {
 				controls = !controls;
 			} else if (key === 'e') {
-				const node = Array.from(selected)[0];
+				const node = Array.from(graphState.selectedNodes)[0];
 				graph.editing.set(node);
 			} else {
 				return;
@@ -432,11 +458,11 @@
 		try {
 			const nodes = graph.nodes.getAll();
 
-			const currentIndex = nodes.findIndex((node) => selected.has(node));
+			const currentIndex = nodes.findIndex((node) => graphState.selectedNodes.has(node));
 			const nextIndex = currentIndex + 1;
 
-			selected.delete(nodes[currentIndex]);
-			selected.add(nodes[nextIndex]);
+			graphState.selectedNodes.delete(nodes[currentIndex]);
+			graphState.selectedNodes.add(nodes[nextIndex]);
 		} catch (error) {
 			console.error('Error selecting next node:', error);
 		}
@@ -462,33 +488,33 @@
 			if (fixedZoom) return;
 			const multiplier = e.shiftKey ? 0.15 : 1;
 			const { clientX, clientY, deltaY } = e;
-			const currentTranslation = translation;
+			const currentTranslation = get(graphState.translation);
 			const pointerPosition = { x: clientX, y: clientY };
 
 			if ((trackpadPan || e.metaKey) && deltaY % 1 === 0) {
-				translation = {
-					x: (translation.x -= e.deltaX),
-					y: (translation.y -= e.deltaY)
+				graphState.translation = {
+					x: (graphState.translation.x -= e.deltaX),
+					y: (graphState.translation.y -= e.deltaY)
 				};
 
 				return;
 			}
 
-			if ((scale >= MAX_SCALE && deltaY < 0) || (scale <= MIN_SCALE && deltaY > 0)) return;
+			if ((get(graphState.scale) >= MAX_SCALE && deltaY < 0) || (get(graphState.scale) <= MIN_SCALE && deltaY > 0)) return;
 
 			const scrollAdjustment = Math.min(0.009 * multiplier * Math.abs(deltaY), 0.08);
-			const newScale = calculateZoom(scale, Math.sign(deltaY), scrollAdjustment);
+			const newScale = calculateZoom(get(graphState.scale), Math.sign(deltaY), scrollAdjustment);
 
 			const newTranslation = calculateTranslation(
-				scale,
+				get(graphState.scale),
 				newScale,
 				currentTranslation,
 				pointerPosition,
-				graphDimensions
+				graphState.graphDimensions
 			);
 
-			scale.set(newScale);
-			translation.set(newTranslation);
+			graphState.scale = newScale;
+			graphState.translation = newTranslation;
 		} catch (error) {
 			console.error('Error handling scroll event:', error);
 		}
@@ -500,30 +526,30 @@
 			const start = performance.now();
 			const direction = key === 'ArrowLeft' || key === 'ArrowUp' ? 1 : -1;
 			const leftRight = key === 'ArrowLeft' || key === 'ArrowRight';
-			const startOffset = leftRight ? translation.x : translation.y;
+			const startOffset = leftRight ? get(graphState.translation.x) : get(graphState.translation.y);
 			const endOffset = startOffset + direction * PAN_INCREMENT * multiplier;
 
 			if (!activeIntervals[key]) {
 				let interval = setInterval(() => {
 					const time = performance.now() - start;
 
-					if (selected.size === 0) {
+					if (graphState.selectedNodes.size === 0) {
 						const movement = startOffset + (endOffset - startOffset) * (time / PAN_TIME);
-						translation.set({
-							x: leftRight ? movement : translation.x,
-							y: leftRight ? translation.y : movement
-						});
+						graphState.translation = {
+							x: leftRight ? movement : get(graphState.translation.x),
+							y: leftRight ? get(graphState.translation.y) : movement
+						};
 					} else {
 						const delta = {
 							x: leftRight ? -direction * 2 : 0,
 							y: leftRight ? 0 : -direction * 2
 						};
-						Array.from(selected).forEach((node) => {
+						Array.from(graphState.selectedNodes).forEach((node) => {
 							const currentPosition = get(node.position);
 							let groupBox: GroupBox | undefined;
 							const groupName = get(node.group);
 
-							const groupBoxes = get(graph.groupBoxes);
+							const groupBoxes = get(graphState.groupBoxes);
 
 							if (groupName) groupBox = groupBoxes.get(groupName);
 							if (groupBox) {
@@ -559,43 +585,49 @@
 	ontouchstart={onTouchStart}
 	onkeydown={handleKeyDown}
 	onkeyup={handleKeyUp}
-	bind:this={graphDOMElement}
+	bind:this={graphState.graphDOMElement}
 	tabindex={0}
 >
-	<GraphRenderer {isMovable}>
-		{#if $editing}
-			<Editor editing={$editing} />
+	<GraphRenderer isMovable={graphState.isMovable}>
+		{#if graphState.editing}
+			<Editor {graphState.editing} />
 		{/if}
-		{@render children}
+		<slot />
 	</GraphRenderer>
 
 	{#if backgroundExists}
-		{@render background}
+		<slot name="background" />
 	{:else}
 		<Background />
 	{/if}
 	{#if minimap}
-		<svelte:component this={minimapComponent} />
+		<svelte:component this={graphState.minimapComponent} />
 	{/if}
 	{#if controls}
-		<svelte:component this={controlsComponent} />
+		<svelte:component this={graphState.controlsComponent} />
 	{/if}
 	{#if toggle}
-		<svelte:component this={toggleComponent} />
+		<svelte:component this={graphState.toggleComponent} />
 	{/if}
 	{#if drawer}
-		<svelte:component this={drawerComponent} />
+		<svelte:component this={graphState.drawerComponent} />
 	{/if}
 	{#if contrast}
-		<svelte:component this={contrastComponent} />
+		<svelte:component this={graphState.contrastComponent} />
 	{/if}
-	{@render minimap}
-	{@render drawer}
-	{@render controls}
-	{@render toggle}
-	{@render contrast}
-	{#if selecting && !disableSelection}
-		<SelectionBox {creating} {anchor} graph={graph} {adding} color={selectionColor} />
+	<slot name="minimap" />
+	<slot name="drawer" />
+	<slot name="controls" />
+	<slot name="toggle" />
+	<slot name="contrast" />
+	{#if graphState.selecting && !disableSelection}
+		<SelectionBox 
+			creating={graphState.creating} 
+			anchor={graphState.anchor} 
+			{graph} 
+			adding={graphState.adding} 
+			color={selectionColor} 
+		/>
 	{/if}
 </section>
 

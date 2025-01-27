@@ -1,13 +1,23 @@
-import type { Writable } from 'svelte/store';
 import type { WrappedWritable } from '$lib/types';
-import { writable } from 'svelte/store';
 
 export function generateInput<T extends Record<string, number | string | boolean | object>>(
 	initialData: T
-): Writable<WrappedWritable<T>> {
+): WrappedWritable<T> {
 	const newStore: Partial<WrappedWritable<T>> = {};
 	for (const key in initialData) {
-		newStore[key as keyof T] = writable(initialData[key as keyof T]);
+		const state = $state({ value: initialData[key as keyof T] });
+		newStore[key as keyof T] = {
+			subscribe: (subscriber: (value: T[keyof T]) => void) => {
+				subscriber(state.value);
+				return () => {};
+			},
+			set: (newValue: T[keyof T]) => {
+				state.value = newValue;
+			},
+			update: (updater: (value: T[keyof T]) => T[keyof T]) => {
+				state.value = updater(state.value);
+			}
+		};
 	}
-	return writable(newStore as WrappedWritable<T>);
+	return newStore as WrappedWritable<T>;
 }

@@ -1,4 +1,4 @@
-import type { ComponentType } from 'svelte';
+import type { SvelteComponent } from 'svelte';
 import type { NodeConfig, EdgeStyle, XYPair } from '$lib/types';
 
 export interface SvelvetConfig {
@@ -7,7 +7,7 @@ export interface SvelvetConfig {
 	minimap: boolean;
 	translation: XYPair;
 	controls: boolean;
-	edge: ComponentType | null;
+	edge: typeof SvelteComponent | null;
 	edgeStyle: EdgeStyle;
 	snapTo: number;
 	editable: boolean;

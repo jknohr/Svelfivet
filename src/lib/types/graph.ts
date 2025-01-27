@@ -1,4 +1,4 @@
-import type { Writable, Readable } from 'svelte/store';
+import type { SvelteComponent } from 'svelte';
 import type {
 	GraphKey,
 	NodeStore,
@@ -22,22 +22,26 @@ export interface Graph {
 	id: GraphKey;
 	nodes: NodeStore;
 	transforms: GraphTransforms;
-	locked: Writable<boolean>;
-	bounds: ReturnType<typeof createBoundsStore>;
-	mounted: Writable<boolean>;
-	center: Readable<XYPair>;
-	maxZIndex: Writable<number>;
-	dimensions: Writable<GraphDimensions>;
+	locked: boolean;
+	bounds: {
+		graphBounds: GraphDimensions;
+		nodeBounds: GraphDimensions;
+		recalculateBounds: () => void;
+	};
+	mounted: boolean;
+	center: XYPair;
+	maxZIndex: number;
+	dimensions: GraphDimensions;
 	editable: boolean;
 	direction: 'TD' | 'LR';
-	cursor: Readable<{ x: number; y: number }>;
-	groups: Writable<Groups>;
+	cursor: XYPair;
+	groups: Groups;
 	edges: EdgeStore;
-	edge: ComponentType | null;
+	edge: typeof SvelteComponent | null;
 	groupBoxes: GroupBoxStore;
-	editing: Writable<Node | null>;
-	activeGroup: Writable<GroupKey | null>;
-	initialNodePositions: Writable<XYPair[]>;
+	editing: Node | null;
+	activeGroup: GroupKey | null;
+	initialNodePositions: XYPair[];
 }
 
 // Props for Svelvet component
@@ -47,8 +51,8 @@ export interface GraphConfig {
 	direction?: 'TD' | 'LR';
 	locked?: boolean;
 	theme?: Theme;
-	translation?: { x: number; y: number };
-	edge?: ComponentType;
+	translation?: XYPair;
+	edge?: typeof SvelteComponent;
 }
 
 export type LinkingAny = Anchor;
@@ -73,28 +77,28 @@ export interface ConnectingFrom {
 export type Groups = Record<GroupKey, Group>;
 
 export interface Bounds {
-	top: Writable<number>;
-	left: Writable<number>;
-	width: Writable<number>;
-	height: Writable<number>;
+	top: number;
+	left: number;
+	width: number;
+	height: number;
 }
 
 export type GroupBoxes = Record<GroupKey, GroupBox>;
 
 export interface GroupBox {
-	group: Writable<GroupKey>;
+	group: string;
 	dimensions: Dimensions;
-	position: Writable<XYPair>;
-	color: Writable<CSSColorString>;
-	moving: Writable<boolean>;
+	position: XYPair;
+	color: CSSColorString;
+	moving: boolean;
 }
 
 export interface Group {
-	parent: Writable<Node | GroupBox | null>;
-	nodes: Writable<Set<Node | GroupBox>>;
+	parent: Node | GroupBox | null;
+	nodes: Set<Node | GroupBox>;
 }
 
 export interface GraphTransforms {
-	translation: Writable<XYPair>;
-	scale: Writable<number>;
+	translation: XYPair;
+	scale: number;
 }

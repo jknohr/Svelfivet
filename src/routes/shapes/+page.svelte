@@ -8,9 +8,7 @@
 		<Node id="round-rect" dimensions={{ width: 150, height: 50 }} position={{ x: 300, y: 100 }}>
 			<svg class="roundRect" height="100%" width="100%">
 				<rect width="100%" height="100%" rx="30" ry="30" fill="slateblue" stroke="black" />
-				<text class="nodeText" text-anchor="middle" font-size={15} fill="white" x="50%" y="60%"
-					>Round Rectangle</text
-				>
+				<text class="nodeText" text-anchor="middle" font-size="15" fill="white" x="50%" y="60%">Round Rectangle</text>
 			</svg>
 			<div class="right-anchor">
 				<Anchor direction="east" invisible connections={['hexagon']} />
@@ -22,9 +20,7 @@
 		<Node id="diamond" dimensions={{ width: 100, height: 100 }} position={{ x: 300, y: 300 }}>
 			<svg class="diamond" height="100%" width="100%">
 				<path d="M0,50 L50,0 L100,50 L50,100 z" fill="orange" stroke="black" />
-				<text class="nodeText" text-anchor="middle" font-size={15} fill="white" x="50%" y="55%"
-					>Diamond</text
-				>
+				<text class="nodeText" text-anchor="middle" font-size="15" fill="white" x="50%" y="55%">Diamond</text>
 			</svg>
 			<div class="top-anchor">
 				<Anchor direction="north" invisible />
@@ -36,9 +32,7 @@
 		<Node id="circle" dimensions={{ width: 100, height: 100 }} position={{ x: 300, y: 500 }}>
 			<svg class="circle" height="100%" width="100%">
 				<circle r="50" cx="50%" cy="50%" fill="lightseagreen" stroke="black" />
-				<text class="nodeText" text-anchor="middle" font-size={15} fill="white" x="50%" y="55%"
-					>Circle</text
-				>
+				<text class="nodeText" text-anchor="middle" font-size="15" fill="white" x="50%" y="55%">Circle</text>
 			</svg>
 			<div class="top-anchor">
 				<Anchor direction="north" invisible />
@@ -50,9 +44,7 @@
 		<Node id="ellipse" dimensions={{ width: 150, height: 50 }} position={{ x: 500, y: 200 }}>
 			<svg class="ellipse" height="100%" width="100%">
 				<ellipse rx="75" ry="25" cx="50%" cy="50%" fill="magenta" stroke="black" />
-				<text class="nodeText" text-anchor="middle" font-size={15} fill="white" x="50%" y="60%"
-					>Ellipse</text
-				>
+				<text class="nodeText" text-anchor="middle" font-size="15" fill="white" x="50%" y="60%">Ellipse</text>
 			</svg>
 			<div class="right-anchor">
 				<Anchor direction="east" invisible connections={['parallelogram']} />
@@ -64,9 +56,7 @@
 		<Node id="triangle" dimensions={{ width: 100, height: 70 }} position={{ x: 500, y: 400 }}>
 			<svg class="triangle" height="100%" width="100%">
 				<path d="M0,70 L50,0 L100,70 z" fill="navy" stroke="black" />
-				<text class="nodeText" text-anchor="middle" font-size={15} fill="white" x="50%" y="75%"
-					>Triangle</text
-				>
+				<text class="nodeText" text-anchor="middle" font-size="15" fill="white" x="50%" y="75%">Triangle</text>
 			</svg>
 			<div class="top-anchor">
 				<Anchor direction="north" invisible connections={['ellipse']} />
@@ -78,9 +68,7 @@
 		<Node id="hexagon" dimensions={{ width: 120, height: 60 }} position={{ x: 700, y: 50 }}>
 			<svg class="hexagon" height="100%" width="100%">
 				<path d="M10,0 L110,0  L120,30 L110,60 L10,60 L0,30 z" fill="red" stroke="black" />
-				<text class="nodeText" text-anchor="middle" font-size={15} fill="white" x="50%" y="60%"
-					>Hexagon</text
-				>
+				<text class="nodeText" text-anchor="middle" font-size="15" fill="white" x="50%" y="60%">Hexagon</text>
 			</svg>
 			<div class="left-anchor">
 				<Anchor direction="west" invisible />
@@ -92,9 +80,7 @@
 		<Node id="parallelogram" dimensions={{ width: 150, height: 70 }} position={{ x: 700, y: 300 }}>
 			<svg class="parallelogram" height="100%" width="100%">
 				<path d="M0,70 L37.5,0 L150,0 L112.5,70 z" fill="slateblue" stroke="black" />
-				<text class="nodeText" text-anchor="middle" font-size={15} fill="white" x="50%" y="55%"
-					>Parallelogram</text
-				>
+				<text class="nodeText" text-anchor="middle" font-size="15" fill="white" x="50%" y="55%">Parallelogram</text>
 			</svg>
 			<div class="top-anchor">
 				<Anchor direction="north" invisible connections={['arrow-rect']} />
@@ -106,9 +92,7 @@
 		<Node id="arrow-rect" dimensions={{ width: 130, height: 50 }} position={{ x: 900, y: 200 }}>
 			<svg class="arrow-rect" height="100%" width="100%">
 				<path d="M0,0 L120,0  L130,25 L120,50 L0,50 z" fill="purple" stroke="black" />
-				<text class="nodeText" text-anchor="middle" font-size={15} fill="white" x="50%" y="60%"
-					>Arrow Rectangle</text
-				>
+				<text class="nodeText" text-anchor="middle" font-size="15" fill="white" x="50%" y="60%">Arrow Rectangle</text>
 			</svg>
 			<div class="top-anchor">
 				<Anchor direction="north" invisible />
@@ -124,9 +108,7 @@
 					fill="darkgray"
 					stroke="black"
 				/>
-				<text class="nodeText" text-anchor="middle" font-size={15} fill="white" x="50%" y="60%"
-					>Database</text
-				>
+				<text class="nodeText" text-anchor="middle" font-size="15" fill="white" x="50%" y="60%">Database</text>
 			</svg>
 			<div class="top-anchor">
 				<Anchor direction="north" invisible />
@@ -135,9 +117,7 @@
 				<Anchor direction="west" invisible />
 			</div>
 		</Node>
-		{#snippet toggle()}
-				<ThemeToggle main="dark" alt="light"  />
-			{/snippet}
+		<ThemeToggle main="dark" alt="light" />
 	</Svelvet>
 </body>
 

@@ -1,13 +1,26 @@
 <script lang="ts">
-	import { stopPropagation } from 'svelte/legacy';
+	import type { Snippet } from 'svelte';
 
 	import { Node, Svelvet, Anchor, Edge } from '$lib';
 	import ThemeToggle from '$lib/components/ThemeToggle/ThemeToggle.svelte';
-	import type { NodeConfig, CSSColorString, Direction } from '$lib/types';
+	import type { NodeConfig, CSSColorString, Direction, NodeDrawerConfig } from '$lib/types';
 	import CustomEdge from '../../example-components/CustomEdge.svelte';
 	import { addProps } from '$lib/utils';
+	import { defaultNodePropsStore } from '$lib/components/Drawer/DrawerNode.svelte';
 
-	let defaultNodes: NodeConfig[] = $state([]);
+	interface NodeChildrenProps {
+		grabHandle: (node: HTMLElement) => void;
+		selected: boolean;
+	}
+
+	let defaultNodes: NodeDrawerConfig[] = $state([]);
+
+	$effect(() => {
+		defaultNodePropsStore.subscribe(nodes => {
+			if (nodes) defaultNodes = nodes;
+		});
+	});
+
 	let customNodes: NodeConfig[] = $state([]);
 	let anchors: any[] = [];
 	let edges: any[] = [];
@@ -132,6 +145,11 @@
 
 		// Add props to node if they exist
 		addProp(nodePropNames, nodePropsArray, nodeProps);
+
+		// Ensure id is a number if present
+		if (nodeProps.id) {
+			nodeProps.id = Number(nodeProps.id);
+		}
 
 		// Object that stores properties for the created anchor
 		const anchorProps: any = {};
@@ -327,29 +345,49 @@
 		textColor = undefined;
 		//edgeClick: () => void | null;
 	};
+
+	const handleNodeResetWithStop = (e: Event) => {
+		e.stopPropagation();
+		handleNodeResetButtonClick(e);
+	};
+
+	const handleAnchorResetWithStop = (e: Event) => {
+		e.stopPropagation();
+		handleAnchorResetButtonClick(e);
+	};
+
+	const handleEdgeResetWithStop = (e: Event) => {
+		e.stopPropagation();
+		handleEdgeResetButtonClick(e);
+	};
 </script>
 
 <div
 	id="drop_zone"
+	role="region"
 	ondragenter={handleDragEnter}
 	ondragleave={handleDragLeave}
 	ondrop={handleDragDrop}
 	ondragover={onDragOver}
 >
 	<Svelvet height={600} zoom={0.7} minimap controls>
-		{#each defaultNodes as node}
-			<Node {...node} drop="cursor" />
-		{/each}
-		{#each customNodes as cNode, index}
-			<Node {...cNode} drop="cursor">
-				<Anchor {...anchors[index]}>
-					<!-- <Edge {...edges[index]}></Edge> -->
-				</Anchor>
+		{#each defaultNodes as node, i}
+			<Node position={{ x: 200, y: 100 }} dimensions={{ width: node.width || 200, height: node.height || 100 }} id={i} bgColor={node.bgColor} drop="cursor" let:grabHandle let:selected>
+				<div class="node" use:grabHandle class:selected>
+					<Anchor output />
+				</div>
 			</Node>
 		{/each}
-		{#snippet toggle()}
-				<ThemeToggle main="light" alt="dark"  />
-			{/snippet}
+		{#each customNodes as cNode, index}
+			<Node {...cNode} drop="cursor" let:grabHandle let:selected>
+				<div class="node" use:grabHandle class:selected>
+					<Anchor {...anchors[index]}>
+						<!-- <Edge {...edges[index]}></Edge> -->
+					</Anchor>
+				</div>
+			</Node>
+		{/each}
+		<ThemeToggle main="light" alt="dark" />
 	</Svelvet>
 </div>
 
@@ -420,9 +458,9 @@
 				</select>
 			</li>
 			<li class="list-item">
-				<button class="nodeResetBtn btn" onclick={stopPropagation(handleNodeResetButtonClick)}
-					>Reset</button
-				>
+				<button class="nodeResetBtn btn" onclick={handleNodeResetWithStop}>
+					Reset
+				</button>
 			</li>
 			<li class="list-item">
 				<h4>Additional Settings:</h4>
@@ -542,10 +580,9 @@
 						/>
 					</li>
 					<li class="list-item">
-						<button
-							class="anchorResetBtn btn"
-							onclick={stopPropagation(handleAnchorResetButtonClick)}>Reset</button
-						>
+						<button class="anchorResetBtn btn" onclick={handleAnchorResetWithStop}>
+							Reset
+						</button>
 					</li>
 				</ul>
 			</div>
@@ -604,9 +641,9 @@
 						<input id="edgeLabel" type="text" bind:value={edgeLabel} />
 					</li>
 					<li class="list-item">
-						<button class="edgeResetBtn btn" onclick={stopPropagation(handleEdgeResetButtonClick)}
-							>Reset</button
-						>
+						<button class="edgeResetBtn btn" onclick={handleEdgeResetWithStop}>
+							Reset
+						</button>
 					</li>
 				</ul>
 			</div>

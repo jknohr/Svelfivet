@@ -1,52 +1,49 @@
-<!-- @migration-task Error while migrating Svelte code: Cannot use rune without parentheses
-https://svelte.dev/e/rune_missing_parentheses -->
-<!-- @migration-task Error while migrating Svelte code: Cannot use rune without parentheses
-https://svelte.dev/e/rune_missing_parentheses -->
 <script lang="ts">
 	import type { CustomWritable } from '$lib/types';
 
-	$props = {
-		options: [],
-		parameterStore: null
-	};
+	interface Props {
+		options: string[];
+		parameterStore: CustomWritable<string> | null;
+	}
 
-	$state = {
-		initial: 0
-	};
+	let { options = [], parameterStore = null } = $props();
+	let initial = $state(0);
 
 	$effect(() => {
-		$props.parameterStore = $props.options[$state.initial];
+		if (parameterStore) {
+			parameterStore.set(options[initial]);
+		}
 	});
 
 	const slugify = (str = '') => str.toLowerCase().replace(/ /g, '-').replace(/./g, '');
 
 	function cycleThroughGroup(event: KeyboardEvent) {
 		const key = event.key;
+		const currentInitial = initial;
+		const optionsLength = options.length;
 
-		// Allows us to use tab to navigate to the next element
-		// But stops the page from scrolling due to the arrow keys
 		if (key !== 'Tab') event.preventDefault();
 		event.stopPropagation();
 		if (key === 'ArrowRight' || key === 'ArrowDown') {
-			$state.initial = ($state.initial + 1) % $props.options.length;
+			initial = (currentInitial + 1) % optionsLength;
 		} else if (key === 'ArrowLeft' || key === 'ArrowUp') {
-			$state.initial = ($state.initial - 1 + $props.options.length) % $props.options.length;
+			initial = (currentInitial - 1 + optionsLength) % optionsLength;
 		}
 	}
 </script>
 
 <div class="radio-group" role="radiogroup" onkeydown={cycleThroughGroup} tabindex={0}>
-	{#each $props.options as label, index}
+	{#each options as label, index}
 		<button
 			onmousedown={() => {
-				$state.initial = index;
+				initial = index;
 			}}
-			aria-checked={$state.initial === index}
+			aria-checked={initial === index}
 			aria-label={label}
 			role="radio"
 		>
 			<label class="option-wrapper">
-				<input class="option" type="radio" id={slugify(label)} bind:group={$state.initial} value={index} />
+				<input class="option" type="radio" id={slugify(label)} bind:group={initial} value={index} />
 				<p>{label}</p>
 			</label>
 		</button>

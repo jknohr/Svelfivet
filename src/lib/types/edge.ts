@@ -1,88 +1,124 @@
-import type { Writable, Readable } from 'svelte/store';
 import type {
 	Anchor,
 	CSSColorString,
 	EmValue,
 	EdgeKey,
-	CustomWritable,
 	XYPair,
 	Direction,
 	Node
 } from '.';
 import type { PixelValue, RemValue } from '.';
-import type { ComponentType } from 'svelte';
-export type EdgeStyle = 'straight' | 'step' | 'bezier';
+import type { SvelteComponent } from 'svelte';
+
+export type EdgeStyle = 'straight' | 'step' | 'bezier' | 'subway' | 'horizontal' | 'vertical' | 'dagre' | 'tokyo';
 export type EndStyle = 'arrow' | null;
 
-// With writable properties
+export interface EdgeEndpointMetadata {
+	id: string;
+	type?: string;
+	dataType?: string;
+	format?: string;
+	schema?: Record<string, unknown>;
+	validation?: {
+		required?: boolean;
+		min?: number;
+		max?: number;
+		pattern?: string;
+		custom?: (value: unknown) => boolean;
+	};
+	transform?: (value: unknown) => unknown;
+}
+
+export interface EdgeMetadata {
+	id?: string;
+	label?: string;
+	description?: string;
+	tags?: string[];
+	// Input/Output metadata
+	input?: EdgeEndpointMetadata | EdgeEndpointMetadata[];
+	output?: EdgeEndpointMetadata | EdgeEndpointMetadata[];
+	// Flow metadata
+	flowRate?: number;
+	capacity?: number;
+	protocol?: string;
+	// Timing metadata
+	latency?: number;
+	updateFrequency?: number;
+	lastUpdated?: Date;
+	// State metadata
+	status?: 'active' | 'inactive' | 'error' | 'pending';
+	errorRate?: number;
+	healthScore?: number;
+	// Version control
+	version?: string;
+	createdAt?: Date;
+	updatedAt?: Date;
+	// Custom data
+	data?: Record<string, unknown>;
+	metrics?: Record<string, number>;
+	config?: Record<string, unknown>;
+}
+
 export type WritableEdge = {
 	id: EdgeKey;
 	source: Anchor | CursorAnchor;
 	target: Anchor | CursorAnchor;
-	type: Writable<EdgeStyle | null>;
-	color:
-		| Writable<CSSColorString | null>
-		| CustomWritable<CSSColorString>
-		| Readable<CSSColorString>;
-	width: Writable<number>;
+	type: EdgeStyle | null;
+	color: CSSColorString | null;
+	width: number;
 	label?: EdgeLabel;
-	animated: Writable<boolean>;
+	animated: boolean;
 	disconnect?: true;
-	component: ComponentType | null;
-	rendered: Writable<boolean>;
-	// raiseEdgeOnSelect?: boolean;
-	// edgesAbove?: boolean;
+	component: typeof SvelteComponent | null;
+	rendered: boolean;
 	start: EndStyle;
 	end: EndStyle;
+	metadata?: EdgeMetadata;
 };
 
 interface CursorNode {
-	rotating: Writable<boolean>;
-	position: Readable<XYPair>;
+	rotating: boolean;
+	position: XYPair;
 	dimensions: {
-		width: Writable<number>;
-		height: Writable<number>;
+		width: number;
+		height: number;
 	};
-	zIndex: Writable<number>;
+	zIndex: number;
 }
 
 export interface CursorAnchor {
 	id: null;
-	position: Readable<XYPair>;
-	offset: Writable<XYPair>;
-	connected: Writable<Set<Anchor>>;
-	dynamic: Writable<boolean>;
+	position: XYPair;
+	offset: XYPair;
+	connected: Set<Anchor>;
+	dynamic: boolean;
 	edge: null;
-	edgeColor: Writable<null>;
-	direction: Writable<Direction>;
+	edgeColor: null;
+	direction: Direction;
 	inputKey: null;
 	type: 'output';
-	mounted: Writable<true>;
-	moving: Readable<boolean>;
+	mounted: true;
+	moving: boolean;
 	store: null;
-	rotation: Readable<number>;
+	rotation: number;
 	node: CursorNode;
 }
 
 export interface EdgeLabel {
-	text: Writable<string>;
-	color: Writable<CSSColorString>;
-	textColor: Writable<CSSColorString>;
-	fontSize: Writable<PixelValue | RemValue | EmValue>;
+	text: string;
+	color: CSSColorString;
+	textColor: CSSColorString;
+	fontSize: PixelValue | RemValue | EmValue;
 	dimensions: {
-		width: Writable<number>;
-		height: Writable<number>;
+		width: number;
+		height: number;
 	};
-
-	borderRadius: Writable<number>;
+	borderRadius: number;
 }
 
 export interface EdgeConfig {
 	type?: EdgeStyle;
-	color?:
-		| Writable<CSSColorString | null>
-		| CustomWritable<CSSColorString>
-		| Readable<CSSColorString>;
+	color?: CSSColorString | null;
 	width?: number;
 	label?: EdgeLabelConfig;
 	animated?: boolean;
@@ -91,6 +127,7 @@ export interface EdgeConfig {
 	edgesAbove?: boolean;
 	start?: EndStyle;
 	end?: EndStyle;
+	metadata?: EdgeMetadata;
 }
 
 export interface EdgeLabelConfig {

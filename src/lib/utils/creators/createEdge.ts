@@ -1,13 +1,12 @@
 import type { WritableEdge, EdgeConfig, Anchor } from '$lib/types';
-import { writable } from 'svelte/store';
 import * as s from '$lib/constants/styles';
 import type { EdgeLabel, EdgeKey } from '$lib/types';
 import { sortEdgeKey } from '$lib/utils/helpers/sortKey';
-import type { ComponentType } from 'svelte';
+import type { SvelteComponent } from 'svelte';
 
 export function createEdge(
 	connection: { source: Anchor; target: Anchor },
-	component: ComponentType | null,
+	component: typeof SvelteComponent | null,
 	config?: EdgeConfig
 ): WritableEdge {
 	const { source, target } = connection;
@@ -18,28 +17,42 @@ export function createEdge(
 		target: connection.target,
 		source: connection.source,
 		component,
-		type: writable(config?.type || null),
-		color: config?.color || writable(null),
-		width: writable(config?.width || 0),
-		animated: writable(config?.animated || false),
-		rendered: writable(false),
+		type: config?.type || null,
+		color: config?.color || null,
+		width: config?.width || 0,
+		animated: config?.animated || false,
+		rendered: false,
 		start: config?.start || null,
-		end: config?.end || null
+		end: config?.end || null,
+		metadata: config?.metadata || {
+			status: 'active',
+			flowRate: 1,
+			healthScore: 1,
+			input: {
+				id: 'default-input',
+				type: 'default',
+				validation: { required: true }
+			},
+			output: {
+				id: 'default-output',
+				type: 'default'
+			}
+		}
 	};
 	// if (config?.raiseEdges) writableEdge.raiseEdgeOnSelect = true;
 	// if (config?.edgesAbove) writableEdge.edgesAbove = true;
 	if (config?.disconnect) writableEdge.disconnect = true;
 	if (config?.label) {
 		const baseLabel: EdgeLabel = {
-			text: writable(config?.label.text),
-			color: writable(config?.label?.color || s.EDGE_LABEL_COLOR),
-			textColor: writable(config?.label?.textColor || s.EDGE_LABEL_TEXT_COLOR),
-			fontSize: writable(config?.label?.fontSize || s.EDGE_LABEL_FONT_SIZE),
+			text: config.label.text,
+			color: config.label?.color || s.EDGE_LABEL_COLOR,
+			textColor: config.label?.textColor || s.EDGE_LABEL_TEXT_COLOR,
+			fontSize: config.label?.fontSize || s.EDGE_LABEL_FONT_SIZE,
 			dimensions: {
-				width: writable(config?.label.dimensions?.width || s.EDGE_LABEL_WIDTH),
-				height: writable(config?.label.dimensions?.height || s.EDGE_LABEL_HEIGHT)
+				width: config.label.dimensions?.width || s.EDGE_LABEL_WIDTH,
+				height: config.label.dimensions?.height || s.EDGE_LABEL_HEIGHT
 			},
-			borderRadius: writable(config?.label.borderRadius || s.EDGE_LABEL_BORDER_RADIUS)
+			borderRadius: config.label.borderRadius || s.EDGE_LABEL_BORDER_RADIUS
 		};
 		writableEdge.label = baseLabel;
 	}

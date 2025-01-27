@@ -31,10 +31,6 @@
 	let gridOpacity = 1;
 	let majorGridOpacity = 1;
 
-	//Subscriptions
-	let graphTranslation = $derived($translationStore);
-	let scale = $derived($scaleStore);
-
 	// Reactive declarations
 	let gridScale = $derived(scale * gridWidth); // Update grid scale when scale changes
 	let radius = $derived((scale * dotSize) / 2); // Update dot radius when scale changes
@@ -50,6 +46,9 @@
 		majorGridOpacity =
 			scale > opacityThreshold / 3 ? 1 : scale / (opacityThreshold / 3) + minOpacity;
 	});
+
+	let graphTranslation = $derived(translationStore);
+	let scale = $derived(scaleStore);
 </script>
 
 <!-- BACKGROUND COMPONENT START -->

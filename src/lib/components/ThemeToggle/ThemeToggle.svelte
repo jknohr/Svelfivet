@@ -7,42 +7,37 @@ https://svelte.dev/e/rune_missing_parentheses -->
 	import { getJSONState } from '$lib/utils/savers/saveStore';
 	import { onMount } from 'svelte';
 	import { graphStore } from '$lib/stores';
-	import { get } from 'svelte/store';
 
-	$props = {
-		main: 'light',
-		alt: 'dark',
-		mainIcon: 'light_mode',
-		altIcon: 'dark_mode',
-		corner: 'NE',
-		bgColor: null,
-		iconColor: null,
-		onToggleTheme: null,
-		onSave: null,
-		themeOptions: ['light', 'dark', 'Black/White', 'Yellow/Black', 'Black/Yellow', 'Yellow/Blue', 'Grayscale', 'Black/Pink']
-	};
+	interface Props {
+		main?: string;
+		alt?: string;
+		mainIcon?: string;
+		altIcon?: string;
+		corner?: 'NE' | 'NW' | 'SE' | 'SW';
+		bgColor?: CSSColorString | null;
+		iconColor?: CSSColorString | null;
+		onToggleTheme?: (theme: string) => void;
+		onSave?: () => void;
+		themeOptions?: string[];
+	}
 
-	$state = {
-		current: $props.main
-	};
+	let { main = 'light', alt = 'dark', mainIcon = 'light_mode', altIcon = 'dark_mode', corner = 'NE', bgColor = null, iconColor = null, onToggleTheme = undefined, onSave = undefined, themeOptions = ['light', 'dark', 'Black/White', 'Yellow/Black', 'Black/Yellow', 'Yellow/Blue', 'Grayscale', 'Black/Pink'] }: Props = $props();
+	let current = $state(main);
 
 	function toggleTheme() {
 		try {
 			const currentTheme = document.documentElement.getAttribute('svelvet-theme');
 			let newTheme;
-			if (!currentTheme || currentTheme === $props.main) {
-				newTheme = $props.alt;
-				$state.current = $props.alt;
+			if (!currentTheme || currentTheme === main) {
+				newTheme = alt;
+				current = alt;
 			} else {
-				newTheme = $props.main;
-				$state.current = $props.main;
+				newTheme = main;
+				current = main;
 			}
 			document.documentElement.setAttribute('svelvet-theme', newTheme);
-
-			// Save the current theme to Local Storage
 			localStorage.setItem('currentTheme', newTheme);
-
-			if ($props.onToggleTheme) $props.onToggleTheme(newTheme);
+			if (onToggleTheme) onToggleTheme(newTheme);
 		} catch (error) {
 			console.error('Error toggling theme:', error);
 		}
@@ -51,12 +46,9 @@ https://svelte.dev/e/rune_missing_parentheses -->
 	function setTheme(theme: string) {
 		try {
 			document.documentElement.setAttribute('svelvet-theme', theme);
-			$state.current = theme;
-
-			// Save the current theme to Local Storage
+			current = theme;
 			localStorage.setItem('currentTheme', theme);
-
-			if ($props.onToggleTheme) $props.onToggleTheme(theme);
+			if (onToggleTheme) onToggleTheme(theme);
 		} catch (error) {
 			console.error('Error setting theme:', error);
 		}
@@ -67,11 +59,10 @@ https://svelte.dev/e/rune_missing_parentheses -->
 			const savedTheme = localStorage.getItem('currentTheme');
 			if (savedTheme) {
 				document.documentElement.setAttribute('svelvet-theme', savedTheme);
-				$state.current = savedTheme;
+				current = savedTheme;
 			} else {
-				// If no theme is saved in Local Storage, set the default theme (main) as the initial theme
-				document.documentElement.setAttribute('svelvet-theme', $props.main);
-				$state.current = $props.main;
+				document.documentElement.setAttribute('svelvet-theme', main);
+				current = main;
 			}
 		} catch (error) {
 			console.error('Error setting initial theme:', error);
@@ -79,38 +70,23 @@ https://svelte.dev/e/rune_missing_parentheses -->
 	});
 
 	let graph: any;
-
 	graphStore.subscribe((graphMap) => {
 		const graphKey = 'G-1';
 		graph = graphMap.get(graphKey);
-			// console.log('Graph from store:', graph);
 	});
-	function logCurrentGraphState() {
-		try {
-			const currentGraphMap = get(graphStore);
-			const graph = currentGraphMap.get('G-1');
-			// if (graph) {
-			// 	console.log('Current Graph State:', graph);
-			// } else {
-			// 	console.log('No current graph found');
-			// }
-		} catch (error) {
-			console.error('Error logging current graph state:', error);
-		}
-	}
 </script>
 
 <div
 	class="controls-wrapper"
-	style:--prop-theme-toggle-color={$props.bgColor}
-	style:--prop-theme-toggle-text-color={$props.iconColor}
-	class:SW={$props.corner === 'SW'}
-	class:NE={$props.corner === 'NE'}
-	class:SE={$props.corner === 'SE'}
-	class:NW={$props.corner === 'NW'}
+	style:--prop-theme-toggle-color={bgColor}
+	style:--prop-theme-toggle-text-color={iconColor}
+	class:SW={corner === 'SW'}
+	class:NE={corner === 'NE'}
+	class:SE={corner === 'SE'}
+	class:NW={corner === 'NW'}
 >
 	<button onclick={toggleTheme} ontouchstart={toggleTheme}>
-		<span class="material-symbols-outlined">{$state.current === $props.main ? $props.altIcon : $props.mainIcon}</span>
+		<span class="material-symbols-outlined">{current === main ? altIcon : mainIcon}</span>
 	</button>
 
 	<button
@@ -118,7 +94,7 @@ https://svelte.dev/e/rune_missing_parentheses -->
 		onclick={() => {
 			try {
 				getJSONState(graph);
-				if ($props.onSave) $props.onSave();
+				if (onSave) onSave();
 			} catch (error) {
 				console.error('Error saving graph state:', error);
 			}
@@ -129,8 +105,8 @@ https://svelte.dev/e/rune_missing_parentheses -->
 		class="theme-selector"
 		onchange={(e) => setTheme((e.target as HTMLSelectElement).value)}
 	>
-		{#each $props.themeOptions as themeOption}
-			<option value={themeOption} selected={themeOption === $state.current}>{themeOption}</option>
+		{#each themeOptions as themeOption}
+			<option value={themeOption} selected={themeOption === current}>{themeOption}</option>
 		{/each}
 	</select>
 </div>
@@ -189,7 +165,6 @@ https://svelte.dev/e/rune_missing_parentheses -->
 		);
 	}
 
-	/* reset button */
 	button {
 		margin: 0;
 		padding: 0;
@@ -214,8 +189,8 @@ https://svelte.dev/e/rune_missing_parentheses -->
 		cursor: pointer;
 	}
 	.save-button {
-		top: 10px; /* Adjust the top position as needed */
-		left: 10px; /* Adjust the left position as needed */
+		top: 10px;
+		left: 10px;
 		background-color: var(--save-button-bg-color, var(--default-save-button-bg-color));
 		color: var(--save-button-text-color, var(--default-save-button-text-color));
 		border: solid 1px var(--save-button-border-color, var(--default-save-button-border-color));

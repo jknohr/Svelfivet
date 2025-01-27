@@ -1,9 +1,7 @@
 <script lang="ts">
 	import { calculateFitContentWidth } from '$lib/utils';
-	import { beforeUpdate, getContext, onMount } from 'svelte';
-	import { get } from 'svelte/store';
-	import { initialClickPosition, resizing } from '$lib/stores';
-	import type { Graph, Node } from '$lib/types';
+	import { getContext } from 'svelte';
+	import type { Graph, Node, XYPair } from '$lib/types';
 	import type { Writable } from 'svelte/store';
 
 	const graph = getContext<Graph>('graph');
@@ -12,13 +10,13 @@
 
 	let { width = false, height = false, rotation = false, minHeight = 0, minWidth = 0 } = $props();
 
-	let DOMnode: HTMLElement | null = null;
-	let direction = 1;
-	let startingRotation = 0;
-	let initialClickAngle = 0;
-	let initialNodePosition = get(node.position);
-	let initialWidth = 0;
-	let initialHeight = 0;
+	let DOMnode: HTMLElement | null = $state(null);
+	let direction = $state(1);
+	let startingRotation = $state(0);
+	let initialClickAngle = $state(0);
+	let initialNodePosition = $state<XYPair>({ x: 0, y: 0 });
+	let initialWidth = $state(0);
+	let initialHeight = $state(0);
 
 	let left = width;
 	let right = width;
@@ -26,106 +24,116 @@
 	let bottom = height;
 	let both = width && height;
 
-	const position = node.position;
+	// Create local state variables
+	let nodePosition = $state<XYPair>({ x: 0, y: 0 });
+	let nodeRotation = $state(0);
+	let nodeDimensions = $state({
+		width: 0,
+		height: 0
+	});
 
-	const resizingWidth = node.resizingWidth;
-	const resizingHeight = node.resizingHeight;
-	const rotating = node.rotating;
+	let isResizingWidth = $state(false);
+	let isResizingHeight = $state(false);
+	let isRotating = $state(false);
+	let isResizing = $state(false);
+	let cursorPosition = $state<XYPair>({ x: 0, y: 0 });
 
-	const nodeRotation = node.rotation;
+	// Keep local state in sync with node properties
+	$effect(() => {
+		if (!node) return;
+		nodePosition = node.position as XYPair;
+		nodeRotation = node.rotation as number;
+		nodeDimensions = {
+			width: node.dimensions.width as number,
+			height: node.dimensions.height as number
+		};
+		cursorPosition = graph.cursor as XYPair;
+	});
 
-	const heightStore = node.dimensions.height;
-	const widthStore = node.dimensions.width;
-
-	const cursor = graph.cursor;
-
-	let $x = $derived($position.x);
-	let $y = $derived($position.y);
-
-	let $centerPoint = $derived({
-		x: $x + $widthStore / 2,
-		y: $y + $heightStore / 2
+	let centerPoint = $derived({
+		x: nodePosition.x + nodeDimensions.width / 2,
+		y: nodePosition.y + nodeDimensions.height / 2
 	});
 
 	$effect(() => {
-		if ($resizingHeight) {
-			const initialClick = get(initialClickPosition);
-			const cursorPosition = $cursor;
-			const newHeight = Math.max(
-				minHeight,
-				initialHeight + (cursorPosition.y - initialClick.y) * direction
-			);
-			if (newHeight > minHeight) {
-				resized.set(true);
-				$heightStore = newHeight;
-			} else {
-				resized.set(false);
-			}
+		if (!isResizingHeight) return;
+		
+		if (!cursorPosition) return;
 
-			if (direction === -1) {
-				$position = {
-					x: initialNodePosition.x,
-					y: initialNodePosition.y + cursorPosition.y - initialClick.y
-				};
-			}
-			if ($nodeRotation !== 0) {
-				node.position.update((pos) => {
-					return {
-						y: initialNodePosition.y - (newHeight - initialHeight) / 2,
-						x: pos.x
-					};
-				});
-			}
+		const newHeight = Math.max(
+			minHeight,
+			initialHeight + (cursorPosition.y - initialNodePosition.y) * direction
+		);
+
+		if (newHeight > minHeight) {
+			resized.set(true);
+			node.dimensions.height = newHeight;
+			nodeDimensions.height = newHeight;
+		} else {
+			resized.set(false);
 		}
-	});
 
-	$effect(() => {
-		if ($resizingWidth) {
-			const initialClick = get(initialClickPosition);
-			const cursorPosition = $cursor;
-			const newWidth = Math.max(
-				minWidth,
-				initialWidth + (cursorPosition.x - initialClick.x) * direction
-			);
-			if (newWidth > minWidth) {
-				resized.set(true);
-				$widthStore = newWidth;
-			} else {
-				resized.set(false);
-			}
+		if (direction === -1) {
+			const newPos: XYPair = {
+				x: initialNodePosition.x,
+				y: initialNodePosition.y + cursorPosition.y - initialNodePosition.y
+			};
+			node.position = newPos;
+			nodePosition = newPos;
+		}
 
-			if (direction === -1) {
-				$position = {
-					x: initialNodePosition.x + cursorPosition.x - initialClick.x,
-					y: initialNodePosition.y
-				};
-			}
-			if ($nodeRotation !== 0) {
-				node.position.update((pos) => {
-					return {
-						x: initialNodePosition.x - (newWidth - initialWidth) / 2,
-						y: pos.y
-					};
-				});
-			}
+		if (nodeRotation !== 0) {
+			const newPos: XYPair = {
+				y: initialNodePosition.y - (newHeight - initialHeight) / 2,
+				x: nodePosition.x
+			};
+			node.position = newPos;
+			nodePosition = newPos;
 		}
 	});
 
 	$effect(() => {
-		if ($rotating) {
-			$cursor;
-			$nodeRotation = calculateRotation();
+		if (!isResizingWidth) return;
+
+		if (!cursorPosition) return;
+
+		const newWidth = Math.max(
+			minWidth,
+			initialWidth + (cursorPosition.x - initialNodePosition.x) * direction
+		);
+
+		if (newWidth > minWidth) {
+			resized.set(true);
+			node.dimensions.width = newWidth;
+			nodeDimensions.width = newWidth;
+		} else {
+			resized.set(false);
+		}
+
+		if (direction === -1) {
+			const newPos: XYPair = {
+				x: initialNodePosition.x + cursorPosition.x - initialNodePosition.x,
+				y: initialNodePosition.y
+			};
+			node.position = newPos;
+			nodePosition = newPos;
+		}
+
+		if (nodeRotation !== 0) {
+			const newPos: XYPair = {
+				x: initialNodePosition.x - (newWidth - initialWidth) / 2,
+				y: nodePosition.y
+			};
+			node.position = newPos;
+			nodePosition = newPos;
 		}
 	});
 
-	onMount(() => {
-		try {
-			DOMnode = document.querySelector(`#${node.id}`) as HTMLElement;
-			if (DOMnode) [minWidth, minHeight] = calculateFitContentWidth(DOMnode);
-		} catch (e) {
-			// eslint-disable-next-line no-console
-			console.error(e);
-		}
+	$effect(() => {
+		if (!isRotating) return;
+		const newRotation = calculateRotation();
+		node.rotation = newRotation;
+		nodeRotation = newRotation;
 	});
 
 	function resizeHandler(
@@ -141,24 +149,26 @@
 				direction = 1;
 			}
 
-			resizing.set(true);
-			$initialClickPosition = get(cursor);
-			initialWidth = $widthStore;
-			initialHeight = $heightStore;
-			initialNodePosition = $position;
+			isResizing = true;
+			initialNodePosition = cursorPosition;
+			initialWidth = nodeDimensions.width;
+			initialHeight = nodeDimensions.height;
 
-			dimensions.both ? ($resizingWidth = true) : ($resizingWidth = false);
-			$resizingWidth = dimensions.left || dimensions.right || dimensions.both || false;
-			$resizingHeight = dimensions.top || dimensions.bottom || dimensions.both || false;
+			if (dimensions.both) {
+				isResizingWidth = true;
+			} else {
+				isResizingWidth = dimensions.left || dimensions.right || dimensions.both || false;
+				isResizingHeight = dimensions.top || dimensions.bottom || dimensions.both || false;
+			}
 
 			if (DOMnode) [minWidth, minHeight] = calculateFitContentWidth(DOMnode);
 			window.addEventListener('mouseup', removeResize);
 		};
 
 		const removeResize = () => {
-			$resizingWidth = false;
-			$resizingHeight = false;
-			resizing.set(false);
+			isResizingWidth = false;
+			isResizingHeight = false;
+			isResizing = false;
 			window.removeEventListener('mouseup', removeResize);
 		};
 
@@ -171,29 +181,24 @@
 		};
 	}
 
-	// set rotaiton based on xy mouse movement
 	function rotateHandler(node: HTMLElement) {
 		const setRotation = (e: MouseEvent) => {
 			e.stopPropagation();
 			e.preventDefault();
 
-			//Capture current node rotation
-			startingRotation = $nodeRotation;
+			startingRotation = nodeRotation;
+			initialNodePosition = cursorPosition;
 
-			//Capture current click position
-			$initialClickPosition = get(cursor);
-
-			// Calculate the initial angle
-			const initialDeltaX = $initialClickPosition.x - $centerPoint.x;
-			const initialDeltaY = $initialClickPosition.y - $centerPoint.y;
+			const initialDeltaX = initialNodePosition.x - centerPoint.x;
+			const initialDeltaY = initialNodePosition.y - centerPoint.y;
 			initialClickAngle = Math.atan2(initialDeltaY, initialDeltaX);
 
-			$rotating = true;
+			isRotating = true;
 			window.addEventListener('mouseup', removeRotation);
 		};
 
 		const removeRotation = () => {
-			$rotating = false;
+			isRotating = false;
 			window.removeEventListener('mouseup', removeRotation);
 		};
 
@@ -207,14 +212,11 @@
 	}
 
 	function calculateRotation() {
-		const cursorPosition = get(cursor);
-		const currentDeltaX = cursorPosition.x - $centerPoint.x;
-		const currentDeltaY = cursorPosition.y - $centerPoint.y;
+		const currentDeltaX = cursorPosition.x - centerPoint.x;
+		const currentDeltaY = cursorPosition.y - centerPoint.y;
 
 		const currentAngle = Math.atan2(currentDeltaY, currentDeltaX);
-
 		const angleDifference = initialClickAngle - currentAngle;
-
 		const newAngle = startingRotation - radiansToDegrees(angleDifference);
 		return newAngle;
 	}
@@ -223,27 +225,30 @@
 		return radians * (180 / Math.PI);
 	}
 
-	beforeUpdate(() => {
-		if (DOMnode) [minWidth, minHeight] = calculateFitContentWidth(DOMnode);
-		if ($widthStore < minWidth) resized.set(false);
-		if ($heightStore < minHeight) resized.set(false);
+	$effect(() => {
+		if (!DOMnode) return;
+		const [newMinWidth, newMinHeight] = calculateFitContentWidth(DOMnode);
+		minWidth = newMinWidth;
+		minHeight = newMinHeight;
+		if (nodeDimensions.width < minWidth) resized.set(false);
+		if (nodeDimensions.height < minHeight) resized.set(false);
 	});
 </script>
 
 {#if width}
-	<div use:resizeHandler={{ left }} class:width class="left" />
-	<div use:resizeHandler={{ right }} class:width class="right" />
+	<div use:resizeHandler={{ left }} class:width class="left"></div>
+	<div use:resizeHandler={{ right }} class:width class="right"></div>
 {/if}
 
 {#if height}
-	<div use:resizeHandler={{ top }} class:height class="top" />
-	<div use:resizeHandler={{ bottom }} class:height class="bottom" />
+	<div use:resizeHandler={{ top }} class:height class="top"></div>
+	<div use:resizeHandler={{ bottom }} class:height class="bottom"></div>
 {/if}
 {#if both}
-	<div use:resizeHandler={{ both }} class:both />
+	<div use:resizeHandler={{ both }} class:both></div>
 {/if}
 {#if rotation}
-	<div use:rotateHandler class:rotation />
+	<div use:rotateHandler class:rotation></div>
 {/if}
 
 <style>
@@ -252,7 +257,7 @@
 		width: 9px;
 		height: 9px;
 		z-index: 0;
-		 pointer-events: auto;
+		pointer-events: auto;
 	}
 
 	.width {

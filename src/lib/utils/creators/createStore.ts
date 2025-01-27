@@ -1,22 +1,26 @@
-import { writable } from 'svelte/store';
 import type { Store } from '$lib/types';
 
 export function createStore<T, K>(): Store<T, K> {
 	type TData = Map<K, T>;
 
-	const data = new Map() as TData;
-
-	const { subscribe, set, update } = writable(data);
+	const data = $state(new Map() as TData);
 
 	const store: Store<T, K> = {
-		subscribe,
-		set,
-		update,
+		subscribe: (subscriber: (value: TData) => void) => {
+			subscriber(data);
+			return () => {};
+		},
+		set: (value: TData) => {
+			data.clear();
+			value.forEach((v, k) => data.set(k, v));
+		},
+		update: (updater: (value: TData) => TData) => {
+			const newValue = updater(data);
+			data.clear();
+			newValue.forEach((v, k) => data.set(k, v));
+		},
 		add: (item: T, key: K) => {
-			update((currentData) => {
-				currentData.set(key, item);
-				return currentData;
-			});
+			data.set(key, item);
 			return data;
 		},
 		get: (key: K) => {
@@ -26,13 +30,7 @@ export function createStore<T, K>(): Store<T, K> {
 			return Array.from(data.values());
 		},
 		delete: (key: K) => {
-			let deleted = false;
-			update((currentData) => {
-				currentData.delete(key);
-				deleted = true;
-
-				return currentData;
-			});
+			const deleted = data.delete(key);
 			return deleted;
 		},
 		count: () => data.size

@@ -1,170 +1,234 @@
-<!-- @migration-task Error while migrating Svelte code: `{@render ...}` tags can only contain call expressions
-https://svelte.dev/e/render_tag_invalid_expression -->
-<!-- @migration-task Error while migrating Svelte code: `{@render ...}` tags can only contain call expressions
-https://svelte.dev/e/render_tag_invalid_expression -->
-<script context="module" lang="ts">
-	import Graph from '../Graph/Graph.svelte';
+<script lang="ts">
+	import GraphRenderer from '$lib/renderers/GraphRenderer/GraphRenderer.svelte';
 	import FlowChart from '$lib/components/FlowChart/FlowChart.svelte';
 	import { onMount, setContext } from 'svelte';
 	import { createGraph } from '$lib/utils/';
-	import { graphStore } from '$lib/stores';
 	import { reloadStore } from '$lib/utils/savers/reloadStore';
-	import type { ComponentType } from 'svelte';
+	import type { SvelteComponent } from 'svelte';
 	import type {
 		Graph as GraphType,
 		EdgeStyle,
 		EndStyle,
 		XYPair,
-		SvelvetConnectionEvent
+		SvelvetConnectionEvent,
+		NodeConfig,
+		GraphKey,
+		CSSColorString,
+		NodeKey,
+		Node,
+		Anchor,
+		EdgeStore,
+		WritableEdge
 	} from '$lib/types';
-	import type { NodeConfig, GraphKey, CSSColorString, NodeKey } from '$lib/types';
-	import type { Node, Anchor } from '$lib/types';
-</script>
 
-<script lang="ts">
-	// Props
-	$props = {
-		mermaid: '',
-		theme: 'light',
-		id: 0,
-		snapTo: 0,
-		zoom: 1,
-		TD: false,
-		editable: true,
-		locked: false,
-		width: 0,
-		height: 0,
-		minimap: false,
-		controls: false,
-		toggle: false,
-		drawer: false,
-		contrast: false,
-		fitView: false,
-		selectionColor: 'lightblue',
-		edgeStyle: 'bezier',
-		endStyles: [null, null],
-		edge: null,
-		disableSelection: false,
-		mermaidConfig: {},
-		translation: { x: 0, y: 0 },
-		trackpadPan: false,
-		modifier: 'meta',
-		raiseEdgesOnSelect: false,
-		edgesAboveNode: false,
-		title: '',
-		fixedZoom: false,
-		pannable: true
-	};
+	interface Props {
+		mermaid?: string;
+		theme?: string;
+		id?: number;
+		snapTo?: number;
+		zoom?: number;
+		TD?: boolean;
+		editable?: boolean;
+		locked?: boolean;
+		width?: number;
+		height?: number;
+		minimap?: boolean;
+		controls?: boolean;
+		toggle?: boolean;
+		drawer?: boolean;
+		contrast?: boolean;
+		fitView?: boolean;
+		selectionColor?: string;
+		edgeStyle?: EdgeStyle;
+		endStyles?: [EndStyle | null, EndStyle | null];
+		edge?: SvelteComponent | null;
+		disableSelection?: boolean;
+		mermaidConfig?: Record<string, unknown>;
+		translation?: XYPair;
+		trackpadPan?: boolean;
+		modifier?: string;
+		raiseEdgesOnSelect?: boolean;
+		edgesAboveNode?: boolean;
+		title?: string;
+		fixedZoom?: boolean;
+		pannable?: boolean;
+		children?: any;
+		nodeTemplate?: (node: any) => { component: any; props: any };
+	}
 
-	$state = {
-		graph: null,
-		direction: $props.TD ? 'TD' : 'LR',
-		backgroundExists: false,
-		edgeStore: null
-	};
+	let { 
+		mermaid = '',
+		theme = 'light',
+		id = 0,
+		snapTo = 0,
+		zoom = 1,
+		TD = false,
+		editable = true,
+		locked = false,
+		width = 0,
+		height = 0,
+		minimap = false,
+		controls = false,
+		toggle = false,
+		drawer = false,
+		contrast = false,
+		fitView = false,
+		selectionColor = 'lightblue',
+		edgeStyle = 'bezier',
+		endStyles = [null, null],
+		edge = null,
+		disableSelection = false,
+		mermaidConfig = {},
+		translation = { x: 0, y: 0 },
+		trackpadPan = false,
+		modifier = 'meta',
+		raiseEdgesOnSelect = false,
+		edgesAboveNode = false,
+		title = '',
+		fixedZoom = false,
+		pannable = true,
+		children,
+		nodeTemplate
+	}: Props = $props();
 
-	setContext('snapTo', $props.snapTo);
-	setContext('edgeStyle', $props.edgeStyle);
-	setContext('endStyles', $props.endStyles);
-	setContext('graphEdge', $props.edge);
-	setContext('raiseEdgesOnSelect', $props.raiseEdgesOnSelect);
-	setContext('edgesAboveNode', $props.edgesAboveNode);
-	setContext('graph', $state.graph);
+	let graph = $state<GraphType | null>(null);
+	let direction = $state<'TD' | 'LR'>(TD ? 'TD' : 'LR');
+	let backgroundExists = $state(false);
+	let edgeStore = $state<EdgeStore | undefined>(undefined);
 
-	// function to load a graph from local storage
-	// occurs after Svelvet renders
+	setContext('snapTo', snapTo);
+	setContext('edgeStyle', edgeStyle);
+	setContext('endStyles', endStyles);
+	setContext('graphEdge', edge);
+	setContext('raiseEdgesOnSelect', raiseEdgesOnSelect);
+	setContext('edgesAboveNode', edgesAboveNode);
+	
+	$effect(() => {
+		setContext('graph', graph);
+	});
+
 	onMount(() => {
 		const stateObject = localStorage.getItem('state');
 		if (stateObject) {
-			$state.graph = reloadStore(stateObject);
-			graphStore.add($state.graph, $state.graph.id);
+			const loadedGraph = reloadStore(stateObject);
+			$effect(() => {
+				graph = loadedGraph;
+			});
 		} else {
-			let graphKey: GraphKey = `G-${$props.id || graphStore.count() + 1}`;
-
-			$state.graph = createGraph(graphKey, {
-				zoom: $props.zoom,
-				direction: $state.direction,
-				editable: $props.editable,
-				locked: $props.locked,
-				translation: $props.translation
+			let graphKey: GraphKey = `G-${id || 0}`;
+			const newGraph = createGraph(graphKey, {
+				zoom,
+				direction,
+				editable,
+				locked,
+				translation
 			});
-
-			graphStore.add($state.graph, graphKey);
-		}
-	});
-
-	$effect(() => {
-		$state.backgroundExists = $$snippets.background;
-	});
-
-	$effect(() => {
-		$state.edgeStore = $state.graph && $state.graph.edges;
-	});
-
-	$effect(() => {
-		if ($state.graph) $state.graph.transforms.scale.set($props.zoom);
-	});
-
-	$effect(() => {
-		if ($state.edgeStore) {
-			$state.edgeStore.onEdgeChange((edge, type) => {
-				dispatchEvent(
-					new CustomEvent(type, {
-						detail: {
-							sourceAnchor: edge.source as Anchor,
-							targetAnchor: edge.target as Anchor,
-							sourceNode: edge.source.node as Node,
-							targetNode: edge.target.node as Node
-						}
-					})
-				);
+			$effect(() => {
+				graph = newGraph;
 			});
 		}
 	});
 
-	/**
-	 * @description Disconnects two nodes
-	 * @param source
-	 * @param target
-	 */
-	// Need to rethink this implementation
-	export function disconnect(
+	$effect(() => {
+		backgroundExists = !!children;
+	});
+
+	$effect(() => {
+		edgeStore = graph?.edges;
+	});
+
+	$effect(() => {
+		if (graph) graph.transforms.scale = zoom;
+	});
+
+	function handleEdgeChange(edge: WritableEdge, type: 'connection' | 'disconnection') {
+		const detail = {
+			sourceAnchor: edge.source as Anchor,
+			targetAnchor: edge.target as Anchor,
+			sourceNode: edge.source.node as Node,
+			targetNode: edge.target.node as Node
+		};
+		
+		const event = new CustomEvent(type, { detail });
+		dispatchEvent(event);
+	}
+
+	$effect(() => {
+		if (edgeStore) {
+			edgeStore.onEdgeChange(handleEdgeChange);
+		}
+	});
+
+	function disconnect(
 		source: [string | number, string | number],
 		target: [string | number, string | number]
 	) {
+		if (!graph) return;
 		const sourceNodeKey: NodeKey = `N-${source[0]}`;
-		const sourceNode = $state.graph.nodes.get(sourceNodeKey);
+		const sourceNode = graph.nodes.get(sourceNodeKey);
 		if (!sourceNode) return;
 		const sourceAnchor = sourceNode.anchors.get(`A-${source[1]}/N-${source[0]}`);
 		if (!sourceAnchor) return;
 		const targetNodeKey: NodeKey = `N-${target[0]}`;
-		const targetNode = $state.graph.nodes.get(targetNodeKey);
+		const targetNode = graph.nodes.get(targetNodeKey);
 		if (!targetNode) return;
 		const targetAnchor = targetNode.anchors.get(`A-${target[1]}/N-${target[0]}`);
 		if (!targetAnchor) return;
-		const edgeKey = $state.graph.edges.match(sourceAnchor, targetAnchor);
+		const edgeKey = graph.edges.match(sourceAnchor, targetAnchor);
 		if (!edgeKey) return;
-		$state.graph.edges.delete(edgeKey[0]);
+		graph.edges.delete(edgeKey[0]);
 	}
 </script>
 
-{#if $state.graph}
-	<Graph
-		{...$props}
-		graph={$state.graph}
-		on:edgeDrop
-	>
-		{#if $props.mermaid.length}
-			<FlowChart {...$props} />
+{#if graph}
+	{#snippet content()}
+		{#if mermaid.length}
+			<FlowChart
+				{mermaid}
+				{theme}
+				{id}
+				{snapTo}
+				{zoom}
+				{TD}
+				{editable}
+				{locked}
+				{width}
+				{height}
+				{minimap}
+				{controls}
+				{toggle}
+				{drawer}
+				{contrast}
+				{fitView}
+				{selectionColor}
+				{edgeStyle}
+				{endStyles}
+				{edge}
+				{disableSelection}
+				{mermaidConfig}
+				{translation}
+				{trackpadPan}
+				{modifier}
+				{raiseEdgesOnSelect}
+				{edgesAboveNode}
+				{title}
+				{fixedZoom}
+				{pannable}
+				{nodeTemplate}
+			/>
 		{/if}
-			{@render children}
-	</Graph>
+		{@render children()}
+	{/snippet}
+
+	<GraphRenderer isMovable={!locked}>
+		{@render content()}
+	</GraphRenderer>
 {:else}
 	<div
 		class="svelvet-temp"
-		style:width={$props.width ? $props.width + 'px' : '100%'}
-		style:height={$props.height ? $props.height + 'px' : '100%'}
-	/>
+		style:width={width ? width + 'px' : '100%'}
+		style:height={height ? height + 'px' : '100%'}
+	></div>
 {/if}
 
 <style>

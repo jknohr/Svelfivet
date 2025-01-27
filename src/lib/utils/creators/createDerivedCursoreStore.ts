@@ -1,33 +1,41 @@
-import type { Readable, Writable } from 'svelte/store';
-import type { Graph } from '$lib/types';
-import { derived } from 'svelte/store';
+import type { Graph, XYPair } from '$lib/types';
 import { calculateRelativeCursor } from '../calculators';
 
 export function createDerivedCursorStore(
-	cursorPositionRaw: Readable<{ x: number; y: number }>,
-	dimensions: Graph['dimensions'],
-	translation: Graph['transforms']['translation'],
-	scale: Writable<number>
-): Readable<{ x: number; y: number }> {
-	const cursorPosition: Readable<{ x: number; y: number }> = derived(
-		[cursorPositionRaw, dimensions, translation, scale],
-		([$cursorPositionRaw, $dimensions, $translation, $scale]) => {
-			const e = {
-				clientX: $cursorPositionRaw.x,
-				clientY: $cursorPositionRaw.y
-			};
+	cursorPositionRaw: () => { x: number; y: number },
+	dimensions: () => Graph['dimensions'],
+	translation: () => Graph['transforms']['translation'],
+	scale: () => number
+): { x: number; y: number } {
+	let cursorPosition = $state({ x: 0, y: 0 });
 
-			return calculateRelativeCursor(
-				e,
-				$dimensions.top,
-				$dimensions.left,
-				$dimensions.width,
-				$dimensions.height,
-				$scale,
-				$translation
-			);
+	$effect(() => {
+		const rawPos = cursorPositionRaw();
+		const dims = dimensions();
+		const trans = translation();
+		const scaleVal = scale();
+
+		const e = {
+			clientX: rawPos.x,
+			clientY: rawPos.y
+		};
+
+		cursorPosition = calculateRelativeCursor(
+			e,
+			dims.top,
+			dims.left,
+			dims.width,
+			dims.height,
+			scaleVal,
+			trans
+		);
+	});
+
+	return new Proxy({} as { x: number; y: number }, {
+		get(target, prop) {
+			if (prop === 'x') return cursorPosition.x;
+			if (prop === 'y') return cursorPosition.y;
+			return undefined;
 		}
-	);
-
-	return cursorPosition;
+	});
 }

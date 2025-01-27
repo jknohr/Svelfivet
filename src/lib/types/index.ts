@@ -12,3 +12,5 @@ export * from './drawer/svelvetProps';
 export * from './drawer/anchorProps';
 export * from './drawer/edgeProps';
 export * from './drawer/nodeProps';
+
+export type EdgeStyle = 'straight' | 'step' | 'bezier' | 'subway' | 'horizontal' | 'vertical' | 'dagre' | 'tokyo';

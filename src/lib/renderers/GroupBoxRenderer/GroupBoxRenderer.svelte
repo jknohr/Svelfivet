@@ -1,18 +1,36 @@
 <script lang="ts">
-	import type { Graph } from '$lib/types';
-	import GroupBoundingBox from '$lib/components/Group/GroupBoundingBox.svelte';
-	import { getContext } from 'svelte';
+    import type { Graph, GroupBox, GroupKey } from '$lib/types';
+    import GroupBoundingBox from '$lib/components/Group/GroupBoundingBox.svelte';
+    import { getContext } from 'svelte';
+    import { derived } from 'svelte/store';
 
-	const graph = getContext<Graph>('graph');
-	let { onclick } = $props();
+    // Get graph context
+    const graph = getContext<Graph>('graph');
 
-	let groupBoxes = $state(graph.groupBoxes);
+    // Reactive state for groupBoxes
+    const groupBoxes = derived(graph.groupBoxes, ($groupBoxes) => {
+        if ($groupBoxes && typeof $groupBoxes.entries === 'function') {
+            return Array.from($groupBoxes.entries()) as [GroupKey, GroupBox][];
+        }
+        return [];
+    });
 
-	function handleGroupClick(groupName: string) {
-		onclick?.(groupName);
-	}
+    // Handle group click and dispatch event
+    function handleGroupClick(groupName: string, e: MouseEvent) {
+        e.stopPropagation();
+        const event = new CustomEvent('groupClick', {
+            detail: { groupName },
+            bubbles: true
+        });
+        document.dispatchEvent(event);
+    }
 </script>
 
-{#each Array.from(groupBoxes) as [id, group] (id)}
-	<GroupBoundingBox {...group} groupName={id} onclick={handleGroupClick} />
+<!-- Group rendering loop -->
+{#each $groupBoxes as [id, group] (id)}
+    <GroupBoundingBox 
+        {...group} 
+        groupName={id}
+        onclick={(e: MouseEvent) => handleGroupClick(id, e)}
+    />
 {/each}

@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { setContext, getContext } from 'svelte';
 	import type { Group, Graph, GroupBox, GroupKey } from '$lib/types';
-	import { writable } from 'svelte/store';
 	import { getRandomColor } from '$lib/utils';
 
 	let {
@@ -16,33 +15,36 @@
 	const graph = getContext<Graph>('graph');
 	const groupKey: GroupKey = `${groupName}/${graph.id}`;
 
-	// Set the group context
-	setContext('group', groupKey);
+	// Reactive state using Svelte 5 runes
+	let group = $state(groupKey);
+	let dimensions = $state({ 
+		width: $state(width), 
+		height: $state(height) 
+	});
+	let positionState = $state(position);
+	let colorState = $state(color);
+	let moving = $state(false);
 
-	// Create a writable store for the position
-	const writablePosition = writable(position);
-
-	// Create a group box object
+	// Create group box object with reactive properties
 	const groupBox: GroupBox = {
-		group: writable(groupKey),
-		dimensions: { width: writable(width), height: writable(height) },
-		position: writablePosition,
-		color: writable(color),
-		moving: writable(false)
+		get group() { return group },
+		get dimensions() { return dimensions },
+		get position() { return positionState },
+		get color() { return colorState },
+		get moving() { return moving }
 	};
 
-	// Add the group box to the graph's group boxes
+	// Add to graph context
 	graph.groupBoxes.add(groupBox, groupKey);
+	graph.groups = {
+		...graph.groups,
+		[groupKey]: {
+			parent: groupBox,
+			nodes: new Set([groupBox])
+		}
+	};
 
-	// Update the graph's groups with the new group
-	graph.groups.update((groups) => {
-		const newGroup: Group = {
-			parent: writable(groupBox),
-			nodes: writable(new Set([groupBox]))
-		};
-		groups[groupKey] = newGroup;
-		return groups;
-	});
+	setContext('group', groupKey);
 </script>
 
 <slot />

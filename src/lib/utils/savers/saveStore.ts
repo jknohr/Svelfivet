@@ -1,13 +1,4 @@
 import type { Graph } from '$lib/types';
-import { get } from 'svelte/store';
-import type { WritableNode } from '$lib/types';
-import type { Node } from '$lib/types';
-import { writable } from 'svelte/store';
-import type { Readable } from 'svelte/store';
-
-function isSvelteStore(value: any): value is Readable<any> {
-	return value && typeof value.subscribe === 'function';
-}
 
 // Function to traverse a nested object and extract the data
 function traverse(obj: Record<string, any>, depth = 0) {
@@ -21,9 +12,7 @@ function traverse(obj: Record<string, any>, depth = 0) {
 				const nodeData: Record<string, any> = {};
 				for (const nodeKey in node) {
 					const nodeValue = node[nodeKey];
-					if (isSvelteStore(nodeValue)) {
-						nodeData[nodeKey] = get(nodeValue);
-					} else if (typeof nodeValue === 'object' && nodeValue !== null) {
+					if (typeof nodeValue === 'object' && nodeValue !== null) {
 						nodeData[nodeKey] = traverse(nodeValue, depth + 1);
 					} else {
 						nodeData[nodeKey] = nodeValue;
@@ -31,13 +20,6 @@ function traverse(obj: Record<string, any>, depth = 0) {
 				}
 				return nodeData;
 			});
-		} else if (isSvelteStore(value)) {
-			const storeValue = get(value);
-			if (typeof storeValue === 'object' && storeValue !== null) {
-				output[key] = traverse(storeValue, depth + 1);
-			} else {
-				output[key] = storeValue;
-			}
 		} else if (typeof value === 'object' && value !== null) {
 			output[key] = traverse(value, depth + 1);
 		} else {
@@ -60,7 +42,7 @@ function domRectReplacer(_key: string, value: any) {
 	return value;
 }
 
-// Function to get JSON stringified data from nested Svelte store
+// Function to get JSON stringified data from nested state
 export function getJSONState(store: any) {
 	const data = traverse(store);
 	const raw = JSON.stringify(data, domRectReplacer);

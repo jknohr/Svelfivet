@@ -1,4 +1,3 @@
-import type { Writable } from 'svelte/store';
 import type { Graph } from '$lib/types';
 
 // This is a work in progress to create a type for the context object
@@ -11,10 +10,10 @@ export interface ContextValues {
 }
 
 export interface ResizeDataContext {
-	heightStore: Writable<number>;
-	widthStore: Writable<number>;
+	height: number;
+	width: number;
 	minWidth: number;
 	minHeight: number;
-	x: Writable<number>;
-	y: Writable<number>;
+	x: number;
+	y: number;
 }

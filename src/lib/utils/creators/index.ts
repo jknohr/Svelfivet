@@ -5,3 +5,4 @@ export * from './createGraph';
 export * from './generateOutput';
 export * from './generateInput';
 export * from './createAnchor';
+export * from './createCursorEdge';

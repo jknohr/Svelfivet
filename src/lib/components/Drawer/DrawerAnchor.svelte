@@ -1,7 +1,3 @@
-<!-- @migration-task Error while migrating Svelte code: Cannot use rune without parentheses
-https://svelte.dev/e/rune_missing_parentheses -->
-<!-- @migration-task Error while migrating Svelte code: Cannot use rune without parentheses
-https://svelte.dev/e/rune_missing_parentheses -->
 <script lang="ts">
     import { writable } from 'svelte/store';
     import type { CSSColorString, Direction, AnchorDrawerConfig, AnchorProps } from '$lib/types';
@@ -9,7 +5,6 @@ https://svelte.dev/e/rune_missing_parentheses -->
     import type { ComponentType } from 'svelte';
     import Icon from '$lib/assets/icons/Icon.svelte';
 
-    // Add props using $props()
     let { children } = $props();
 
     // Local stores for anchor counts
@@ -19,37 +14,36 @@ https://svelte.dev/e/rune_missing_parentheses -->
     const bottomAnchorCounter = writable<number>(0);
     const selfAnchorCounter = writable<number>(0);
 
-    // Props for anchor creation
-    $state = {
-        invisible: undefined,
-        nodeConnect: undefined,
-        input: undefined,
-        output: undefined,
-        multiple: undefined,
-        direction: undefined,
-        dynamic: undefined,
-        anchorEdgeLabel: undefined,
-        anchorLocked: undefined,
-        anchorBgColor: undefined,
-        directionValue: undefined,
-        edgeProps: undefined
-    };
+    // Props for anchor creation with proper state declarations
+    let invisible = $state<boolean | undefined>(undefined);
+    let nodeConnect = $state<boolean | undefined>(undefined);
+    let input = $state<boolean | undefined>(undefined);
+    let output = $state<boolean | undefined>(undefined);
+    let multiple = $state<boolean | undefined>(undefined);
+    let direction = $state<Direction | undefined>(undefined);
+    let dynamic = $state<boolean | undefined>(undefined);
+    let anchorEdgeLabel = $state<string | undefined>(undefined);
+    let anchorLocked = $state<boolean | undefined>(undefined);
+    let anchorBgColor = $state<CSSColorString | undefined>(undefined);
+    let directionValue = $state<HTMLSelectElement | undefined>(undefined);
+    let edgeProps = $state<any>(undefined);
 
     // Array of props for pending anchors based on direction
-    let anchorsCreated = {
-        self: [],
-        left: [],
-        right: [],
-        top: [],
-        bottom: []
-    };
+    let anchorsCreated = $state({
+        self: [] as AnchorDrawerConfig[],
+        left: [] as AnchorDrawerConfig[],
+        right: [] as AnchorDrawerConfig[],
+        top: [] as AnchorDrawerConfig[],
+        bottom: [] as AnchorDrawerConfig[]
+    });
 
     // Creates props and adds to corresponding anchor direction
     export const createAnchorProps = (
         createAnchors: boolean,
         anchorPosition?: string
     ): { [key: string]: AnchorDrawerConfig[] } | undefined => {
-        if ($state.direction == '') $state.direction = undefined;
+        // Skip empty direction values
+        if (!direction) return;
 
         // Object that stores properties for the created anchor
         const anchorProps: AnchorDrawerConfig = {};
@@ -68,17 +62,17 @@ https://svelte.dev/e/rune_missing_parentheses -->
             'edge'
         ];
         const anchorPropsArray: AnchorProps = [
-            $state.invisible,
-            $state.nodeConnect,
-            $state.input,
-            $state.output,
-            $state.multiple,
-            $state.direction,
-            $state.dynamic,
-            $state.anchorEdgeLabel,
-            $state.anchorLocked,
-            $state.anchorBgColor,
-            $state.edgeProps
+            invisible,
+            nodeConnect,
+            input,
+            output,
+            multiple,
+            direction,
+            dynamic,
+            anchorEdgeLabel,
+            anchorLocked,
+            anchorBgColor,
+            edgeProps
         ];
 
         // Adds props to anchor if they exist
@@ -107,58 +101,58 @@ https://svelte.dev/e/rune_missing_parentheses -->
     //Button Clicks for Anchors
     const handleAnchorLockedButtonClick = (e: Event) => {
         const target = e.target as HTMLInputElement;
-        $state.anchorLocked = target.checked;
+        anchorLocked = target.checked;
     };
 
     const handleInvisibleButtonClick = (e: Event) => {
         const target = e.target as HTMLInputElement;
-        $state.invisible = target.checked;
+        invisible = target.checked;
     };
 
     const handleNodeConnectButtonClick = (e: Event) => {
         const target = e.target as HTMLInputElement;
-        $state.nodeConnect = target.checked;
+        nodeConnect = target.checked;
     };
 
     const handleInputButtonClick = (e: Event) => {
         const target = e.target as HTMLInputElement;
-        $state.input = target.checked;
+        input = target.checked;
     };
 
     const handleOutputButtonClick = (e: Event) => {
         const target = e.target as HTMLInputElement;
-        $state.output = target.checked;
+        output = target.checked;
     };
 
     const handleMultipleButtonClick = (e: Event) => {
         const target = e.target as HTMLInputElement;
-        $state.multiple = target.checked;
+        multiple = target.checked;
     };
 
     const handleDynamicButtonClick = (e: Event) => {
         const target = e.target as HTMLInputElement;
-        $state.dynamic = target.checked;
+        dynamic = target.checked;
     };
 
     const handleDirectionButtonClick = (e: Event) => {
         const target = e.target as HTMLSelectElement;
-        if (target.value == '') $state.direction = undefined;
+        if (target.value == '') direction = undefined;
         else {
-            $state.direction = target.value as Direction | undefined;
+            direction = target.value as Direction | undefined;
         }
     };
     // Reset props, pending anchors, and counters for position of anchors
     const handleAnchorResetButtonClick = (e: Event) => {
-        $state.invisible = undefined;
-        $state.nodeConnect = undefined;
-        $state.input = undefined;
-        $state.output = undefined;
-        $state.multiple = undefined;
-        $state.direction = undefined;
-        $state.dynamic = undefined;
-        $state.anchorEdgeLabel = undefined;
-        $state.anchorLocked = undefined;
-        $state.anchorBgColor = undefined;
+        invisible = undefined;
+        nodeConnect = undefined;
+        input = undefined;
+        output = undefined;
+        multiple = undefined;
+        direction = undefined;
+        dynamic = undefined;
+        anchorEdgeLabel = undefined;
+        anchorLocked = undefined;
+        anchorBgColor = undefined;
         anchorsCreated.left = [];
         anchorsCreated.right = [];
         anchorsCreated.top = [];
@@ -210,34 +204,34 @@ https://svelte.dev/e/rune_missing_parentheses -->
 
     // Validation for anchor properties
     const validateAnchorProps = () => {
-        if ($state.invisible !== undefined && typeof $state.invisible !== 'boolean') {
+        if (invisible !== undefined && typeof invisible !== 'boolean') {
             throw new Error('Invalid value for invisible property');
         }
-        if ($state.nodeConnect !== undefined && typeof $state.nodeConnect !== 'boolean') {
+        if (nodeConnect !== undefined && typeof nodeConnect !== 'boolean') {
             throw new Error('Invalid value for nodeConnect property');
         }
-        if ($state.input !== undefined && typeof $state.input !== 'boolean') {
+        if (input !== undefined && typeof input !== 'boolean') {
             throw new Error('Invalid value for input property');
         }
-        if ($state.output !== undefined && typeof $state.output !== 'boolean') {
+        if (output !== undefined && typeof output !== 'boolean') {
             throw new Error('Invalid value for output property');
         }
-        if ($state.multiple !== undefined && typeof $state.multiple !== 'boolean') {
+        if (multiple !== undefined && typeof multiple !== 'boolean') {
             throw new Error('Invalid value for multiple property');
         }
-        if ($state.direction !== undefined && !['north', 'south', 'east', 'west', 'self'].includes($state.direction)) {
+        if (direction !== undefined && !['north', 'south', 'east', 'west', 'self'].includes(direction)) {
             throw new Error('Invalid value for direction property');
         }
-        if ($state.dynamic !== undefined && typeof $state.dynamic !== 'boolean') {
+        if (dynamic !== undefined && typeof dynamic !== 'boolean') {
             throw new Error('Invalid value for dynamic property');
         }
-        if ($state.anchorEdgeLabel !== undefined && typeof $state.anchorEdgeLabel !== 'string') {
+        if (anchorEdgeLabel !== undefined && typeof anchorEdgeLabel !== 'string') {
             throw new Error('Invalid value for anchorEdgeLabel property');
         }
-        if ($state.anchorLocked !== undefined && typeof $state.anchorLocked !== 'boolean') {
+        if (anchorLocked !== undefined && typeof anchorLocked !== 'boolean') {
             throw new Error('Invalid value for anchorLocked property');
         }
-        if ($state.anchorBgColor !== undefined && typeof $state.anchorBgColor !== 'string') {
+        if (anchorBgColor !== undefined && typeof anchorBgColor !== 'string') {
             throw new Error('Invalid value for anchorBgColor property');
         }
     };
@@ -251,14 +245,14 @@ https://svelte.dev/e/rune_missing_parentheses -->
         <ul aria-labelledby="select_props">
             <li class="list-item">
                 <label for="anchorBgColor">Background: </label>
-                <input id="anchorBgColor" class="colorWheel" type="color" bind:value={$state.anchorBgColor} />
+                <input id="anchorBgColor" class="colorWheel" type="color" bind:value={anchorBgColor} />
             </li>
             <li class="list-item">
                 <label for="invisible">Invisible: </label>
                 <input
                     id="invisible"
                     type="checkbox"
-                    bind:value={$state.invisible}
+                    bind:value={invisible}
                     onchange={handleInvisibleButtonClick}
                 />
             </li>
@@ -267,20 +261,20 @@ https://svelte.dev/e/rune_missing_parentheses -->
                 <input
                     id="nodeConnect"
                     type="checkbox"
-                    bind:value={$state.nodeConnect}
+                    bind:value={nodeConnect}
                     onchange={handleNodeConnectButtonClick}
                 />
             </li>
             <li class="list-item">
                 <label for="input">Input: </label>
-                <input id="input" type="checkbox" bind:value={$state.input} onchange={handleInputButtonClick} />
+                <input id="input" type="checkbox" bind:value={input} onchange={handleInputButtonClick} />
             </li>
             <li class="list-item">
                 <label for="output">Output: </label>
                 <input
                     id="output"
                     type="checkbox"
-                    bind:value={$state.output}
+                    bind:value={output}
                     onchange={handleOutputButtonClick}
                 />
             </li>
@@ -289,7 +283,7 @@ https://svelte.dev/e/rune_missing_parentheses -->
                 <input
                     id="multiple"
                     type="checkbox"
-                    bind:value={$state.multiple}
+                    bind:value={multiple}
                     onchange={handleMultipleButtonClick}
                 />
             </li>
@@ -297,8 +291,8 @@ https://svelte.dev/e/rune_missing_parentheses -->
                 <label for="direction">Direction: </label>
                 <select
                     id="direction"
-                    bind:this={$state.directionValue}
-                    bind:value={$state.direction}
+                    bind:this={directionValue}
+                    bind:value={direction}
                     onchange={handleDirectionButtonClick}
                 >
                     <option value="">-</option>
@@ -314,7 +308,7 @@ https://svelte.dev/e/rune_missing_parentheses -->
                 <input
                     id="dynamic"
                     type="checkbox"
-                    bind:value={$state.dynamic}
+                    bind:value={dynamic}
                     onchange={handleDynamicButtonClick}
                 />
             </li>
@@ -324,7 +318,7 @@ https://svelte.dev/e/rune_missing_parentheses -->
                 <input
                     id="anchorLocked"
                     type="checkbox"
-                    bind:value={$state.anchorLocked}
+                    bind:value={anchorLocked}
                     onchange={handleAnchorLockedButtonClick}
                 />
             </li>

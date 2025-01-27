@@ -1,27 +1,27 @@
-import type { Writable } from 'svelte/store';
+import type { SvelteComponent } from 'svelte';
 import type { AnchorStore, CSSDimensionString, InitialDimensions, Connections, Direction } from '.';
 import type { XYPair, NodeKey, Dimensions, CSSColorString, GroupKey } from '.';
-import type { ComponentType } from 'svelte';
+
 // This defines an interface for the actual node object that is used in the graph/stores
 export interface Node {
 	id: NodeKey;
-	rotation: Writable<number>;
-	position: Writable<XYPair>;
+	rotation: number;
+	position: XYPair;
 
-	moving: Writable<boolean>;
-	label: Writable<string>; // Primary label for default node
+	moving: boolean;
+	label: string; // Primary label for default node
 	dimensions: Dimensions;
-	inputs: Writable<number>; //Number of default input anchors to render
-	outputs: Writable<number>; // Number of default output anchors to render
+	inputs: number; //Number of default input anchors to render
+	outputs: number; // Number of default output anchors to render
 	anchors: AnchorStore;
-	group: Writable<GroupKey | null>;
-	collapsed: Writable<boolean>;
+	group: GroupKey | null;
+	collapsed: boolean;
 	// visible: Writable<boolean>;
-	resizingWidth: Writable<boolean>;
-	resizingHeight: Writable<boolean>;
-	rotating: Writable<boolean>;
-	editable: Writable<boolean>;
-	locked: Writable<boolean>;
+	resizingWidth: boolean;
+	resizingHeight: boolean;
+	rotating: boolean;
+	editable: boolean;
+	locked: boolean;
 	recalculateAnchors: (direction?: Direction) => void;
 	// selectable: Writable<boolean>;
 	// connectable: Writable<boolean>;
@@ -29,18 +29,18 @@ export interface Node {
 	// deletable: Writable<boolean>;
 	// hideable: Writable<boolean>;
 	// focusable: Writable<boolean>;
-	resizable: Writable<boolean>;
-	zIndex: Writable<number>;
-	edge: ComponentType | null;
+	resizable: boolean;
+	zIndex: number;
+	edge: typeof SvelteComponent | null;
 	// ariaLabel: string;
-	direction: Writable<'TD' | 'LR'>;
-	borderRadius: Writable<number>;
-	borderWidth: Writable<number>;
-	connections: Writable<Connections>;
-	bgColor: Writable<CSSColorString | null>;
-	borderColor: Writable<CSSColorString | null>;
-	selectionColor: Writable<CSSColorString | null>;
-	textColor: Writable<CSSColorString | null>;
+	direction: 'TD' | 'LR';
+	borderRadius: number;
+	borderWidth: number;
+	connections: Connections;
+	bgColor: CSSColorString | null;
+	borderColor: CSSColorString | null;
+	selectionColor: CSSColorString | null;
+	textColor: CSSColorString | null;
 }
 
 // This defines an interface for the node object
@@ -62,7 +62,7 @@ export interface NodeConfig {
 	outputs?: number;
 	locked?: boolean;
 	selectionColor?: CSSColorString;
-	component?: ComponentType;
+	component?: typeof SvelteComponent;
 	width?: number;
 	height?: number;
 	header?: true;
@@ -75,9 +75,7 @@ export interface NodeConfig {
 	rotation?: number;
 	textColor?: CSSColorString;
 	connections?: Connections;
-	edge?: ComponentType;
+	edge?: typeof SvelteComponent;
 }
 
 export type UserDimension = number | CSSDimensionString;
-
-export type WritableNode = Writable<Node>;

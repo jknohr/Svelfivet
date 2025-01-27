@@ -1,4 +1,5 @@
-import type { Graph } from '$lib/types';
+import type { Graph, XYPair } from '$lib/types';
+import { get } from 'svelte/store';
 
 export const calculateRelativeCursor = (
 	e: { clientX: number; clientY: number },
@@ -29,11 +30,30 @@ export const calculateRelativeCursor = (
 
 	return { x: newCursorX, y: newCursorY };
 };
-import { get } from 'svelte/store';
+
+interface GraphDimensions {
+	top: number;
+	left: number;
+	width: number;
+	height: number;
+	subscribe: (subscriber: (value: GraphDimensions) => void) => () => void;
+}
+
+interface GraphTransforms {
+	scale: {
+		subscribe: (subscriber: (value: number) => void) => () => void;
+	};
+	translation: {
+		subscribe: (subscriber: (value: XYPair) => void) => () => void;
+	};
+}
 
 export function calculateRelativePosition(
-	dimensions: Graph['dimensions'],
-	transforms: Graph['transforms'],
+	dimensions: GraphDimensions,
+	transforms: {
+		scale: { subscribe: (subscriber: (value: number) => void) => () => void };
+		translation: { subscribe: (subscriber: (value: XYPair) => void) => () => void };
+	},
 	position: { x: number; y: number }
 ) {
 	const { top, left, width, height } = get(dimensions);

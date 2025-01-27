@@ -1,67 +1,81 @@
 <script lang="ts">
 	import { Anchor, Node } from '$lib';
+	import type { NodeConfig } from '$lib/types';
+	import type { Snippet } from 'svelte';
 
-	$state.text = 'Test';
-	$state.checked = true;
-	$state.color = '#ff0000';
-	$state.date = new Date();
-	$state.datetime = new Date();
-	$state.email = '';
-	$state.month = '';
-	$state.number = 0;
-	$state.password = '';
-	$state.radio = '';
-	$state.range = 0;
-	$state.search = '';
-	$state.tel = '';
-	$state.url = '';
-	$state.week = '';
+	let text = $state('Test');
+	let checked = $state(true);
+	let color = $state('#ff0000');
+	let date = $state(new Date());
+	let datetime = $state(new Date());
+	let email = $state('');
+	let month = $state('');
+	let number = $state(0);
+	let password = $state('');
+	let radio = $state('');
+	let range = $state(0);
+	let search = $state('');
+	let tel = $state('');
+	let url = $state('');
+	let week = $state('');
 
-	$derived formattedDate = $state.date.toLocaleDateString();
-	$derived formattedDatetime = $state.datetime.toLocaleString();
+	let formattedDate = $derived(date.toLocaleDateString());
+	let formattedDatetime = $derived(datetime.toLocaleString());
 
 	$effect(() => {
-		console.log('Text changed:', $state.text);
+		console.log('Text changed:', text);
 	});
+
+	const nodeProps: NodeConfig = {
+		id: 1,
+		bgColor: 'black',
+		label: 'StartNode',
+		borderRadius: 10
+	};
 </script>
 
-<Node id="input" bgColor="black" label="StartNode" borderRadius={10} >
-	{@render children({ destroy })}
-		<div class="node">
-			<input id="text-test" type="text" bind:value={$state.text} />
-			<input id="checkbox-test" type="checkbox" bind:checked={$state.checked} />
-			<input type="color" bind:value={$state.color} />
-			<input type="date" bind:value={$state.date} />
-			<input type="datetime-local" bind:value={$state.datetime} />
-			<input type="email" bind:value={$state.email} />
-			<input type="month" bind:value={$state.month} />
-			<input type="number" bind:value={$state.number} />
-			<input type="password" bind:value={$state.password} />
-			<input type="radio" bind:value={$state.radio} />
-			<input type="range" bind:value={$state.range} />
-			<input type="search" bind:value={$state.search} />
-			<input type="tel" bind:value={$state.tel} />
-			<select id="numberSelect">
-				<option value="1">1</option>
-				<option value="2">2</option>
-				<option value="3">3</option>
-				<option value="4">4</option>
-				<option value="5">5</option>
-				<option value="6">6</option>
-				<option value="7">7</option>
-				<option value="8">8</option>
-				<option value="9">9</option>
-				<option value="10">10</option>
-			</select>
-			<textarea id="textarea-test"></textarea>
-			<button onclick={$state.destroy}>Test</button>
-		</div>
-	{@/render}
+<Node {...nodeProps} let:grabHandle let:selected>
+	<div class="node" use:grabHandle class:selected>
+		<input id="text-test" type="text" bind:value={text} />
+		<input id="checkbox-test" type="checkbox" bind:checked={checked} />
+		<input type="color" bind:value={color} />
+		<input type="date" bind:value={date} />
+		<input type="datetime-local" bind:value={datetime} />
+		<input type="email" bind:value={email} />
+		<input type="month" bind:value={month} />
+		<input type="number" bind:value={number} />
+		<input type="password" bind:value={password} />
+		<input type="radio" bind:value={radio} />
+		<input type="range" bind:value={range} />
+		<input type="search" bind:value={search} />
+		<input type="tel" bind:value={tel} />
+		<select id="numberSelect">
+			<option value="1">1</option>
+			<option value="2">2</option>
+			<option value="3">3</option>
+			<option value="4">4</option>
+			<option value="5">5</option>
+			<option value="6">6</option>
+			<option value="7">7</option>
+			<option value="8">8</option>
+			<option value="9">9</option>
+			<option value="10">10</option>
+		</select>
+		<textarea id="textarea-test"></textarea>
+	</div>
 </Node>
 
 <style>
 	.node {
 		width: 400px;
 		height: 400px;
+		padding: 1rem;
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+	}
+
+	.node.selected {
+		outline: 2px solid var(--selection-color, #00ff00);
 	}
 </style>

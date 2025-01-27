@@ -1,8 +1,6 @@
-import type { Writable } from 'svelte/store';
-
 export interface XYPosition {
-	x: Writable<number>;
-	y: Writable<number>;
+	x: number;
+	y: number;
 }
 
 export interface XYPair {
@@ -17,6 +15,7 @@ export interface GraphDimensions {
 	height: number;
 	bottom: number;
 	right: number;
+	subscribe: (subscriber: (value: GraphDimensions) => void) => () => void;
 }
 
 export interface NodeDOMBounds {
@@ -47,8 +46,8 @@ export interface ThemeGroup {
 export type Corner = 'SE' | 'SW' | 'NE' | 'NW';
 
 export interface Dimensions {
-	width: Writable<number>;
-	height: Writable<number>;
+	width: number;
+	height: number;
 }
 
 export interface InitialDimensions {

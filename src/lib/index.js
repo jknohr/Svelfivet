@@ -14,6 +14,7 @@ import Background from './containers/Background/Background.svelte';
 import ThemeToggle from './components/ThemeToggle/ThemeToggle.svelte';
 import ColorPicker from './components/data/ColorPicker/ColorWheel.svelte';
 import Resizer from './components/Resizer/Resizer.svelte';
+import TextField from './components/data/TextField/TextField.svelte';
 import { generateInput, generateOutput } from './utils/creators';
 import { getViewportCenter } from './utils/getters/getViewportCenter';
 import ContrastTheme from './components/ContrastTheme/ContrastTheme.svelte';
@@ -34,6 +35,7 @@ export {
 	ThemeToggle,
 	ColorPicker,
 	Drawer,
+	TextField,
 	generateInput,
 	generateOutput,
 	getViewportCenter,
