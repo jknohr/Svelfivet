@@ -1,31 +1,30 @@
 <script lang="ts">
 	import { Svelvet, ThemeToggle, Node } from '$lib';
 	// import type { Theme } from 'svelvet';
-	import InputNode from '../../example-components/InputNode.svelte';
+	import InputNode from 'src/example-components/InputNode.svelte';
 	import { generateInput, generateOutput, Knob, Resizer } from '$lib';
-	import NodeWrapper from '../../example-components/test-components/NodeWrapper.svelte';
-	import Output from '../../example-components/test-components/Output.svelte';
-	import Volume from '../../example-components/test-components/Volume.svelte';
-	import Bass from '../../example-components/test-components/Bass.svelte';
-	import Treble from '../../example-components/test-components/Treble.svelte';
-	import Audio from '../../example-components/test-components/Audio.svelte';
-	import KnobOutputDisplayer from '../../example-components/test-components/KnobOutputDisplayer.svelte';
-	import CircleColor from '../../example-components/test-components/CircleColor.svelte';
-
+	import NodeWrapper from 'src/example-components/test-components/NodeWrapper.svelte';
+	import Output from 'src/example-components/test-components/Output.svelte';
+	import Volume from 'src/example-components/test-components/Volume.svelte';
+	import Bass from 'src/example-components/test-components/Bass.svelte';
+	import Treble from 'src/example-components/test-components/Treble.svelte';
+	import Audio from 'src/example-components/test-components/Audio.svelte';
+	import KnobOutputDisplayer from 'src/example-components/test-components/KnobOutputDisplayer.svelte';
+	import CircleColor from 'src/example-components/test-components/CircleColor.svelte';
+	import Minimap from '$lib/components/Organisms/Minimap/Minimap.svelte';
 	type Inputs = {
 		degree: number;
 	};
 </script>
 
 <body>
-	<Svelvet minimap>
+	<Svelvet controls>
 		<!-- <Volume /> -->
 		<Treble />
 		<!-- <Bass /> -->
 		<Audio />
-		{#snippet toggle()}
-				<ThemeToggle main="light" alt="dark"  />
-			{/snippet}
+		<Minimap width={100} corner="SE" />
+		<ThemeToggle main="light" alt="dark" />
 	</Svelvet>
 </body>
 

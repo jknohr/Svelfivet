@@ -372,19 +372,23 @@
 >
 	<Svelvet height={600} zoom={0.7} minimap controls>
 		{#each defaultNodes as node, i}
-			<Node position={{ x: 200, y: 100 }} dimensions={{ width: node.width || 200, height: node.height || 100 }} id={i} bgColor={node.bgColor} drop="cursor" let:grabHandle let:selected>
-				<div class="node" use:grabHandle class:selected>
-					<Anchor output />
-				</div>
+			<Node position={{ x: 200, y: 100 }} dimensions={{ width: node.width || 200, height: node.height || 100 }} id={i} bgColor={node.bgColor} drop="cursor">
+				<svelte:fragment slot="content" let:grabHandle let:selected>
+					<div class="node" use:grabHandle class:selected>
+						<Anchor output />
+					</div>
+				</svelte:fragment>
 			</Node>
 		{/each}
 		{#each customNodes as cNode, index}
-			<Node {...cNode} drop="cursor" let:grabHandle let:selected>
-				<div class="node" use:grabHandle class:selected>
-					<Anchor {...anchors[index]}>
-						<!-- <Edge {...edges[index]}></Edge> -->
-					</Anchor>
-				</div>
+			<Node {...cNode} drop="cursor">
+				<svelte:fragment slot="content" let:grabHandle let:selected>
+					<div class="node" use:grabHandle class:selected>
+						<Anchor {...anchors[index]}>
+							<!-- <Edge {...edges[index]}></Edge> -->
+						</Anchor>
+					</div>
+				</svelte:fragment>
 			</Node>
 		{/each}
 		<ThemeToggle main="light" alt="dark" />
@@ -401,6 +405,9 @@
 					draggable="true"
 					ondragstart={handleDragStart}
 					ondragend={handleDragEnd}
+					role="button"
+					tabindex="0"
+					aria-label="Draggable node"
 				>
 					Node
 				</div>

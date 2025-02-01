@@ -1,11 +1,16 @@
 <script lang="ts">
-	import { Node } from '$lib';
+	import { Node, Svelvet } from '$lib';
 	import type { Node as NodeType } from '$lib/types';
 	import type { SvelvetConnectionEvent } from '$lib/types';
+	import { v7 } from 'uuid';
+	import type { Snippet } from 'svelte';
 
 	let selected = $state(false);
 	let position = $state({ x: 100, y: 100 });
 	let label = $state('test');
+
+	type NodeSnippetProps = { selected: boolean; label: string };
+	let nodeContent: Snippet<[NodeSnippetProps]> = node;
 
 	function handleConnection(e: CustomEvent<SvelvetConnectionEvent>) {
 		console.log(e.detail);
@@ -20,48 +25,50 @@
 	}
 </script>
 
-<body>
-	<div class="wrapper">
-		<Svelvet
-			onconnection={handleConnection}
-			theme="dark"
-			width={800}
-			height={500}
-			controls
-			title="tests"
-		>
-			<Node
-				id={1}
-				position={position}
-				onnodeClicked={handleNodeClick}
-				onnodeReleased={handleNodeRelease}
-			>
-				{#snippet node({ selected = false }: { selected: boolean })}
-					<div class="node" class:selected>
-						<p>Node 1</p>
-					</div>
-				{/snippet}
-			</Node>
-			{/* @ts-ignore - Library type definitions need updating for Svelte 5 */}
-			<Node
-				id={2}
-				position={{ x: 300, y: 100 }}
-			>
-				{#snippet node({ selected = false }: { selected: boolean })}
-					<div class="node" class:selected>
-						<p>Node 2</p>
-					</div>
-				{/snippet}
-			</Node>
-			<Node label="what" position={{ x: 10, y: 200 }} inputs={3} TD id={3} />
-			{#snippet minimap()}
-				<div class="minimap">
-					<!-- Minimap content -->
-				</div>
-			{/snippet}
-		</Svelvet>
+{#snippet node({ selected, label }: NodeSnippetProps)}
+	<div class="node" class:selected>
+		<p>{label}</p>
 	</div>
-</body>
+{/snippet}
+
+<div class="wrapper">
+	<Svelvet
+		theme="dark"
+		width={800}
+		height={500}
+		controls={true}
+		title="tests"
+	>
+		<Node
+			id={v7()}
+			position={position}
+			width={100}
+			height={50}
+			{nodeContent}
+		>
+			{@render node({ selected, label: 'Node 1' })}
+		</Node>
+		<Node
+			id={v7()}
+			position={{ x: 300, y: 100 }}
+			width={100}
+			height={50}
+			{nodeContent}
+		>
+			{@render node({ selected, label: 'Node 2' })}
+		</Node>
+		<Node 
+			label="what" 
+			position={{ x: 10, y: 200 }} 
+			inputs={v7()} 
+			TD 
+			id={v7()}
+			width={100}
+			height={50}
+			{nodeContent}
+		/>
+	</Svelvet>
+</div>
 
 <style>
 	.wrapper {
@@ -71,16 +78,7 @@
 		overflow: hidden;
 		box-shadow: 0 0 40px 0 rgba(37, 37, 37, 0.5);
 	}
-	body {
-		display: flex;
-		justify-content: center;
-		align-items: center;
-		background-color: gray;
-		width: 100vw;
-		height: 100vh;
-		padding: 0;
-		margin: 0;
-	}
+
 	/* :root[theme='dark'] {
 		--node-selection-color: blue;
 		--node-color: red;

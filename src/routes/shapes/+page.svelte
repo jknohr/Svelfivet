@@ -4,7 +4,7 @@
 </script>
 
 <body>
-	<Svelvet minimap controls edgeStyle="step">
+	<Svelvet minimap={true} controls={true} edgeStyle="step">
 		<Node id="round-rect" dimensions={{ width: 150, height: 50 }} position={{ x: 300, y: 100 }}>
 			<svg class="roundRect" height="100%" width="100%">
 				<rect width="100%" height="100%" rx="30" ry="30" fill="slateblue" stroke="black" />

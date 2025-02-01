@@ -11,7 +11,7 @@
 	import { getJSONState } from '$lib/utils/savers/saveStore';
 	import type { Graph } from '$lib/types';
 	import { getContext } from 'svelte';
-	import { graphStore } from '$lib/stores';
+	import { graphStore } from '$lib/components/Templates/Canvas/stores';
 	import { get } from 'svelte/store';
 	// Controls is not used on the canvas itself, but is part of the HUD of the dev homepage
 	// maybe not needed here

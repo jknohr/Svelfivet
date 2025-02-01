@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { Svelvet, Node, Group } from '$lib';
-	import { graphStore } from '$lib/stores';
+	import { graphStore } from '$lib/components/Templates/Canvas/stores';
 	import { getContext } from 'svelte';
 	import type { Graph } from '$lib/types';
 	import DashCount from '../../example-components/test-components/DashCount.svelte';

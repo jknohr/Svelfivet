@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { Svelvet, Minimap, Node, Anchor } from '$lib';
-	import Edge from '$lib/components/Edge/Edge.svelte';
+	import Edge from '$lib/components/Organisms/Edge/Edge.svelte';
 
 	let childrenHidden = true;
 </script>

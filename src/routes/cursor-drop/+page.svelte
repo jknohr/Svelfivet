@@ -2,7 +2,7 @@
 	import { getContext, onMount, setContext } from 'svelte';
 	import { Node, Svelvet, Anchor } from '$lib';
 	//import Graph from '$lib/containers/Graph/Graph.svelte';
-	import { graphStore } from '$lib/stores';
+	import { graphStore } from '$lib/components/Templates/Canvas/stores';
 	import type { Graph, NodeConfig, CSSColorString, InitialDimensions, XYPair } from '$lib/types';
 
 	const graph = getContext<Graph>('graph');

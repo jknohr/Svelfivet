@@ -1,5 +1,5 @@
 <script lang="ts">
-	import Edge from '$lib/components/Edge/Edge.svelte';
+	import Edge from '$lib/components/Organisms/Edge/Edge.svelte';
 	import type { CSSColorString } from '$lib/types';
 
 	let color = $state<CSSColorString>('yellow');

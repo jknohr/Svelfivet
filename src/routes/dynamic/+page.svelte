@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { Svelvet, Node } from '$lib';
-	import Anchor from '$lib/components/Anchor/Anchor.svelte';
+	import Anchor from '$lib/components/Atoms/Anchor/Anchor.svelte';
 	let outputs = 4;
 </script>
 

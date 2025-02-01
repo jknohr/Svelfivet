@@ -12,7 +12,7 @@
 
 <body>
 	<div class="wrapper">
-		<Svelvet TD theme="dark" width={800} height={500} zoom={0.5} controls title="tests">
+		<Svelvet TD theme="dark" width={800} height={500} zoom={0.5} controls title="tests" minimap={true}>
 			<Node connections={[2, 3]} useDefaults width={200} height={100}>
 				{#snippet node({ grabHandle, selected }: NodeProps)}
 					<div class="node" use:grabHandle class:selected>
@@ -27,9 +27,7 @@
 				<Node position={{ x: -100, y: 500 }} />
 			{/if}
 
-			{#snippet minimap()}
-				<Minimap width={100} corner="SE" />
-			{/snippet}
+			<Minimap width={100} corner="SE" />
 		</Svelvet>
 	</div>
 </body>
