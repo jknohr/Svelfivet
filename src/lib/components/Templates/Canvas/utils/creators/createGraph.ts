@@ -1,12 +1,20 @@
-import type { Graph, Node, GroupBox, GraphKey, GroupKey, XYPair, GraphDimensions, Groups } from '$lib/components/Templates/Canvas/types';
+import type { SvelteComponent } from 'svelte';
+import type {
+	Graph,
+	GraphConfig,
+	Groups,
+	GraphTransforms
+} from '$lib/components/Templates/Canvas/Graph/Graph.types';
+import type { NodeStore, EdgeStore, GroupStore } from '$lib/components/Templates/Canvas/types/stores';
+import type { Node, GroupBox, GraphKey, GroupKey, XYPair } from '$lib/components/Templates/Canvas/types/logic';
+import type { GraphDimensions } from '$lib/components/Templates/Canvas/Svelvet/Svelvet.types';
 import { createStore } from './createStore';
 import { createEdgeStore } from './createEdgeStore';
 import { cursorPosition } from '$lib/components/Templates/Canvas/stores/CursorStore';
-import type { NodeKey } from '$lib/components/Templates/Canvas/types';
+import type { NodeKey } from '$lib/components/Templates/Canvas/types/logic';
 import { createDerivedCursorStore } from './createDerivedCursoreStore';
 import { createBoundsStore } from './createBoundsStore';
-import type { GraphConfig } from '$lib/components/Templates/Canvas/types';
-import { calculateViewportCenter } from '../calculators/calculateViewPortCenter';
+import { calculateViewportCenter } from '../calculators';
 
 export function createGraph(id: GraphKey, config: GraphConfig): Graph {
 	const { zoom = 1, editable, translation: initialTranslation, direction, locked, edge } = config;
@@ -36,7 +44,7 @@ export function createGraph(id: GraphKey, config: GraphConfig): Graph {
 		cursor: $state<XYPair>({ x: 0, y: 0 }),
 		graphBounds: $state<GraphDimensions>({ left: Infinity, top: Infinity, right: -Infinity, bottom: -Infinity, width: 0, height: 0 }),
 		nodeBounds: $state<GraphDimensions>({ left: Infinity, top: Infinity, right: -Infinity, bottom: -Infinity, width: 0, height: 0 }),
-		nodes: createStore<Node, NodeKey>()
+		nodes: createStore<NodeKey, Node>()
 	};
 
 	// Create effects to update center and cursor
@@ -59,7 +67,7 @@ export function createGraph(id: GraphKey, config: GraphConfig): Graph {
 	});
 
 	const bounds = createBoundsStore(
-		graphState.nodes, 
+		graphState.nodes as NodeStore, 
 		() => graphState.dimensions, 
 		() => graphState.scale, 
 		() => graphState.translation
@@ -79,12 +87,12 @@ export function createGraph(id: GraphKey, config: GraphConfig): Graph {
 
 	const graph: Graph = {
 		id,
-		nodes: graphState.nodes,
-		edges: createEdgeStore(),
+		nodes: graphState.nodes as unknown as NodeStore,
+		edges: createEdgeStore() as unknown as EdgeStore,
 		transforms: {
 			translation: graphState.translation,
 			scale: graphState.scale
-		},
+		} as GraphTransforms,
 		maxZIndex: graphState.maxZIndex,
 		dimensions: graphState.dimensions,
 		bounds: {
@@ -92,15 +100,17 @@ export function createGraph(id: GraphKey, config: GraphConfig): Graph {
 			nodeBounds: graphState.nodeBounds as GraphDimensions,
 			recalculateBounds: () => {
 				// Recalculate bounds based on current state
-				const nodeList = graphState.nodes.getAll();
+				const nodeList = Array.from(graphState.nodes.items.values());
 				if (!nodeList.length) return;
 				
-				const { left, top, right, bottom } = nodeList.reduce((acc: { left: number; top: number; right: number; bottom: number }, node: Node) => ({
+				const { left, top, right, bottom } = nodeList.reduce((acc: GraphDimensions, node: Node) => ({
 					left: Math.min(acc.left, node.position.x),
 					top: Math.min(acc.top, node.position.y),
 					right: Math.max(acc.right, node.position.x + node.dimensions.width),
-					bottom: Math.max(acc.bottom, node.position.y + node.dimensions.height)
-				}), { left: Infinity, top: Infinity, right: -Infinity, bottom: -Infinity });
+					bottom: Math.max(acc.bottom, node.position.y + node.dimensions.height),
+					width: 0,
+					height: 0
+				}), { left: Infinity, top: Infinity, right: -Infinity, bottom: -Infinity, width: 0, height: 0 });
 
 				graphState.nodeBounds = { left, top, right, bottom, width: right - left, height: bottom - top };
 				graphState.graphBounds = { ...graphState.nodeBounds };
@@ -115,7 +125,7 @@ export function createGraph(id: GraphKey, config: GraphConfig): Graph {
 		cursor: graphState.cursor,
 		locked: graphState.locked,
 		groups,
-		groupBoxes: createStore<GroupBox, GroupKey>(),
+		groupBoxes: createStore<GroupKey, GroupBox>() as unknown as GroupStore,
 		activeGroup: graphState.activeGroup,
 		initialNodePositions: graphState.initialNodePositions
 	};

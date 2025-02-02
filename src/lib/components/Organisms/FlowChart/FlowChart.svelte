@@ -1,16 +1,18 @@
+<svelte:options runes={true} />
+
 <script lang="ts">
 	import type { FlowChartProps, NodeId, Position } from './FlowChart.types';
-	import type { Graph } from '$lib/components/Templates/Canvas/Graph/Graph.types';
-	import Node from '../Node/Node.svelte';
+	import type { Graph } from '../../Templates/Canvas/Graph/Graph.types';
+	import type { Node } from '../../Templates/Canvas/types';
 	import { onMount } from 'svelte';
-	import { flowChartDrawer } from '$lib/utils/drawers/flowchartDrawer';
-	import { flowChartParser } from '$lib/utils/helpers/parser';
+	import { flowChartDrawer } from '../../Templates/Canvas/utils/drawers/flowchartDrawer';
+	import { flowChartParser } from '../../Utility/Parser/parser';
 	import { getContext } from 'svelte';
 
-	const props = $props();
+	let props = $props<FlowChartProps>();
 	const flowChart = flowChartParser(props.mermaid || '');
 	const grid = flowChartDrawer(flowChart);
-	const graph = getContext<Graph>('graph');
+	const graph = getContext<Graph>('graph');	
 
 	const MIN_X_SPACE = 100;
 	const MIN_Y_SPACE = 100;
@@ -18,7 +20,7 @@
 	// Track node positions
 	let nodePositions = $state<Record<NodeId, Position>>({});
 
-	onMount(() => {
+	$effect(() => {
 		let y = 0;
 		for (const row of grid) {
 			let x = 0;

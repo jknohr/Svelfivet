@@ -110,11 +110,11 @@
     <GlassPane
         variant={props.variant || 'primary'}
         state={currentState}
-        {props.glowOnHover}
-        {props.componentType}
+        glowOnHover={props.glowOnHover}
+        componentType={props.componentType}
         style={anchorStyle}
-        on:mouseenter={() => isHovering = true}
-        on:mouseleave={() => isHovering = false}
+        onmouseenter={() => isHovering = true}
+        onmouseleave={() => isHovering = false}
     >
         <div class="anchor" style={anchorStyle} {...props}>
             <slot />

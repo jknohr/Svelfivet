@@ -1,6 +1,6 @@
-import type { WritableEdge, EdgeConfig, Anchor, Edge } from '../../types';
+import type { Edge, Anchor, EdgeKey } from '../../types/logic';
+import type { WritableEdge, EdgeConfig, EdgeStyle, EndStyle, EdgeLabel } from '$lib/components/Organisms/Edge/Edge.types';
 import * as s from '../../constants/styles';
-import type { EdgeLabel, EdgeKey } from '../../types';
 import { sortEdgeKey } from '../helpers/sortKey';
 
 export function createEdge(
@@ -9,21 +9,21 @@ export function createEdge(
 	config?: EdgeConfig
 ): WritableEdge {
 	const { source, target } = connection;
-	const edgeId: EdgeKey = source.id && target.id ? sortEdgeKey(source.id, target.id) : 'cursor';
+	const edgeId = (source.id && target.id ? sortEdgeKey(source.id, target.id) : `E-cursor-${Date.now()}`) as EdgeKey;
 
 	const writableEdge: WritableEdge = {
 		id: edgeId,
-		target: connection.target,
 		source: connection.source,
-		component: edge,
-		type: config?.type || null,
-		color: config?.color || null,
-		width: config?.width || 0,
-		animated: config?.animated || false,
-		rendered: false,
-		start: config?.start || null,
-		end: config?.end || null,
-		metadata: config?.metadata || {
+		target: connection.target,
+		component: null,
+		type: config?.style ?? null,
+		color: config?.color ?? null,
+		width: config?.width ?? 0,
+		animated: false,
+		rendered: { value: false, set: (value) => { writableEdge.rendered.value = value; } },
+		start: config?.start ?? 'none',
+		end: config?.end ?? 'none',
+		metadata: config?.metadata ?? {
 			status: 'active',
 			flowRate: 1,
 			healthScore: 1,
@@ -38,22 +38,14 @@ export function createEdge(
 			}
 		}
 	};
-	// if (config?.raiseEdges) writableEdge.raiseEdgeOnSelect = true;
-	// if (config?.edgesAbove) writableEdge.edgesAbove = true;
-	if (config?.disconnect) writableEdge.disconnect = true;
+
 	if (config?.label) {
-		const baseLabel: EdgeLabel = {
+		writableEdge.label = {
 			text: config.label.text,
-			color: config.label?.color || s.EDGE_LABEL_COLOR,
-			textColor: config.label?.textColor || s.EDGE_LABEL_TEXT_COLOR,
-			fontSize: config.label?.fontSize || s.EDGE_LABEL_FONT_SIZE,
-			dimensions: {
-				width: config.label.dimensions?.width || s.EDGE_LABEL_WIDTH,
-				height: config.label.dimensions?.height || s.EDGE_LABEL_HEIGHT
-			},
-			borderRadius: config.label.borderRadius || s.EDGE_LABEL_BORDER_RADIUS
+			color: config.label.color ?? s.EDGE_LABEL_COLOR,
+			textColor: config.label.textColor ?? s.EDGE_LABEL_TEXT_COLOR,
+			position: config.label.position
 		};
-		writableEdge.label = baseLabel;
 	}
 
 	return writableEdge;

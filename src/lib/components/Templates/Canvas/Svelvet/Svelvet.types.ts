@@ -27,6 +27,13 @@ export interface DimensionsMap {
     [key: string]: Dimensions & { id?: string };
 }
 
+export interface GraphDimensions extends Dimensions {
+    left: number;
+    top: number;
+    right: number;
+    bottom: number;
+}
+
 export interface GraphState {
     scale: number;
     translation: XYPair;
@@ -39,7 +46,7 @@ export interface GraphState {
     activeIntervals: Record<string, number>;
     isDragging: boolean;
     mounted: boolean;
-    dimensions: Dimensions;
+    dimensions: GraphDimensions;
     nodeBounds: DimensionsMap;
     groupBoxes: Map<string, Dimensions>;
     nodes: GraphNodes;

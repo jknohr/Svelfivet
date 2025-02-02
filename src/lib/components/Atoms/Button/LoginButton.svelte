@@ -50,11 +50,11 @@ Features:
       <!-- Register Side -->
       <button
         class="button-half register"
-        on:mouseenter={() => isRegisterHovered = true}
-        on:mouseleave={() => isRegisterHovered = false}
-        on:mousedown={() => isRegisterActive = true}
-        on:mouseup={() => isRegisterActive = false}
-        on:click={(e) => onCreateUser(e)}
+        onmouseenter={() => isRegisterHovered = true}
+        onmouseleave={() => isRegisterHovered = false}
+        onmousedown={() => isRegisterActive = true}
+        onmouseup={() => isRegisterActive = false}
+        onclick={(e) => onCreateUser(e)}
         {disabled}
         aria-label="Register"
       >
@@ -68,11 +68,11 @@ Features:
       <!-- Login Side -->
       <button
         class="button-half login"
-        on:mouseenter={() => isLoginHovered = true}
-        on:mouseleave={() => isLoginHovered = false}
-        on:mousedown={() => isLoginActive = true}
-        on:mouseup={() => isLoginActive = false}
-        on:click={(e) => onLogin(e)}
+        onmouseenter={() => isLoginHovered = true}
+        onmouseleave={() => isLoginHovered = false}
+        onmousedown={() => isLoginActive = true}
+        onmouseup={() => isLoginActive = false}
+        onclick={(e) => onLogin(e)}
         {disabled}
         aria-label="Login"
       >

@@ -1,10 +1,42 @@
 <script lang="ts">
-  import { layoutConfig, navigationAccess } from '$lib/config/navigation/navigation';
+  import { layoutConfig } from '$lib/components/Vistas/navigation';
   import type { ContextType } from '$lib/types/context';
-  import type { BaseLayoutProps, LayoutComponent } from '$lib/types/components/layout';
-  import type { LayoutMode } from '$lib/types/components/layout';
-  import BaseLayout from './BaseLayout.svelte';
-  import { currentContext } from '$lib/components/Templates/Canvas/stores/context';
+  import HeaderLayout from './Header/HeaderLayout.svelte';
+  import BaseLayout from './Body/BaseLayout.svelte';
+  import LayoutFooter from './Footer/LayoutFooter.svelte';
+  import { currentContext } from '$lib/stores/context';
+
+  // Update type definition to include all required properties
+  interface BaseLayoutProps {
+    showNav: boolean;
+    showLeftSidebar: boolean;
+    showRightSidebar: boolean;
+    showFooter: boolean;
+    leftSidebarWidth: string;
+    rightSidebarWidth: string;
+    mainContentWidth: string;
+    showMap: boolean;
+    showFilters: boolean;
+    pageTitle: string;
+    pageDescription: string;
+    preContent: () => void;
+    mainContent: () => void;
+    postContent: () => void;
+    leftSidebar: () => void;
+    rightSidebar: () => void;
+    map: () => void;
+    filters: () => void;
+  }
+
+  // Update footerProps type
+  interface FooterProps {
+    agents: unknown[];
+    initialAgent: string;
+    voiceEnabled: boolean;
+    autoConnect: boolean;
+    onmessage: (msg: unknown) => void;
+    onerror: (err: unknown) => void;
+  }
 
   // Map contexts to their layout components
   let contextLayouts = $state<Partial<Record<ContextType, typeof BaseLayout>>>({});
@@ -29,6 +61,17 @@
     rightSidebar: () => undefined,
     map: () => undefined,
     filters: () => undefined
+  });
+
+  // Add footer configuration
+  let footerProps = $state<FooterProps>({
+    agents: [],
+    initialAgent: 'default',
+    voiceEnabled: true,
+    autoConnect: true,
+    onmessage: (msg) => console.log('Message:', msg),
+    onerror: (err) => console.error('Error:', err),
+    // ...other event handlers
   });
 
   // Current layout component
@@ -64,11 +107,23 @@
   });
 </script>
 
-{#key $currentContext?.current}
-  <ContextLayout {...layoutProps} />
-{/key}
+<div class="layout-container">
+  <HeaderLayout />
+  
+  {#key $currentContext?.current}
+    <ContextLayout {...layoutProps} />
+  {/key}
+  
+  <LayoutFooter {...footerProps} />
+</div>
 
 <style>
+  .layout-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+
   :global(.pre-content),
   :global(.main-content),
   :global(.post-content),

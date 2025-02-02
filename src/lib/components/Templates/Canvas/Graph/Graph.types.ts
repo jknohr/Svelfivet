@@ -1,16 +1,16 @@
 import type { SvelteComponent } from 'svelte';
 import type {
 	GraphKey,
-	NodeStore,
 	Node,
-	GroupBoxStore,
-	EdgeStore,
+	Edge,
 	GroupKey,
 	Anchor,
-	InputStore,
-	OutputStore
-} from '$lib/components/Templates/Canvas/types/graph';
-import type { Theme, GraphDimensions, XYPair, CSSColorString } from '$lib/components/Templates/Canvas/types/general';
+	XYPair,
+} from '$lib/components/Templates/Canvas/types/logic';
+import { GroupStore, EdgeStore, NodeStore } from '$lib/components/Templates/Canvas/types/stores';
+import { GroupBox, InputStore, OutputStore } from '$lib/components/Templates/Canvas/types/storage';
+import type { GraphDimensions } from '$lib/components/Templates/Canvas/types/storage';
+import { CSSColorString, Theme } from '$lib/components/Templates/Canvas/types/theme';
 import type { Dimensions } from '$lib/components/Organisms/FlowChart/FlowChart.types';
 import type { createBoundsStore } from '$lib/components/Templates/Canvas/utils/creators/createBoundsStore';
 

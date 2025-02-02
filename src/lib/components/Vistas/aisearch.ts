@@ -1,5 +1,6 @@
 import { commonUserMenu } from './common';
-import type { ContextConfig } from '$lib/components/Templates/Canvas/types/context';
+import type { ContextConfig } from '$lib/components/Utility/content_context/;
+
 
 export const aiSearchConfig: ContextConfig = {
     type: 'aisearch',

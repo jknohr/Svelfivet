@@ -1,4 +1,4 @@
-import type { SvelteComponent } from 'svelte';
+import type { ComponentType } from 'svelte';
 
 // Basic types this component needs
 export type NodeId = string;
@@ -42,7 +42,7 @@ export interface FlowChartProps {
         children: NodeId[];
         ignore?: boolean;
     }) => {
-        component: typeof SvelteComponent;
+        component: ComponentType;
         props: Record<string, any>;
     };
     snapTo?: number;

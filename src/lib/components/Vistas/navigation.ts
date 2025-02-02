@@ -1,26 +1,7 @@
 import { realEstateConfig } from './real-estate';
-import { restaurantsConfig } from './resturants';
-import { educationConfig } from './education';
-import { nightlifeConfig } from './nightlife';
-import { socialConfig } from './social';
-import { servicesConfig } from './services';
-import { transitConfig } from './transit';
-import { cultureConfig } from './culture';
-import { jobsConfig } from './jobs';
-import { healthConfig } from './health';
-import { tourismConfig } from './tourism';
-import { newsConfig } from './news';
-import { hotelsConfig } from './hotels';
-import { datingConfig } from './dating';
-import { transportConfig } from './transport';
-import { shopsConfig } from './shops';
-import { classifiedConfig } from './classified';
-import { consumerGoodsConfig } from './consumer-goods';
-import { financialServicesConfig } from './financial-services';
-import { entertainmentConfig } from './entertainment';
+
 import { aiSearchConfig } from './aisearch';
-import { aiInferenceConfig } from './aiinference';
-import { aiPediaConfig } from './aipedia';
+
 import { adminConfig } from './systemadmin';
 import { commonUserMenu } from './common';
 
@@ -30,28 +11,9 @@ import type { ContextType } from '$lib/components/Templates/Canvas/types/context
 // Export all configurations
 export const contextConfigs: Record<ContextType | 'system', ContextConfig> = {
     'real-estate': realEstateConfig,
-    restaurants: restaurantsConfig,
-    education: educationConfig,
-    nightlife: nightlifeConfig,
-    social: socialConfig,
-    services: servicesConfig,
-    transit: transitConfig,
-    culture: cultureConfig,
-    jobs: jobsConfig,
-    health: healthConfig,
-    tourism: tourismConfig,
-    news: newsConfig,
-    hotels: hotelsConfig,
-    dating: datingConfig,
-    transport: transportConfig,
-    shops: shopsConfig,
-    classified: classifiedConfig,
-    'consumer-goods': consumerGoodsConfig,
-    'financial-services': financialServicesConfig,
-    entertainment: entertainmentConfig,
+  
     aisearch: aiSearchConfig,
-    aiinference: aiInferenceConfig,
-    aipedia: aiPediaConfig,
+
     system: adminConfig
 };
 

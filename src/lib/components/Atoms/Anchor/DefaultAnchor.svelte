@@ -1,7 +1,7 @@
 <svelte:options runes={true} />
 
 <script lang="ts">
-	import type { CSSColorString } from '$lib/types/general';
+	import type { CSSColorString } from '$lib/components/Templates/Canvas/types/theme';
 	import type { ConnectingFrom } from './Anchor.types';
 	import type { GlassEffect, GlassState } from '$lib/components/Theme/Theme.types';
 	import GlassPane from '$lib/components/Theme/GlassPane.svelte';

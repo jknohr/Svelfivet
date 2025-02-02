@@ -1,4 +1,4 @@
-import type { FlowChart, Node as FlowChartNode } from '$lib/components/Templates/Canvas/types/parser';
+import type { FlowChart, Node as FlowChartNode } from '../../types/parser';
 
 type LayerNode = {
 	id: string;
@@ -16,7 +16,7 @@ interface LayerTracker {
 }
 
 export function flowChartDrawer(flowChart: FlowChart) {
-	flowChart.parentNodes.forEach((node) => assignNodeDepthAndNesting(node));
+	flowChart.parentNodes.forEach((node: FlowChartNode) => assignNodeDepthAndNesting(node));
 	const [layerTracker, maxLayer] = layerAssignment(flowChart);
 	populateGhostNodes(layerTracker, flowChart);
 	balanceLayers(layerTracker);

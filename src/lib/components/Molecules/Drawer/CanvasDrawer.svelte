@@ -1,10 +1,9 @@
+<svelte:options runes={true} />
+
 <script lang="ts">
-	import { Node, Svelvet, Anchor, Edge } from '$lib';
-	import type { NodeProps } from '$lib/components/Organisms/Node/Node.types';
-	import type { AnchorProps } from '$lib/components/Atoms/Anchor/Anchor.types';
-	import type { EdgeProps } from '$lib/components/Organisms/Edge/Edge.types';
-	import type { NodeConfig, XYPair, EdgeStyle } from '$lib/types';
+	import { Node, Svelvet, Anchor, Edge } from '$lib/components/Templates/Canvas/core';
 	import type { NodeDrawerConfig } from './CanvasDrawer.types';
+	import type { EdgeStyle } from '$lib/components/Templates/Canvas/Theme';
 	import DrawerNode from './CanvasDrawerNode.svelte';
 
 	interface Props {
@@ -34,7 +33,7 @@
 		position?: string;
 	}
 
-	let props = $props();
+	let props = $props<Props>();
 
 	let width = $state<number | undefined>(undefined);
 	let height = $state<number | undefined>(undefined);
@@ -96,6 +95,7 @@
 		position,
 		drawer: true
 	});
+	
 	let defaultNodes = $state<NodeDrawerConfig[]>([{
 		id: 'default-node',
 		dimensions: { width: 100, height: 50 },

@@ -97,6 +97,10 @@ Props:
 
 <svelte:options runes={true} />
 
+<script lang="ts" context="module">
+	export { default } from './InternalNode.svelte';
+</script>
+
 <script lang="ts">
 	import { getContext, setContext } from 'svelte';
 	import type { NodeKey, Anchor, AnchorKey, XYPair, Node as NodeType } from '$lib/types';

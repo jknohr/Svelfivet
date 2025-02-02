@@ -1,4 +1,5 @@
-import type { Node, NodeConfig, Anchor, AnchorKey, NodeKey, Direction, CSSColorString, Edge } from '../../types';
+import type { Node, NodeConfig, Anchor, AnchorKey, NodeKey, Direction, CSSColorString, Edge, EdgeKey } from '../../types';
+import type { AnchorStore } from '../../types/stores';
 import { createStore } from './createStore';
 
 export function createNode(userNode: NodeConfig): Node {
@@ -61,13 +62,17 @@ export function createNode(userNode: NodeConfig): Node {
 		borderWidth: $state(borderWidth),
 		selectionColor: $state<CSSColorString | null>(selectionColor),
 		textColor: $state<CSSColorString | null>(textColor),
-		connections: $state(connections)
+		connections: $state(connections.map(conn => ({
+			source: conn.source as AnchorKey,
+			target: conn.target as AnchorKey,
+			edge: conn.edge as EdgeKey
+		})))
 	};
 
 	const newNode: Node = {
 		id: nodeKey,
 		...nodeState,
-		anchors: createStore<Anchor, AnchorKey>(),
+		anchors: createStore<AnchorKey, Anchor>(),
 		edge: edge || null
 	};
 

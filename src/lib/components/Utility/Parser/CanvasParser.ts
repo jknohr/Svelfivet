@@ -1,4 +1,39 @@
-import type { Node, NodeArray, FlowChart, Edge } from '$lib/types/parser';
+// Parser-specific types
+interface FlowChartNode {
+	id: string;
+	data: {
+		shape: string;
+		content: string;
+		props?: string;
+	};
+	type: string;
+	children: Array<{
+		node: FlowChartNode;
+		shape?: string;
+		content?: string;
+		length?: number;
+	}>;
+	parents: Array<{
+		node: FlowChartNode;
+	}>;
+	depth: number;
+	nesting: number;
+}
+
+interface FlowChart {
+	parentNodes: FlowChartNode[];
+	nodeList: {
+		[key: string]: FlowChartNode;
+	};
+}
+
+interface FlowChartEdge {
+	shape: string;
+	length: number;
+	content?: string;
+}
+
+type NodeArray = Array<FlowChartNode>;
 
 type Shape =
 	| 'round'
@@ -95,18 +130,18 @@ const parseLine = (line: string) => {
 	const [parentNodesString, childNodesString] = trimmedLine.split(edgeString);
 	for (const parentNode of parentNodesString.split('&')) parentNodes.push(nodeParser(parentNode));
 	for (const childNode of childNodesString.split('&')) childNodes.push(nodeParser(childNode));
-	const edge: Edge = edgeParser(edgeString);
+	const edge: FlowChartEdge = edgeParser(edgeString);
 	return { parentNodes, childNodes, edge };
 };
 
-const nodeParser = (node: string) => {
+const nodeParser = (node: string): FlowChartNode => {
 	node = node.trim();
 	const id = node[0];
 	const body = node.slice(1);
 	let label = '';
 	let shape = '';
 	const type = 'Default';
-	const data: Node['data'] = { shape: '' };
+	const data: FlowChartNode['data'] = { shape: '', content: '' };
 	const bracketStack: Array<OpenBracket> = [];
 
 	for (let i = 0; i < body.length; i++) {
@@ -121,7 +156,7 @@ const nodeParser = (node: string) => {
 	return { id, data, type, children: [], parents: [], depth: 0, nesting: 0 };
 };
 
-const edgeParser = (edge: string) => {
+const edgeParser = (edge: string): FlowChartEdge => {
 	edge = edge.trim();
 	let shape = '';
 	const [edgeLine, content] = edge.split('|');

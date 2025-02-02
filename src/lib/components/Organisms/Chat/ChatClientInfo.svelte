@@ -34,32 +34,38 @@
   const theme = getContext<ThemeContext>('theme');
 </script>
 
-<GlassPane variant="medium" attentionState="default" class="client-info">
-  <GlassPane variant="light" attentionState="default" class="header">
-    <div class="avatar-container">
-      <div class="avatar-wrapper">
-        <img src={avatarUrl} alt="Client Avatar" class="avatar" />
-      </div>
-      <ChatClientBehavior {behavioralStatus} />
+<div class="client-info">
+  <GlassPane variant="medium" attentionState="default">
+    <div class="header">
+      <GlassPane variant="light" attentionState="default">
+        <div class="avatar-container">
+          <div class="avatar-wrapper">
+            <img src={avatarUrl} alt="Client Avatar" class="avatar" />
+          </div>
+          <ChatClientBehavior {behavioralStatus} />
+        </div>
+      </GlassPane>
     </div>
+
+    <div class="content">
+      <ChatClientWishes
+        {goal}
+        {requirements}
+        {softWants}
+        {hardWants}
+        {dontWants}
+      />
+    </div>
+
+    {#if listings?.length}
+      <div class="footer">
+        <GlassPane variant="light" attentionState="default">
+          <ListingPreview {listings} detailed={true} />
+        </GlassPane>
+      </div>
+    {/if}
   </GlassPane>
-
-  <div class="content">
-    <ChatClientWishes
-      {goal}
-      {requirements}
-      {softWants}
-      {hardWants}
-      {dontWants}
-    />
-  </div>
-
-  {#if listings?.length}
-    <GlassPane variant="light" attentionState="default" class="footer">
-      <ListingPreview {listings} detailed={true} />
-    </GlassPane>
-  {/if}
-</GlassPane>
+</div>
 
 <style>
   .client-info {

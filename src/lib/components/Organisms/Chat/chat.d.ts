@@ -2,7 +2,10 @@ import type { Agent } from '$lib/components/Templates/Canvas/types/context';
 import type { ContextType } from '$lib/components/Templates/Canvas/types/context';
 
 export interface ChatEvents {
-  error: { message: string };
+  error: {
+    message: string;
+    reason?: string;
+  };
   agentSwitch: { agent: Agent };
   agentMessage: { message: string };
   agentMessageReceived: { message: string };
@@ -28,6 +31,8 @@ export interface ChatEvents {
   voiceAssistantWarning: { warning: string };
   voiceAssistantInfo: { info: string };
   voiceAssistantDebug: { debug: string };
+  isListening: { isListening: boolean };
+  isProcessing: { isProcessing: boolean };
   // other events...
 } 
 
@@ -36,9 +41,8 @@ export interface ChatMessage {
   content: string;
   messageType: 'text' | 'voice';
   timestamp: string;
+  sender: string;
   agent: string;
-  sender?: string;
-  time?: string;
 }
 
 export interface ChatHistory {
@@ -62,7 +66,6 @@ export interface Agent {
   id: string;
   name: string;
   type: 'local' | 'remote';
-  capabilities?: string[];
 }
 
 export interface VoiceState {
@@ -91,13 +94,21 @@ export interface WebSocketState {
 }
 
 export interface WebSocketMessage {
-  type: string;
+  type: 'message' | 'status';
   message?: ChatMessage;
   isProcessing?: boolean;
-  data?: any;
 }
 
 export interface WebSocketError extends Error {
   code?: number;
   reason?: string;
 }
+
+// Re-export all types
+export type {
+  Agent,
+  VoiceState,
+  ChatMessage,
+  WebSocketMessage,
+  ChatEvents,
+};

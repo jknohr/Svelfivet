@@ -1,10 +1,11 @@
 import type { Node, Edge, GroupBox, NodeKey, EdgeKey, GroupKey, XYPair, Dimensions, Direction, AnchorKey } from './logic';
 import type { CSSColorString } from './theme';
 
-// Re-export types from logic and theme
+// Re-export types from logic, theme, storage, store, stores, and surrealdb
 export * from './logic';
 export * from './theme';
 export * from './storage';
+
 
 // Additional types needed for creators
 export interface Store<T, K> {
@@ -129,4 +130,4 @@ export interface Anchor {
     edgeColor: CSSColorString | null;
     rotation: number;
     recalculatePosition: () => void;
-} 
+}

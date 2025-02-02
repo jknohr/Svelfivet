@@ -1,129 +1,234 @@
+<svelte:options runes={true} />
+
 <script lang="ts">
-  import { contextStore } from '$lib/components/Templates/Canvas/stores/context';
-  import Button from '$lib/components/Atoms/Button/Buttong.svelte';
-  import Typography from '$lib/components/Theme/Typography.svelte';
   import { slide } from 'svelte/transition';
-  import type { ContextConfig } from '$lib/types/context';
+  import { contextConfigs } from '$lib/components/Vistas/navigation';
+  import type { ContextType } from '$lib/types/context';
+  import GlassPane from '$lib/components/Theme/GlassPane.svelte';
+  import Typography from '$lib/components/Theme/Typography.svelte';
 
-  export let isOpen = false;
-  export let position: 'left' | 'right' = 'left';
-  export let width = '280px';
+  // Types
+  type VistaInfo = {
+    id: ContextType;
+    name: string;
+    icon: string;
+    description: string;
+  };
 
-  function handleContextSelect(context: ContextConfig) {
-    contextStore.setActive(context);
-    isOpen = false;
+  // Props
+  let {
+    initialVista = 'real-estate' as ContextType,
+    onSelect = ((vista: ContextType): void => {}) as (vista: ContextType) => void
+  } = $props();
+
+  // State
+  let isOpen = $state(false);
+  let isHovered = $state(false);
+  let isActive = $state(false);
+  let selectedVista = $state<ContextType>(initialVista);
+
+  // Derived state
+  let buttonState = $derived(() => {
+    if (isActive) return 'active';
+    if (isHovered) return 'hover';
+    return 'default';
+  });
+
+  // Convert contextConfigs to array for rendering
+  function computeVistas(): VistaInfo[] {
+    return Object.entries(contextConfigs).map(([id, config]): VistaInfo => ({
+      id: id as ContextType,
+      name: config.label,
+      icon: config.icon,
+      description: config.description
+    }));
   }
 
-  function handleClose() {
+  let vistas = $derived(computeVistas());
+
+  // Handle vista selection
+  function selectVista(vista: VistaInfo) {
+    selectedVista = vista.id;
     isOpen = false;
+    onSelect(vista.id);
   }
 </script>
 
-{#if isOpen}
-<div 
-  class="vista-menu"
-  class:left={position === 'left'}
-  class:right={position === 'right'}
-  style="width: {width}"
-  transition:slide={{ duration: 200 }}
->
-  <div class="menu-header">
-    <Typography>Switch Context</Typography>
-    <Button 
-      onclick={handleClose}
-      aria-label="Close menu"
+<div class="vista-menu">
+  <GlassPane
+    variant="light"
+    state={buttonState}
+    glowOnHover={true}
+    componentType="button"
+  >
+    <button 
+      class="vista-button"
+      onmouseenter={() => isHovered = true}
+      onmouseleave={() => isHovered = false}
+      onmousedown={() => isActive = true}
+      onmouseup={() => isActive = false}
+      onclick={() => isOpen = !isOpen}
+      aria-expanded={isOpen}
+      aria-haspopup="true"
     >
-      <span class="material-icons">close</span>
-    </Button>
-  </div>
+      <span class="material-icons">{contextConfigs[selectedVista].icon}</span>
+      <Typography size="base" weight="medium">
+        <span class="vista-name">{contextConfigs[selectedVista].label}</span>
+      </Typography>
+    </button>
+  </GlassPane>
 
-  <div class="menu-content" role="menu">
-    {#each $contextStore.items as context (context.id)}
-      <Button
-        onclick={() => handleContextSelect(context)}
-        class="menu-item"
-        role="menuitem"
-        data-active={$contextStore.active?.id === context.id}
-      >
-        <div class="menu-item-content">
-          <span class="material-icons icon">{context.icon}</span>
-          <div class="text-content">
-            <Typography>{context.label}</Typography>
-            <Typography class="description">{context.description}</Typography>
+  {#if isOpen}
+    <div 
+      class="vista-dropdown" 
+      role="menu" 
+      aria-label="Vista selection menu"
+      transition:slide={{ duration: 150 }}
+    >
+      {#each vistas as vista (vista.id)}
+        <button
+          class="vista-option"
+          class:selected={vista.id === selectedVista}
+          onclick={() => selectVista(vista)}
+          role="menuitem"
+          aria-label={vista.description}
+        >
+          <span class="material-icons">{vista.icon}</span>
+          <div class="vista-info">
+            <Typography size="base" weight="medium">
+              <span class="vista-name">{vista.name}</span>
+            </Typography>
+            <Typography size="sm" color="muted">
+              <span class="vista-description">{vista.description}</span>
+            </Typography>
           </div>
-        </div>
-      </Button>
-    {/each}
-  </div>
+        </button>
+      {/each}
+    </div>
+  {/if}
 </div>
-{/if}
 
 <style>
   .vista-menu {
-    position: fixed;
-    top: 0;
-    height: 100vh;
-    z-index: var(--layer-menu);
+    position: relative;
+    height: var(--ui-unit);
+    min-width: calc(var(--ui-unit) * 4);
+  }
+
+  .vista-button {
     display: flex;
-    flex-direction: column;
-    gap: var(--spacing-3);
-    padding: var(--spacing-4);
-    background: var(--surface-1);
-    backdrop-filter: blur(8px);
-  }
-
-  .vista-menu.left {
-    left: 0;
-  }
-
-  .vista-menu.right {
-    right: 0;
-  }
-
-  .menu-header {
-    display: flex;
-    justify-content: space-between;
     align-items: center;
-    padding-bottom: var(--spacing-2);
-    border-bottom: 1px solid var(--border);
-  }
-
-  .menu-content {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-2);
-    overflow-y: auto;
-  }
-
-  .menu-item {
+    gap: 0.5rem;
     width: 100%;
-    padding: var(--spacing-3);
+    height: 100%;
+    padding: 0.5rem;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    color: var(--color-text);
+    transition: all 0.2s;
+    border-radius: var(--radius-md);
+  }
+
+  .vista-dropdown {
+    position: absolute;
+    top: calc(100% + 0.5rem);
+    left: 0;
+    width: 300px;
+    background: color-mix(in srgb, var(--color-surface) 95%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-border) 50%, transparent);
+    border-radius: var(--radius-md);
+    box-shadow: 
+      0 4px 6px color-mix(in srgb, var(--color-shadow) 10%, transparent),
+      inset 0 1px 2px color-mix(in srgb, var(--color-highlight) 15%, transparent);
+    padding: 0.5rem;
+    transform-origin: top left;
+    animation: dropdown 0.2s ease-out;
+    backdrop-filter: blur(10px);
+    z-index: 1000;
+  }
+
+  .vista-option {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    width: 100%;
+    padding: 0.75rem;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    color: var(--color-text);
+    transition: all 0.2s;
+    border-radius: var(--radius-md);
     text-align: left;
   }
 
-  .menu-item[data-active="true"] {
-    background: var(--surface-2);
+  .vista-option:hover {
+    background: color-mix(in srgb, var(--color-primary) 5%, transparent);
+    transform: translateX(4px);
   }
 
-  .menu-item-content {
-    display: grid;
-    grid-template-columns: auto 1fr;
-    gap: var(--spacing-3);
-    align-items: center;
+  .vista-option.selected {
+    background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+    color: var(--color-primary);
   }
 
-  .icon {
-    font-size: 1.5rem;
-    color: var(--text-2);
-  }
-
-  .text-content {
+  .vista-info {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-1);
+    gap: 0.25rem;
+    min-width: 0;
   }
 
-  .description {
-    color: var(--text-2);
+  .vista-name {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .vista-description {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--color-text-muted);
+  }
+
+  .material-icons {
+    font-size: 1.25rem;
+    flex-shrink: 0;
+  }
+
+  @keyframes dropdown {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Dark mode adjustments */
+  :global([data-theme="dark"]) .vista-dropdown {
+    background: color-mix(in srgb, var(--color-surface) 97%, transparent);
+    box-shadow: 
+      0 4px 6px color-mix(in srgb, black 20%, transparent),
+      inset 0 1px 2px color-mix(in srgb, white 5%, transparent);
+  }
+
+  /* Spatial adjustments */
+  @media (--ar) {
+    .vista-menu {
+      transform-style: preserve-3d;
+      transform: translateZ(var(--depth-floating));
+    }
+  }
+
+  @media (--vr) {
+    .vista-menu {
+      transform-style: preserve-3d;
+      transform: translateZ(var(--depth-ui));
+    }
   }
 </style> 

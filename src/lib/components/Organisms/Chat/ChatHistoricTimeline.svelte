@@ -42,33 +42,42 @@
   };
 </script>
 
-<GlassPane variant="medium" attentionState="default">
-  <div class="timeline-controls">
-    <div class="timeline">
-      <div class="marker" style={`left: ${markerPosition}`}></div>
-      <input 
-        type="range" 
-        min="0" 
-        max="1000" 
-        value={currentTime} 
-        oninput={(e: Event) => {
-          const target = e.target as HTMLInputElement;
-          handleSeek({ time: target.value });
-        }}
-      />
+<div class="timeline-wrapper">
+  <GlassPane variant="medium" attentionState="default">
+    <div class="timeline-controls">
+      <div class="timeline">
+        <div class="marker" style={`left: ${markerPosition}`}></div>
+        <input 
+          type="range" 
+          min="0" 
+          max="1000" 
+          value={currentTime} 
+          oninput={(e: Event) => {
+            const target = e.target as HTMLInputElement;
+            handleSeek({ time: target.value });
+          }}
+        />
+      </div>
+      <div class="controls">
+        <button onclick={handlePlay}>
+          <Typography size="sm" weight="medium">Play</Typography>
+        </button>
+        <button onclick={handlePause}>
+          <Typography size="sm" weight="medium">Pause</Typography>
+        </button>
+      </div>
     </div>
-    <div class="controls">
-      <button onclick={handlePlay}>
-        <Typography size="sm" weight="medium">Play</Typography>
-      </button>
-      <button onclick={handlePause}>
-        <Typography size="sm" weight="medium">Pause</Typography>
-      </button>
-    </div>
-  </div>
-</GlassPane>
+  </GlassPane>
+</div>
 
 <style>
+  .timeline-wrapper {
+    position: fixed;
+    bottom: var(--spacing-lg, 20px);
+    left: var(--spacing-lg, 20px);
+    width: 600px;
+  }
+
   .timeline-controls {
     position: fixed;
     bottom: var(--spacing-lg, 20px);

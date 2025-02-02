@@ -103,4 +103,25 @@ export interface NavigationBarTheme {
   '--dark-text'?: string;
   '--depth-floating'?: string;
   '--depth-ui'?: string;
+}
+
+export interface NavigationItem {
+  id: string;
+  label: string;
+  path: string;
+  icon: string;
+  onClick?: () => void;
+}
+
+export interface NavigationConfig {
+  items: NavigationItem[];
+  icon?: string;
+  label?: string;
+}
+
+export type ContextType = 'real-estate' | 'property-management' | 'investment';
+
+export interface NavigationContext {
+  type: ContextType;
+  config: NavigationConfig;
 } 

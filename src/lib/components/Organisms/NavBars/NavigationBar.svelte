@@ -1,609 +1,529 @@
+<!--
+@component NavigationBar
+Visual presentation of the navigation system.
+Features:
+- Glass effect styling
+- Responsive layout
+- Hover/focus animations
+- AR/VR spatial adaptations
+-->
+<svelte:options immutable={true} />
 
- <!-- src/lib/components/NavigationBar.svelte -->
+
+
 <script lang="ts">
-  import { fade, slide } from 'svelte/transition';
-  import { currentContext } from '$lib/components/Templates/Canvas/stores/context';
-  import { auth } from '$lib/stores/auth';
-  import { loginPopup } from '$lib/stores/loginPopup';
-  import { goto } from '$app/navigation';
-  import Button from '$lib/components/common/atomic/buttons/button.svelte';
-  import LoginPopup from 'src/routes/auth/login/LoginPopup.svelte';
-  import { clickOutside } from '$lib/actions/click-outside';
-  import { trapFocus } from '$lib/actions/trap-focus';
-  import type { ContextType } from '$lib/types/context';
-  import type { NavigationItem, NavigationConfig } from '$lib/types/navigation';
-  import { contextConfigs } from '$lib/config/navigation/navigation';
-  import {
-    Spring,
-    Tween,
-    prefersReducedMotion,
-    spring,
-    tweened
-  } from 'svelte/motion';
-  import { state, effect, derived } from 'svelte/store';
+  import { onMount, onDestroy } from 'svelte';
+  import { Spring, Tweened } from 'svelte/motion';
+  import { fade } from 'svelte/transition';
+  import GlassPane from '$lib/components/Theme/GlassPane.svelte';
+  import Typography from '$lib/components/Theme/Typography.svelte';
+  import type {
+    Category,
+    SearchResult,
+    NavigationBarProps,
+    NavigationState
+  } from '../../Layouts/Header/NavigationLogic/types';
+  import { writable } from 'svelte/store';
 
-  interface UserNav {
-    top: NavigationItem[];
-    bottom: NavigationItem[];
-  }
+  // Props
+  export let headerHeight: string = '60px';
+  export let componentWidth: string = '100%';
+  export let content: () => any = null;
+  export let categories: Category[] = [];
+  export let isContextMenuOpen: boolean = false;
+  export let isUserMenuOpen: boolean = false;
+  export let isMobileMenuOpen: boolean = false;
+  export let activeSubmenu: string = '';
+  export let isHeaderFocused: boolean = false;
+  export let onContextMenu: () => void = () => {};
+  export let onUserMenu: () => void = () => {};
+  export let onMobileMenu: () => void = () => {};
+  export let onSubmenuChange: (category: string) => void = () => {};
+  export let onClickOutside: () => void = () => {};
+  export let onHeaderFocus: (focused: boolean) => void = () => {};
 
-  // State management
-  let isContextMenuOpen = $state(false);
-  let isUserMenuOpen = $state(false);
-  let isMobileMenuOpen = $state(false);
-  let activeSubmenu = $state<string | null>(null);
-  let contextMenuRef = $state<HTMLElement | null>(null);
+  // Reactive State
+  let selectedCategory: string | null = null;
+  let searchQuery: string = '';
+  let highlightedIndex: number = -1;
+  let darkMode: boolean = false;
+  let isSearching: boolean = false;
+  let filteredCategories: Category[] = [...categories];
+  let searchResults: SearchResult[] = [];
+  let reducedMotion: boolean = false;
+  let isMobile: boolean = false;
 
-  // Reactive context data
-  let pathname = $state("");
-  let currentCtx = $state<ContextType | null>(null);
-  let mainNav = $state<NavigationItem[]>([]);
-  let userNav = $state<UserNav | null>(null);
+  // Reactive Variables with $state
+  const selectedCategoryState = $state(selectedCategory);
+  const searchQueryState = $state(searchQuery);
+  const highlightedIndexState = $state(highlightedIndex);
+  const darkModeState = $state(darkMode);
+  const isSearchingState = $state(isSearching);
+  const filteredCategoriesState = $state(filteredCategories);
+  const searchResultsState = $state(searchResults);
+  const reducedMotionState = $state(reducedMotion);
+  const isMobileState = $state(isMobile);
 
-  $effect(() => {
-    pathname = window.location.pathname;
-    currentCtx = $currentContext.current;
-    if (currentCtx && contextConfigs[currentCtx]) {
-      mainNav = contextConfigs[currentCtx].navigation.main || [];
-      userNav = getUserNavigation($auth, currentCtx);
-      
-      // Check if current path is valid for context
-      const isValidPath = mainNav.some(item => 
-        pathname.startsWith(item.path) || 
-        item.subItems?.some(sub => pathname.startsWith(sub.path))
-      );
-      
-      if (!isValidPath && pathname !== '/') {
-        console.warn('Invalid path for context:', pathname);
-      }
-    }
+  // Motion Configuration using Spring and Tweened
+  const rotationAngleTop = new Spring(0, {
+    stiffness: reducedMotion ? 1 : 0.1,
+    damping: reducedMotion ? 1 : 0.3
   });
 
-  // Get user navigation based on auth state and current context
-  function getUserNavigation(auth: any, ContextType: ContextType): UserNav {
-    if (!auth.isAuthenticated) {
-      return {
-        top: [
-          { label: 'Register', path: '/auth/register', icon: 'person_add' },
-          { label: 'Login', path: '#', icon: 'login', onClick: () => loginPopup.open(pathname) }
-        ],
-        bottom: []
-      };
+  const rotationAngleBottom = new Spring(0, {
+    stiffness: reducedMotion ? 1 : 0.1,
+    damping: reducedMotion ? 1 : 0.3
+  });
+
+  const frostIntensity = new Tweened(0, {
+    duration: reducedMotion ? 0 : 500
+  });
+
+  // Subscribe to motion preference changes
+  onMount(() => {
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    reducedMotion = mediaQuery.matches;
+    mediaQuery.addEventListener('change', (event) => {
+      reducedMotion = event.matches;
+      updateSpringConfig();
+      updateTweenConfig();
+    });
+
+    // Mobile detection
+    const mobileQuery = window.matchMedia('(max-width: 768px)');
+    isMobile = mobileQuery.matches;
+    mobileQuery.addEventListener('change', (event) => {
+      isMobile = event.matches;
+    });
+  });
+
+  onDestroy(() => {
+    // Clean up event listeners if necessary
+  });
+
+  // Update spring and tween configurations when motion preference changes
+  $: {
+    rotationAngleTop.configure({
+      stiffness: reducedMotion ? 1 : 0.1,
+      damping: reducedMotion ? 1 : 0.3
+    });
+    rotationAngleBottom.configure({
+      stiffness: reducedMotion ? 1 : 0.1,
+      damping: reducedMotion ? 1 : 0.3
+    });
+    frostIntensity.set(currentFrostIntensity, {
+      duration: reducedMotion ? 0 : 500
+    });
+  }
+
+  // Track frost intensity changes
+  let currentFrostIntensity = 0;
+  $: {
+    frostIntensity.subscribe((value) => {
+      currentFrostIntensity = value;
+    });
+  }
+
+  // Update filtered categories when search query changes
+  $: {
+    if (searchQuery) {
+      filteredCategories = categories.filter(
+        (cat) =>
+          cat.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          cat.sub.some((subItem) =>
+            subItem.toLowerCase().includes(searchQuery.toLowerCase())
+          )
+      );
+    } else {
+      filteredCategories = [...categories];
     }
-
-    const contextConfig = contextConfigs[ContextType];
-    return {
-      top: contextConfig.navigation.user || [],
-      bottom: [
-        { label: 'Logout', path: '#', icon: 'logout', onClick: handleLogout }
-      ]
-    };
   }
 
-  // Event handlers
-  function toggleMobileMenu() {
-    isMobileMenuOpen = !isMobileMenuOpen;
+  // Update search results when filtered categories or selected category changes
+  $: {
+    const results: SearchResult[] = [];
+    filteredCategories.forEach((cat) => {
+      results.push({ type: 'category', text: cat.name, icon: cat.icon });
+      if (selectedCategory === cat.name) {
+        cat.sub.forEach((sub) =>
+          results.push({ type: 'subcategory', text: sub, parent: cat.name })
+        );
+      }
+    });
+    searchResults = results;
   }
 
-  function toggleSubmenu(menuId: string) {
-    activeSubmenu = activeSubmenu === menuId ? null : menuId;
+  // Event Handlers
+  function handleCategorySelect(category: string) {
+    selectedCategory = category;
+    onSubmenuChange(category);
+    searchQuery = '';
+    isSearching = false;
   }
 
-  function toggleContextMenu() {
-    isContextMenuOpen = !isContextMenuOpen;
+  function handleSearchInput(event: Event) {
+    const input = event.target as HTMLInputElement;
+    searchQuery = input.value;
+    highlightedIndex = -1;
   }
 
-  function toggleUserMenu() {
-    isUserMenuOpen = !isUserMenuOpen;
-  }
-
-  function handleClickOutside(menu: 'context' | 'user') {
-    if (menu === 'context') isContextMenuOpen = false;
-    if (menu === 'user') isUserMenuOpen = false;
-  }
-
-  async function handleContextSwitch(ContextType: ContextType) {
-    try {
-      await currentContext.switchContext(ContextType);
-      // Reset navigation state
-      activeSubmenu = null;
-      isContextMenuOpen = false;
-      // Update main navigation
-      mainNav = contextConfigs[ContextType]?.navigation.main || [];
-    } catch (error) {
-      console.error('Error switching context:', error);
+  function handleKeydown(event: KeyboardEvent) {
+    if (!isSearching) {
+      if (event.key === '/') {
+        event.preventDefault();
+        isSearching = true;
+        return;
+      }
+    } else {
+      switch (event.key) {
+        case 'ArrowDown':
+          event.preventDefault();
+          highlightedIndex = Math.min(highlightedIndex + 1, searchResults.length - 1);
+          break;
+        case 'ArrowUp':
+          event.preventDefault();
+          highlightedIndex = Math.max(highlightedIndex - 1, -1);
+          break;
+        case 'Enter':
+          event.preventDefault();
+          if (highlightedIndex >= 0) {
+            const result = searchResults[highlightedIndex];
+            if (result.type === 'category') {
+              handleCategorySelect(result.text);
+            } else if (result.parent) {
+              handleCategorySelect(result.parent);
+            }
+          }
+          break;
+        case 'Escape':
+          event.preventDefault();
+          isSearching = false;
+          searchQuery = '';
+          highlightedIndex = -1;
+          break;
+        default:
+          break;
+      }
     }
   }
 
-  function handleNavigation(path: string, requiresAuth = false) {
-    if (requiresAuth && !$auth.isAuthenticated) {
-      // Open login popup with redirect path
-      loginPopup.open(path);
-      return;
+  function toggleDarkMode() {
+    darkMode = !darkMode;
+  }
+
+  // Spring configuration
+  const springConfig = {
+    stiffness: reducedMotion ? 1 : 0.1,
+    damping: reducedMotion ? 1 : 0.3
+  };
+
+  // Effects for animations
+  $: {
+    if (selectedCategory) {
+      const index = categories.findIndex((c) => c.name === selectedCategory);
+      rotationAngleTop.set(index * -45);
+      rotationAngleBottom.set(index * 30);
+      frostIntensity.set(index * 5);
     }
-    
-    goto(path);
-    isMobileMenuOpen = false;
-    activeSubmenu = null;
   }
 
-  function handleLogout() {
-    auth.logout();
-    isUserMenuOpen = false;
-  }
-
-  // Check if a route requires authentication
-  function requiresAuth(item: NavigationItem): boolean {
-    return item.requiresAuth || false;
-  }
-
-  // Check if user has required roles for a route
-  function hasRequiredRoles(item: NavigationItem): boolean {
-    if (!item.roles || !item.roles.length) return true;
-    return $auth.user?.roles?.some(role => item.roles?.includes(role)) || false;
-  }
-
-  // Handle successful login
-  function handleLoginSuccess(data: any) {
-    loginPopup.close();
-    if ($loginPopup.redirectPath) {
-      goto($loginPopup.redirectPath);
+  // Responsive Configuration
+  $: {
+    if (isMobile) {
+      // Limit the number of visible menu items to 3
+      const maxVisibleItems = 3;
+      filteredCategories = filteredCategories.slice(0, maxVisibleItems);
+    } else {
+      // Reset to full list
+      filteredCategories = [...categories];
     }
   }
 </script>
 
-<nav class="navigation-bar" class:mobile-open={isMobileMenuOpen}>
-  <!-- Mobile Toggle -->
-  <button
-    class="mobile-toggle"
-    onclick={toggleMobileMenu}
-    aria-label="Toggle navigation menu"
-    aria-expanded={isMobileMenuOpen}
+<svelte:window onkeydown={handleKeydown} />
+
+<header
+  class="header"
+  style:height={headerHeight}
+  style:width={componentWidth}
+  onmouseenter={() => onHeaderFocus(true)}
+  onmouseleave={() => onHeaderFocus(false)}
+  onfocusin={() => onHeaderFocus(true)}
+  onfocusout={() => onHeaderFocus(false)}
+>
+  <GlassPane
+    variant={darkMode ? 'dark' : 'light'}
+    state={isHeaderFocused ? 'focus' : 'default'}
+    glowOnHover={true}
+    style="filter: blur({currentFrostIntensity}px)"
   >
-    <span class="material-icons-outlined">
-      {isMobileMenuOpen ? 'close' : 'menu'}
-    </span>
-  </button>
-
-  <!-- Context Switcher -->
-  <div class="context-switcher">
-    <button
-      class="context-button round"
-      onclick={toggleContextMenu}
-      aria-label="Switch context"
-      aria-expanded={isContextMenuOpen}
-      aria-haspopup="true"
+    <div
+      class="header-content"
+      class:focused={isHeaderFocused}
+      class:dark-mode={darkMode}
+      aria-label="Navigation Bar"
     >
-      <span class="material-icons-outlined icon" aria-hidden="true">
-        {currentCtx ? contextConfigs[currentCtx]?.icon || 'apps' : 'apps'}
-      </span>
-    </button>
-
-    {#if isContextMenuOpen}
-      <div
-        class="context-menu"
-        role="menu"
-        tabindex="-1"
-        transition:slide={{duration: 150}}
-        use:clickOutside={() => handleClickOutside('context')}
-        use:trapFocus
+      <button
+        class="dark-mode-toggle"
+        onclick={toggleDarkMode}
+        aria-label="Toggle Dark Mode"
       >
-        {#each Object.entries(contextConfigs) as [id, config]}
-          <button
-            class="menu-item"
-            onclick={() => handleContextSwitch(id as ContextType)}
-            role="menuitem"
-          >
-            <span class="material-icons-outlined icon" aria-hidden="true">
-              {(config as NavigationConfig).icon}
-            </span>
-            <span class="label">{(config as NavigationConfig).label}</span>
-          </button>
-        {/each}
-      </div>
-    {/if}
-  </div>
+        <Typography isIcon size="lg">
+          {darkMode ? 'dark_mode' : 'light_mode'}
+        </Typography>
+      </button>
 
-  <!-- Main Navigation -->
-  <div class="main-nav" class:mobile-open={isMobileMenuOpen}>
-    {#each mainNav as item}
-      {#if item.subItems}
-        <div class="nav-group">
-          <button
-            class="nav-item"
-            onclick={() => toggleSubmenu(item.path)}
-            aria-expanded={activeSubmenu === item.path}
-            aria-haspopup="true"
-            disabled={requiresAuth(item) && !$auth.isAuthenticated}
-          >
-            <span class="material-icons-outlined icon" aria-hidden="true">
-              {item.icon}
-            </span>
-            <span class="label">{item.label}</span>
-            <span class="material-icons-outlined" aria-hidden="true">
-              {activeSubmenu === item.path ? 'expand_less' : 'expand_more'}
-            </span>
-          </button>
-
-          {#if activeSubmenu === item.path}
-            <div class="submenu" transition:slide={{duration: 150}}>
-              {#each item.subItems as subItem}
-                {#if hasRequiredRoles(subItem)}
-                  <button
-                    class="submenu-item"
-                    onclick={() => handleNavigation(subItem.path, requiresAuth(subItem))}
-                    aria-current={pathname === subItem.path}
-                    disabled={requiresAuth(subItem) && !$auth.isAuthenticated}
-                  >
-                    <span class="material-icons-outlined icon" aria-hidden="true">
-                      {subItem.icon}
-                    </span>
-                    <span class="label">{subItem.label}</span>
-                  </button>
-                {/if}
+      {#if isSearching}
+        <div class="search-container" transition:fade>
+          <input
+            type="text"
+            placeholder="Search menu... (Esc to close)"
+            value={searchQuery}
+            oninput={handleSearchInput}
+            class="search-input"
+            aria-label="Search Input"
+          />
+          {#if searchQuery}
+            <div class="search-results" aria-label="Search Results">
+              {#each searchResults as result, i (result.type + result.text)}
+                <div
+                  class="search-result"
+                  class:highlighted={i === highlightedIndex}
+                  onclick={() => {
+                    if (result.type === 'category') {
+                      handleCategorySelect(result.text);
+                    } else if (result.parent) {
+                      handleCategorySelect(result.parent);
+                    }
+                  }}
+                >
+                  {result.text}
+                </div>
               {/each}
             </div>
           {/if}
         </div>
       {:else}
-        {#if hasRequiredRoles(item)}
-          <button
-            class="nav-item"
-            onclick={() => handleNavigation(item.path, requiresAuth(item))}
-            aria-current={pathname === item.path}
-            disabled={requiresAuth(item) && !$auth.isAuthenticated}
-          >
-            <span class="material-icons-outlined icon" aria-hidden="true">
-              {item.icon}
-            </span>
-            <span class="label">{item.label}</span>
-          </button>
-        {/if}
+        <div class="nav-container">
+          <svg class="menu-svg" viewBox="0 0 400 400">
+            <!-- Top disc with main categories -->
+            <g class="top-disc" style:transform={`rotate(${rotationAngleTop}deg)`}>
+              {#each filteredCategories as cat, i (cat.name)}
+                <text
+                  x="200"
+                  y={50 + i * 30}
+                  class="menu-item"
+                  onclick={() => handleCategorySelect(cat.name)}
+                  tabindex="0"
+                  role="button"
+                  aria-label={`Category ${cat.name}`}
+                >
+                  <Typography isIcon size="base">{cat.icon}</Typography> {cat.name}
+                </text>
+              {/each}
+            </g>
+
+            <!-- Bottom disc with subcategories -->
+            <g class="bottom-disc" style:transform={`rotate(${rotationAngleBottom}deg)`}>
+              {#if selectedCategory}
+                {#each categories.find((c) => c.name === selectedCategory)?.sub || [] as subItem, i}
+                  <text
+                    x="200"
+                    y={200 + i * 30}
+                    class="submenu-item"
+                    tabindex="0"
+                    role="button"
+                    aria-label={`Subcategory ${subItem}`}
+                  >
+                    {subItem}
+                  </text>
+                {/each}
+              {/if}
+            </g>
+          </svg>
+        </div>
       {/if}
-    {/each}
-  </div>
 
-  <!-- User Menu -->
-  {#if userNav}
-    <div class="user-menu">
-      <button
-        class="user-button"
-        onclick={toggleUserMenu}
-        aria-label="User menu"
-        aria-expanded={isUserMenuOpen}
-        aria-haspopup="true"
-      >
-        <span class="material-icons-outlined icon" aria-hidden="true">
-          {$auth.isAuthenticated ? 'account_circle' : 'person_outline'}
-        </span>
-      </button>
-
-      {#if isUserMenuOpen}
-        <div
-          class="menu"
-          role="menu"
-          tabindex="-1"
-          transition:slide={{duration: 150}}
-          use:clickOutside={() => handleClickOutside('user')}
-          use:trapFocus
-        >
-          {#each userNav.top as item}
-            <button
-              class="menu-item"
-              onclick={() => item.onClick ? item.onClick() : handleNavigation(item.path, requiresAuth(item))}
-              role="menuitem"
-              disabled={requiresAuth(item) && !$auth.isAuthenticated}
-            >
-              <span class="material-icons-outlined icon" aria-hidden="true">
-                {item.icon}
-              </span>
-              <span class="label">{item.label}</span>
-            </button>
-          {/each}
-
-          {#if userNav.bottom.length}
-            <div class="divider"></div>
-            {#each userNav.bottom as item}
-              <button
-                class="menu-item"
-                onclick={() => item.onClick ? item.onClick() : handleNavigation(item.path, requiresAuth(item))}
-                role="menuitem"
-              >
-                <span class="material-icons-outlined icon" aria-hidden="true">
-                  {item.icon}
-                </span>
-                <span class="label">{item.label}</span>
-              </button>
-            {/each}
-          {/if}
+      {#if content}
+        <div class="content-section">
+          {@html content()}
         </div>
       {/if}
     </div>
-  {/if}
-</nav>
+  </GlassPane>
+</header>
 
-{#if $loginPopup.isOpen}
-  <LoginPopup
-    show={true}
-    onsuccess={handleLoginSuccess}
-    onclose={() => loginPopup.close()}
-  />
-{/if}
 
-<style lang="scss">
-  .navigation-bar {
+<style>
+  .header {
+    position: relative;
+    width: 100%;
+    min-height: var(--header-min-height, 48px);
+    transition: height var(--transition-normal) var(--ease-standard);
+  }
+
+  .header-content {
     display: flex;
     align-items: center;
-    gap: var(--spacing-md);
+    justify-content: space-between;
+    height: 100%;
     padding: var(--spacing-sm);
-    width: 100%;
-    height: var(--nav-height, 60px);
-    background: var(--surface-1);
-    border-bottom: 1px solid var(--border);
-  }
-
-  .mobile-toggle {
-    display: none;
-  }
-
-  .context-switcher {
-    position: relative;
-  }
-
-  .context-button {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-sm);
-    padding: var(--spacing-sm) var(--spacing-md);
-    border: none;
-    background: none;
-    cursor: pointer;
-    border-radius: var(--radius-md);
-    transition: background-color 0.2s;
-  }
-
-  .context-button:hover {
-    background: var(--surface-2);
-  }
-
-  .context-menu {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    min-width: 200px;
-    background: var(--surface-1);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow-lg);
-    z-index: 100;
-  }
-
-  .main-nav {
-    flex: 1;
-    display: flex;
     gap: var(--spacing-md);
   }
 
-  .nav-group {
+  .nav-container {
     position: relative;
-  }
-
-  .nav-item,
-  .submenu-item {
+    width: 100%;
+    height: 100%;
     display: flex;
+    justify-content: center;
     align-items: center;
-    gap: var(--spacing-sm);
-    padding: var(--spacing-sm) var(--spacing-md);
+  }
+
+  .search-container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 80%;
+    max-width: 600px;
+    z-index: 1000;
+}
+
+  .search-input {
+    width: 100%;
+    padding: 12px 20px;
+    font-size: 16px;
     border: none;
-    background: none;
-    cursor: pointer;
-    border-radius: var(--radius-md);
-    transition: background-color 0.2s;
-    white-space: nowrap;
+    border-radius: 8px;
+    background: var(--surface-color, #ffffff);
+    color: var(--text-color, #000000);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   }
 
-  .nav-item:hover,
-  .submenu-item:hover {
-    background: var(--surface-2);
-  }
-
-  .submenu {
+  .search-results {
     position: absolute;
     top: 100%;
     left: 0;
-    min-width: 200px;
-    background: var(--surface-1);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow-lg);
-    z-index: 100;
-  }
-
-  .user-menu {
-    position: relative;
-  }
-
-  .user-button {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 40px;
-    height: 40px;
-    border: none;
-    background: none;
-    cursor: pointer;
-    border-radius: 50%;
-    transition: background-color 0.2s;
-  }
-
-  .user-button:hover {
-    background: var(--surface-2);
-  }
-
-  .menu {
-    position: absolute;
-    top: 100%;
     right: 0;
-    min-width: 200px;
-    background: var(--surface-1);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow-lg);
-    z-index: 100;
+    margin-top: 8px;
+    background: var(--surface-color, #ffffff);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    max-height: 300px;
+    overflow-y: auto;
   }
 
-  .menu-item {
+  .search-result {
+    padding: 12px 20px;
+    cursor: pointer;
     display: flex;
     align-items: center;
-    gap: var(--spacing-sm);
+    gap: 12px;
+    transition: background-color 0.2s ease;
+  }
+
+  .search-result:hover,
+  .search-result.highlighted {
+    background-color: var(--hover-color, rgba(0, 0, 0, 0.05));
+  }
+
+  .result-icon {
+    font-size: 20px;
+  }
+
+  .result-text {
+    flex: 1;
+  }
+
+  .menu-svg {
     width: 100%;
-    padding: var(--spacing-sm) var(--spacing-md);
-    border: none;
-    background: none;
+    height: 100%;
+    max-height: 400px;
+  }
+
+  .menu-item,
+  .submenu-item {
+    fill: var(--text-color);
+    font-size: 16px;
+    text-anchor: middle;
     cursor: pointer;
-    transition: background-color 0.2s;
+    transition: all 0.3s ease;
   }
 
   .menu-item:hover {
-    background: var(--surface-2);
+    fill: var(--accent-color);
+    font-size: 18px;
   }
 
-  .divider {
-    height: 1px;
-    background: var(--border);
-    margin: var(--spacing-xs) 0;
-  }
-
-  .icon {
-    font-size: 1.5rem;
-    opacity: 0.8;
-  }
-
-  .label {
-    font-size: 0.9rem;
-    font-weight: 500;
-  }
-
-  @media (max-width: 768px) {
-    .mobile-toggle {
-      display: block;
-    }
-
-    .main-nav {
-      display: none;
-    }
-
-    .main-nav.mobile-open {
-      display: flex;
-      flex-direction: column;
-      position: absolute;
-      top: var(--nav-height, 60px);
-      left: 0;
-      right: 0;
-      background: var(--surface-1);
-      border-bottom: 1px solid var(--border);
-      padding: var(--spacing-md);
-    }
-  }
-
-  .context-button.round {
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    padding: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--surface-variant);
-    border: 2px solid var(--primary);
-    transition: all 0.2s ease;
-  }
-
-  .context-button.round:hover {
-    background: var(--primary-container);
-    transform: scale(1.05);
-  }
-
-  .context-button.round .icon {
+  .dark-mode-toggle {
+    position: absolute;
+    top: var(--spacing-sm);
+    right: var(--spacing-sm);
+    background: none;
+    border: none;
     font-size: 24px;
-    margin: 0;
+    cursor: pointer;
+    z-index: 10;
   }
 
-  .context-button.round + .context-menu {
-    margin-top: 8px;
-    margin-left: -100px;
+  .dark-mode {
+    background: var(--dark-bg);
+    color: var(--dark-text);
+  }
+
+  .top-disc,
+  .bottom-disc {
+    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Spatial adjustments */
+  @media (--ar) {
+    .header {
+      transform-style: preserve-3d;
+      transform: translateZ(var(--depth-floating));
+    }
+
+    .header-content.focused {
+      transform: scale(1.1) translateZ(calc(var(--depth-floating) * 1.5));
+    }
+  }
+
+  @media (--vr) {
+    .header {
+      transform-style: preserve-3d;
+      transform: translateZ(var(--depth-ui));
+    }
+
+    .header-content.focused {
+      transform: scale(1.2) translateZ(calc(var(--depth-ui) * 1.5));
+    }
+  }
+
+  /* Update transition styles to respect reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    .header,
+    .header-content,
+    .search-result,
+    .menu-item,
+    .submenu-item,
+    .top-disc,
+    .bottom-disc {
+      transition: none;
+    }
+
+    .menu-item:hover {
+      /* Keep color change but remove size animation */
+      fill: var(--accent-color);
+      font-size: 16px;
+    }
+
+    /* Disable spatial animations in AR/VR when reduced motion is preferred */
+    @media (--ar), (--vr) {
+      .header,
+      .header-content.focused {
+        transform: none;
+      }
+    }
   }
 </style>
-
-
-Here is the idea for  the New MainNavigation.svelte..
-
-import { state, effect, action } from 'svelte';
-import { spring, tweened } from 'svelte/motion';
-import * as d3 from 'd3';
-import { onMount } from 'svelte';
-
-// State Management
-const selectedCategory = state(null);
-const rotationAngleTop = spring(0, { prefersReducedMotion: 0.1, damping: 0.3 });
-const rotationAngleBottom = spring(0, { stiffness: 0.1, damping: 0.3 });
-const frostIntensity = tweened(0, { duration: 500 });
-const darkMode = state(false);
-
-// Define Menu Structure
-const categories = [
-  { name: 'Home', icon: '🏠', sub: ['Overview', 'Updates', 'News'] },
-  { name: 'Services', icon: '🛠️', sub: ['Consulting', 'Support', 'Training'] },
-  { name: 'About', icon: 'ℹ️', sub: ['Team', 'History', 'Careers'] },
-  { name: 'Contact', icon: '📞', sub: ['Email', 'Phone', 'Locations'] }
-];
-const visibleCategories = state(categories);
-
-// Action: Rotate Discs
-const rotateDisc = action((node, angle) => {
-  d3.select(node)
-    .transition()
-    .duration(500)
-    .ease(d3.easeCubicInOut)
-    .attr('transform', `rotate(${angle})`);
-});
-
-// Effect: Update Rotation with directional constraints
-effect(() => {
-  if (selectedCategory.value) {
-    let index = categories.findIndex(c => c.name === selectedCategory.value);
-    rotationAngleTop.set(index * -45); // Top disc rotates left only
-    rotationAngleBottom.set(index * 30); // Bottom disc rotates right only
-    frostIntensity.set(index * 5);
-  }
-});
-
-// UI Component
-const Menu = () => {
-  return (
-    <div class={`nav-container ${darkMode.value ? 'dark-mode' : ''}`}>
-      <button class="dark-mode-toggle" on:click={() => darkMode.set(!darkMode.value)}>
-        {darkMode.value ? '🌙' : '☀️'}
-      </button>
-      <svg class="menu-svg" viewBox="0 0 400 400">
-        <g class="top-disc" use:rotateDisc={rotationAngleTop}>
-          {visibleCategories.value.map((cat, i) => (
-            <text key={i} x={200} y={50 + i * 30} class="menu-item" on:click={() => selectedCategory.set(cat.name)}>
-              {cat.icon} {cat.name}
-            </text>
-          ))}
-        </g>
-        <g class="bottom-disc" use:rotateDisc={rotationAngleBottom}>
-          {selectedCategory.value && categories.find(c => c.name === selectedCategory.value).sub.map((subItem, i) => (
-            <text key={i} x={200} y={200 + i * 30} class="submenu-item">
-              {subItem}
-            </text>
-          ))}
-        </g>
-      </svg>
-      <div class="glass-pane" style={{ filter: `blur(${frostIntensity.value}px)`, opacity: 0.8 }}></div>
-    </div>
-  );
-};
-
-export default Menu;

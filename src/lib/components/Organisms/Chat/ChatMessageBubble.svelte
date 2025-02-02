@@ -8,6 +8,7 @@
   import type { ThemeContext } from '$lib/components/Theme/Theme.types';
   import { getContext } from 'svelte';
   import { PlatformThemes } from './chatboxtheme';
+  import type { ChatMessage } from './chat';
   
   let { 
     platform = $bindable('default'),
@@ -17,7 +18,7 @@
     timestamp = $bindable(new Date().toISOString())
   } = $props<{
     platform?: string;
-    message: string;
+    message: ChatMessage;
     user: string;
     avatarUrl: string;
     timestamp?: string;
@@ -37,7 +38,7 @@
       <Typography size="sm" weight="medium" class="user-name">{user}</Typography>
     </div>
     
-    <Typography size="base" class="message-content">{message}</Typography>
+    <Typography size="base" class="message-content">{message.content}</Typography>
     
     <div class="footer">
       <Typography size="xs" class="timestamp">

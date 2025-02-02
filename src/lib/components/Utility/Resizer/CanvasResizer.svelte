@@ -3,7 +3,7 @@
 	import { getContext } from 'svelte';
 	import type { Graph } from '$lib/components/Templates/Canvas/Graph/Graph.types';
 	import type { Node as NodeType } from '$lib/components/Organisms/Node/Node.types';
-	import type { XYPair } from '$lib/types/general';
+	import type { XYPair } from '$lib/components/Templates/Canvas/types/general';
 	import type { Writable } from 'svelte/store';
 	import { getTheme } from '$lib/components/Theme/theme.store';
 
