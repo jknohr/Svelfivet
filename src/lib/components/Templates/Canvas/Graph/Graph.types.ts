@@ -1,18 +1,16 @@
-import type { SvelteComponent } from 'svelte';
-import type {
-	GraphKey,
-	Node,
-	Edge,
-	GroupKey,
-	Anchor,
-	XYPair,
-} from '$lib/components/Templates/Canvas/types/logic';
-import { GroupStore, EdgeStore, NodeStore } from '$lib/components/Templates/Canvas/types/stores';
-import { GroupBox, InputStore, OutputStore } from '$lib/components/Templates/Canvas/types/storage';
-import type { GraphDimensions } from '$lib/components/Templates/Canvas/types/storage';
-import { CSSColorString, Theme } from '$lib/components/Templates/Canvas/types/theme';
+import type { Anchor } from '$lib/components/Atoms/Anchor/Anchor.types';
+import type { WritableEdge } from '$lib/components/Organisms/Edge/Edge.types';
+import type { Node } from '$lib/components/Organisms/Node/Node.types';
+import type { InputStore, OutputStore, GraphDimensions } from '$lib/components/Templates/Canvas/types/storage';
+import type { GroupStore, EdgeStore, NodeStore } from '$lib/components/Templates/Canvas/types/stores';
+import type { GraphKey, GroupKey, XYPair } from '$lib/components/Templates/Canvas/types/logic';
+import type { UnifiedThemeContext, CSSColorString } from '$lib/components/Templates/Canvas/types/theme';
 import type { Dimensions } from '$lib/components/Organisms/FlowChart/FlowChart.types';
-import type { createBoundsStore } from '$lib/components/Templates/Canvas/utils/creators/createBoundsStore';
+
+export interface GraphTransforms {
+	translation: XYPair;
+	scale: number;
+}
 
 export interface Graph {
 	id: GraphKey;
@@ -33,8 +31,8 @@ export interface Graph {
 	cursor: XYPair;
 	groups: Groups;
 	edges: EdgeStore;
-	edge: typeof SvelteComponent | null;
-	groupBoxes: GroupBoxStore;
+	edge: any | null; // Component reference
+	groupBoxes: GroupBoxes;
 	editing: Node | null;
 	activeGroup: GroupKey | null;
 	initialNodePositions: XYPair[];
@@ -46,9 +44,9 @@ export interface GraphConfig {
 	zoom?: number;
 	direction?: 'TD' | 'LR';
 	locked?: boolean;
-	theme?: Theme;
+	theme?: UnifiedThemeContext;
 	translation?: XYPair;
-	edge?: typeof SvelteComponent;
+	edge?: any; // Component reference
 }
 
 export type LinkingAny = Anchor;
@@ -112,11 +110,11 @@ export interface GraphStateType {
 	initialFit: boolean;
 	graphDimensions: GraphDimensions | null;
 	graphDOMElement: HTMLElement | null;
-	toggleComponent: typeof SvelteComponent | null;
-	minimapComponent: typeof SvelteComponent | null;
-	controlsComponent: typeof SvelteComponent | null;
-	drawerComponent: typeof SvelteComponent | null;
-	contrastComponent: typeof SvelteComponent | null;
+	toggleComponent: any | null; // Component reference
+	minimapComponent: any | null; // Component reference
+	controlsComponent: any | null; // Component reference
+	drawerComponent: any | null; // Component reference
+	contrastComponent: any | null; // Component reference
 	duplicate: boolean;
 	mounted: number;
 	selectedNodes: Set<Node>;

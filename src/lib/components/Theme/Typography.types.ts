@@ -48,6 +48,27 @@ export interface TypographyConfig {
   decoration?: TextDecoration;
 
   /**
+   * Font family configuration
+   */
+  fontFamily?: {
+    /**
+     * Primary font family
+     * @default 'system-ui'
+     */
+    primary?: string;
+    /**
+     * Secondary font family
+     * @default 'system-ui'
+     */
+    secondary?: string;
+    /**
+     * Monospace font family
+     * @default 'monospace'
+     */
+    mono?: string;
+  };
+
+  /**
    * Text overflow handling
    * @default 'clip'
    */

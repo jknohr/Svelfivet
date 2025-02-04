@@ -1,7 +1,9 @@
 /**
  * Default theme configuration with spatial design system
  */
-import type { ThemeConfig } from './Theme.types';
+import type { ThemeConfig, GlassEffectConfig, SpatialConstraints } from './Theme.types';
+import type { ScalingConstraints } from '../../types/spatial';
+import { baseGlassEffect } from './presets';
 
 // Golden ratio constant
 const PHI = 1.618033988749895;
@@ -84,21 +86,37 @@ export const defaultTheme: ThemeConfig = {
       borderRadius: '4px',
       padding: '8px'
     },
+    controls: {
+      background: '#ffffff',
+      border: '#e2e8f0',
+      text: '#1e293b',
+      icon: '#64748b',
+      hoverState: {
+        background: '#f8fafc',
+        border: '#cbd5e1'
+      },
+      activeState: {
+        background: '#e2e8f0'
+      }
+    },
     glass: {
       blur: '10px',
       opacity: 0.2,
       borderOpacity: 0.2,
       lightEffect: true,
-      lightIntensity: 0.5
+      lightIntensity: 0.5,
+      lightColor: '#ffffff',
+      tint: 'rgba(255, 255, 255, 0.1)',
+      glowRadius: '4px'
     }
   },
-  transitions: {
-    duration: {
+  transitionConfig: {
+    durationValues: {
       fast: '150ms',
       normal: '300ms',
       slow: '450ms'
     },
-    easing: {
+    easingValues: {
       standard: 'cubic-bezier(0.4, 0.0, 0.2, 1)',
       accelerate: 'cubic-bezier(0.4, 0.0, 1, 1)',
       decelerate: 'cubic-bezier(0.0, 0.0, 0.2, 1)',
@@ -107,15 +125,37 @@ export const defaultTheme: ThemeConfig = {
     }
   },
   spatial: {
-    base: {
-      unit: 8,
-      xxs: Math.round(8 * 0.25),    // 2px
-      xs: Math.round(8 * 0.382),    // 3px - Golden ratio reciprocal
-      s: Math.round(8 * 0.618),     // 5px - Golden ratio reciprocal
-      m: 8,                         // 8px - Base unit
-      l: Math.round(8 * 1.618),     // 13px - Golden ratio
-      xl: Math.round(8 * 2.618),    // 21px - Golden ratio squared
-      xxl: Math.round(8 * 4.236)    // 34px - Golden ratio cubed
+    constraints: {
+      default: {
+        minScale: 0.5,
+        maxScale: 2.5,
+      },
+      desktop: {
+        minScale: 0.75,
+        maxScale: 2,
+      },
+      mobile: {
+        minScale: 0.5,
+        maxScale: 1.5,
+      },
+      tablet: {
+        minScale: 0.6,
+        maxScale: 1.75,
+      },
+      vr: {
+        minScale: 0.2,
+        maxScale: 5.0,
+        minDistance: 0.5,  // 50cm
+        maxDistance: 10.0, // 10m
+        viewingAngle: 180  // degrees
+      },
+      ar: {
+        minScale: 0.1,
+        maxScale: 2.0,
+        minDistance: 0.3,  // 30cm
+        maxDistance: 5.0,  // 5m
+        viewingAngle: 120  // degrees
+      }
     },
     depth: {
       base: 0,
@@ -138,54 +178,6 @@ export const defaultTheme: ThemeConfig = {
         default: 0,
         raised: 2,
         floating: 8
-      }
-    },
-    // AR/VR spatial configuration
-    spatial: {
-      environment: 'desktop',
-      defaultConstraints: {
-        ar: {
-          minScale: 0.1,
-          maxScale: 2.0,
-          minDistance: 0.3,  // 30cm
-          maxDistance: 5.0,  // 5m
-          viewingAngle: 120  // degrees
-        },
-        vr: {
-          minScale: 0.2,
-          maxScale: 5.0,
-          minDistance: 0.5,  // 50cm
-          maxDistance: 10.0, // 10m
-          viewingAngle: 180  // degrees
-        },
-        mixed: {
-          minScale: 0.15,
-          maxScale: 3.0,
-          minDistance: 0.4,  // 40cm
-          maxDistance: 7.0,  // 7m
-          viewingAngle: 150  // degrees
-        }
-      },
-      anchor: {
-        enabled: false,
-        adaptiveScaling: true,
-        followUser: false,
-        collisionDetection: true,
-        position: {
-          x: 0,
-          y: 0,
-          z: 0,
-          rotation: {
-            x: 0,
-            y: 0,
-            z: 0
-          }
-        },
-        bounds: {
-          width: 1,
-          height: 1,
-          depth: 0.5
-        }
       }
     }
   },
@@ -249,11 +241,11 @@ export const defaultTheme: ThemeConfig = {
         }
       }
     },
-    lighting: {
-      ambient: 'rgba(255, 255, 255, 0.1)',
-      key: 'rgba(255, 255, 255, 0.8)',
-      fill: 'rgba(255, 255, 255, 0.3)',
-      intensity: 1,
+    lightingConfig: {
+      ambient: '#1f2937',
+      key: '#374151',
+      fill: '#4b5563',
+      intensity: 0.5,
       angle: 45
     }
   }

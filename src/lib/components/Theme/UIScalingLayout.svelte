@@ -39,8 +39,9 @@ Features:
     SpatialEnvironment,
     SpatialAnchorConfig,
     EnvironmentConstraints,
-    ThemeContext
-  } from './Theme.types';
+    ScalingConstraints
+  } from '$lib/types/spatial';
+import type { UnifiedThemeContext } from './Theme.types';
   import { BASE, SPACE_3D } from './SpatialDesign';
 
   // Props with TypeScript interface
@@ -56,14 +57,16 @@ Features:
   let props = $props();
   let {
     scale = 1,
-    density = 'comfortable',
+    density: initialDensity = 'comfortable',
     environment = 'desktop',
     spatialAnchor,
     children
   } = props as Props;
 
+  let density = $state(initialDensity);
+
   // Theme context
-  const themeContext = getContext<ThemeContext>('theme');
+  const themeContext = getContext<UnifiedThemeContext>('theme');
 
   // Density multipliers based on golden ratio
   const PHI = 1.618033988749895;
@@ -75,17 +78,22 @@ Features:
 
   // Environment detection
   let hasXRSupport = $state(false);
-  let currentConstraints = $state<EnvironmentConstraints | null>(null);
+  let currentConstraints = $state<ScalingConstraints | null>(null);
 
   // Calculate effective scale based on environment and constraints
   const effectiveScale = $derived.by(() => {
     const baseScale = scale * densityScales[density];
     
-    if (currentConstraints && spatialAnchor?.enabled) {
-      return Math.max(
-        currentConstraints.minScale,
-        Math.min(baseScale, currentConstraints.maxScale)
+      // Apply environment-specific constraints if available
+    if (currentConstraints) {
+      const constrainedScale = Math.max(
+        Math.min(baseScale, currentConstraints.maxScale),
+        currentConstraints.minScale
       );
+      
+      // If spatial anchor is enabled, we still use the same constraints
+      // as they represent the environment bounds
+      return constrainedScale;
     }
 
     return baseScale;
@@ -127,13 +135,12 @@ Features:
     '--spatial-scale': effectiveScale.toString()
   } as const));
 
-  // Provide scaling context
+   // Provide scaling context
   const scaleContext: ScaleContext = {
-    get density() { return $state.snapshot(density); },
-    get scale() { return $state.snapshot(effectiveScale); },
-    get baseUnit() { return $state.snapshot(baseUnit); },
-    get gridUnit() { return $state.snapshot(gridUnit); },
-    get spaceUnit() { return $state.snapshot(spaceUnit); }
+    get density() { return density; },
+    get factor() { return effectiveScale; },
+    setDensity: (newDensity: Density) => { density = newDensity; },
+    setScale: (newScale: number) => { scale = newScale; }
   };
   
   setContext('spatial-scale', scaleContext);
@@ -156,9 +163,26 @@ Features:
 
   // Get environment constraints
   $effect(() => {
-    const constraints = themeContext?.theme?.spatial?.spatial?.defaultConstraints;
-    if (environment !== 'desktop' && constraints) {
-      currentConstraints = constraints[environment] ?? null;
+    const computedTheme = themeContext?.utils?.getComputedTheme();
+    if (environment !== 'desktop' && computedTheme?.spatial?.constraints) {
+      const constraints = computedTheme.spatial.constraints;
+      const envKey = environment as SpatialEnvironment;
+      if (envKey in constraints) {
+        const envConstraints = constraints[envKey];
+        if (envConstraints) {
+          currentConstraints = {
+            minScale: envConstraints.minScale ?? 0.5,
+            maxScale: envConstraints.maxScale ?? 2,
+            minDistance: envConstraints.minDistance,
+            maxDistance: envConstraints.maxDistance,
+            viewingAngle: envConstraints.viewingAngle
+          };
+        } else {
+          currentConstraints = null;
+        }
+      } else {
+        currentConstraints = null;
+      }
     } else {
       currentConstraints = null;
     }

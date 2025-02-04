@@ -1,69 +1,63 @@
-<!-- /src/lib/components/TextField.svelte -->
-<!--
-@component TextField
-A modern textarea component with glass effect styling and theme integration.
-Features:
-- Glass effect styling with hover and focus states
-- Multiple sizes and variants
-- Theme system integration
-- Full accessibility support
-- AR/VR environment support
--->
-
 <svelte:options runes={true} />
 
 <script lang="ts">
-  import type { TextFieldProps, TextFieldSize, TextFieldVariant } from './TextField.types';
-  import { TEXTFIELD_SIZES, TEXTFIELD_STATES, TEXTFIELD_VARIANTS } from './TextField.types';
+  import { onDestroy } from 'svelte';
+  import { INPUT_SIZES, INPUT_STATES, INPUT_VARIANTS } from './SearchField.types';
   import GlassPane from '../../Theme/GlassPane.svelte';
   import Typography from '../../Theme/Typography.svelte';
 
-  // Props
+  // Define props using $props()
   let {
-    label,
-    value = $bindable(''),
-    placeholder = '',
-    icon,
+    label = '',
+    value = $state(''),
+    type = 'text',
+    placeholder = 'Search...',
     disabled = false,
-    readonly = false,
-    required = false,
-    size = 'md' as TextFieldSize,
-    variant = 'default' as TextFieldVariant,
-    state: textFieldState = 'default',
+    size = 'md',
+    variant = 'default',
+    state = 'default',
     glass = true,
     elevated = false,
-    ariaLabel,
-    onInput,
-    onFocus,
-    onBlur
+    required = false,
+    ariaLabel = '',
+    debounceTime = 300
   } = $props();
 
-  // Local state
+  // Reactive state
   let isFocused = $state(false);
   let isHovered = $state(false);
+  let inputElement: HTMLInputElement;
+  let debounceTimer: number;
+  let isLoading = $state(false);
+  let showHint = $state(false);
+  let hintTimer: number;
 
-  // Derived values for dynamic styling
-  let effectiveElevation = $derived.by(() => isFocused ? 2 : isHovered ? 1 : 0);
-  
-  // Get styles from constants
-  let sizeStyles = $derived.by(() => TEXTFIELD_SIZES[size as TextFieldSize]);
-  let variantStyles = $derived.by(() => TEXTFIELD_VARIANTS[variant as TextFieldVariant]);
+  // Derived state for elevation
+  let effectiveElevation = $derived(
+    isFocused ? 2 : isHovered ? 1 : 0
+  );
 
-  // Event handlers
-  function handleInput(e: Event) {
-    const target = e.target as HTMLTextAreaElement;
-    value = target.value;
-    onInput?.(target.value);
+  // Debounced search function
+  function handleInput() {
+    showHint = true;
+    resetHintTimer();
+
+    if (debounceTime > 0) {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        performSearch(value);
+      }, debounceTime);
+    } else {
+      performSearch(value);
+    }
   }
 
   function handleFocus() {
     isFocused = true;
-    onFocus?.();
   }
 
   function handleBlur() {
     isFocused = false;
-    onBlur?.();
   }
 
   function handleMouseEnter() {
@@ -74,166 +68,177 @@ Features:
     isHovered = false;
   }
 
-  // Generate unique ID for textarea-label association
-  const id = `textarea-${Math.random().toString(36).slice(2, 11)}`;
+  function handleClear() {
+    value = '';
+    inputElement.focus();
+  }
+
+  async function performSearch(query: string) {
+    if (!query) return;
+    
+    isLoading = true;
+    clearTimeout(hintTimer);
+    showHint = false;
+    
+    try {
+      const response = await fetch(`https://api.example.com/search?query=${encodeURIComponent(query)}`);
+      if (!response.ok) throw new Error(`API error: ${response.status}`);
+    } catch (error) {
+      console.error('Search error:', error);
+    } finally {
+      isLoading = false;
+    }
+  }
+
+  function resetHintTimer() {
+    clearTimeout(hintTimer);
+    hintTimer = setTimeout(() => {
+      showHint = false;
+    }, 20000);
+  }
+
+  // Generate a unique ID for the input
+  const id = `search-input-${Math.random().toString(36).slice(2, 11)}`;
+
+  // Clean up timers on component destroy
+  onDestroy(() => {
+    if (debounceTimer) clearTimeout(debounceTimer);
+    if (hintTimer) clearTimeout(hintTimer);
+  });
 </script>
 
-{#snippet labelContent(labelText: string)}
-  <Typography size={sizeStyles.fontSize}>
-    {labelText}
-  </Typography>
-{/snippet}
-
-{#snippet iconContent(iconName: string)}
-  <Typography size={sizeStyles.fontSize} family="icon">
-    {iconName}
-  </Typography>
-{/snippet}
-
-<div 
-  class="textarea-container"
-  class:disabled
-  class:readonly
-  class:focused={isFocused}
-  class:hovered={isHovered}
-  style:--textarea-height={sizeStyles.height}
-  style:--textarea-padding={sizeStyles.padding}
-  style:--textarea-radius={sizeStyles.radius}
->
-  {#if label}
-    <label for={id} class="label-wrapper">
-      {@render labelContent(label)}
-    </label>
-  {/if}
-
-  <GlassPane
-    variant={glass ? variant : 'transparent'}
-    attentionState={textFieldState}
-    interactive={!disabled}
-    elevated={elevated || effectiveElevation > 0}
-    glowOnHover={!disabled}
-    componentType="textarea"
-  >
-    <div class="textarea-wrapper" class:has-icon={!!icon}>
-      {#if icon}
-        <span class="icon-wrapper">
-          {@render iconContent(icon)}
-        </span>
-      {/if}
-
-      <textarea
-        {id}
-        {placeholder}
-        {readonly}
-        {required}
-        {disabled}
-        bind:value
-        aria-label={ariaLabel || label}
-        aria-invalid={textFieldState === 'error'}
-        aria-disabled={disabled}
-        oninput={handleInput}
-        onfocus={handleFocus}
-        onblur={handleBlur}
-        onmouseenter={handleMouseEnter}
-        onmouseleave={handleMouseLeave}
-      ></textarea>
-    </div>
-  </GlassPane>
-</div>
-
 <style>
-  .textarea-container {
+  .search-field-container {
     position: relative;
     display: flex;
     flex-direction: column;
     gap: var(--ui-space-2);
     z-index: var(--ui-layer-1);
   }
-
-  .textarea-container:hover {
-    z-index: var(--ui-layer-2);
-  }
-
-  .textarea-container:focus-within {
-    z-index: var(--ui-layer-3);
-  }
-
-  .label-wrapper {
-    color: var(--color-text-secondary);
-  }
-
-  .textarea-wrapper {
-    position: relative;
-    display: flex;
+  .search-field-container:hover { z-index: var(--ui-layer-2); }
+  .search-field-container:focus-within { z-index: var(--ui-layer-3); }
+  .label-wrapper { color: var(--color-text-secondary); }
+  input {
     width: 100%;
-  }
-
-  .textarea-wrapper.has-icon {
-    gap: var(--ui-space-2);
-  }
-
-  .icon-wrapper {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--color-text-secondary);
-  }
-
-  textarea {
-    width: 100%;
-    min-height: var(--textarea-height);
-    padding: var(--textarea-padding);
+    height: var(--input-height);
+    padding: var(--input-padding);
+    padding-right: calc(var(--input-padding) + 48px);
     border: none;
-    border-radius: var(--textarea-radius);
+    border-radius: var(--input-radius);
     background: transparent;
     color: var(--color-text);
     font-family: var(--font-family-base);
     font-size: inherit;
-    resize: vertical;
     transition: all var(--transition-normal) var(--ease-standard);
   }
-
-  textarea::placeholder {
+  input::placeholder { color: var(--color-text-secondary); opacity: 0.7; }
+  input:focus { outline: none; }
+  .disabled { opacity: 0.6; cursor: not-allowed; }
+  .clear-button, .loading-indicator {
+    position: absolute;
+    right: var(--ui-grid);
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
     color: var(--color-text-secondary);
-    opacity: 0.7;
+    cursor: pointer;
   }
-
-  textarea:focus {
-    outline: none;
+  .search-icon {
+    position: absolute;
+    left: var(--ui-grid);
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--color-text-secondary);
   }
-
-  .disabled textarea {
-    cursor: not-allowed;
+  .loading-indicator {
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--color-text-secondary);
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
   }
-
-  .readonly textarea {
-    cursor: default;
+  .hint-bubble {
+    position: absolute;
+    top: -30px;
+    right: 0;
+    background: var(--color-background-secondary);
+    color: var(--color-text-secondary);
+    padding: 8px 12px;
+    border-radius: 12px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    font-size: 0.875rem;
+    opacity: 0;
+    transition: opacity 0.3s ease;
   }
-
-  /* Spatial adjustments */
-  @media (--ar) {
-    .textarea-container {
-      transform-style: preserve-3d;
-      transform: translateZ(var(--depth-input));
-    }
+  .hint-bubble.show {
+    opacity: 1;
   }
-
-  @media (--vr) {
-    .textarea-container {
-      transform-style: preserve-3d;
-      transform: translateZ(var(--depth-ui));
-    }
+  @keyframes spin {
+    from { transform: translateY(-50%) rotate(0deg); }
+    to { transform: translateY(-50%) rotate(360deg); }
   }
 </style>
 
-<!--
-wE NEED TO MAKE SURE THIS IS NOT MISSING FOR dIAGRAMS.TextField
-<input
-	{placeholder}
-	type="text"
-	bind:value={$textStore}
-	onkeydown={(event) => event.stopPropagation()}
-	onclick={(event) => event.stopPropagation()}
-	onmousedown={(event) => event.stopPropagation()}
-/>
--->
+<div 
+  class="search-field-container" 
+  class:disabled 
+  onmouseleave={handleMouseLeave}
+>
+  {#if label}
+    <label for={id} class="label-wrapper">
+      <Typography size={INPUT_SIZES[size].fontSize}>{label}</Typography>
+    </label>
+  {/if}
+
+  <GlassPane
+    variant={glass ? variant : 'transparent'}
+    attentionState={state}
+    interactive={!disabled}
+    elevated={elevated || effectiveElevation > 0}
+    glowOnHover={!disabled}
+    class="glass-pane"
+  >
+    <div style="position: relative; width: 100%;">
+      <input
+        id={id}
+        type={type}
+        placeholder={placeholder}
+        disabled={disabled}
+        required={required}
+        bind:value
+        aria-label={ariaLabel || label}
+        aria-invalid={state === 'error'}
+        aria-disabled={disabled}
+        on:input={handleInput}
+        on:focus={handleFocus}
+        on:blur={handleBlur}
+        on:mouseenter={handleMouseEnter}
+        bind:this={inputElement}
+      />
+      
+      {#if value && !disabled}
+        <button class="clear-button" on:click={handleClear}>
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+            <path d="M4.646 4.646a.5.5 0 011-.707L6.207 7.354l3.646-3.647a.5.5 0 11.708.708l-4 4a.5.5 0 01-.708 0l-4-4a.5.5 0 01-.707-1.707L2.343 2.343 4.646 4.646z"/>
+          </svg>
+        </button>
+      {/if}
+      
+      {#if isLoading}
+        <div class="loading-indicator"></div>
+      {/if}
+      
+      <span class="search-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+          <path d="M11.742 10.344a6.5 6.5 0 111.139 1.142l-3.197 3.197a.5.5 0 010-.707l3.197-3.197a.5.5 0 011.063.872l-4.5 4.5a.5.5 0 01-.708 0l-4.5-4.5a.5.5 0 01.872-1.063z"/>
+        </svg>
+      </span>
+      
+      {#if showHint}
+        <div class="hint-bubble show">Try searching with keywords like "latest news" or "trending topics".</div>
+      {/if}
+    </div>
+  </GlassPane>
+</div>

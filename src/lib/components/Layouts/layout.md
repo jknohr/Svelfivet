@@ -1,4 +1,4 @@
-```mermaid
+hy ks thks set k ```mermaid
 graph TD
     %% Main Layout Structure
     BaseLayout[BaseLayout.svelte] --> Header

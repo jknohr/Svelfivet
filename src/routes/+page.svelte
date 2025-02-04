@@ -1,45 +1,8 @@
 <script lang="ts">
-	import { Svelvet, Node, Anchor, Resizer, Group, ThemeToggle, Controls, Drawer, ContrastTheme } from '$lib';
-	import TextField from '$lib/components/data/TextField/TextField.svelte';
-	import Connector from '../example-components/Connector.svelte';
-	import CircleColor from '../example-components/sandbox/CircleColor.svelte';
-	import DashCount from '../example-components/sandbox/DashCount.svelte';
-	import Noise from '../example-components/sandbox/Noise.svelte';
-	import Scale from '../example-components/sandbox/Scale.svelte';
-	import Thickness from '../example-components/sandbox/Thickness.svelte';
-	import Output from '../example-components/sandbox/Output.svelte';
-	import { getJSONState } from '$lib/utils/savers/saveStore';
-	import type { Graph } from '$lib/types';
-	import { getContext } from 'svelte';
-	import { graphStore } from '$lib/components/Templates/Canvas/stores';
-	import { get } from 'svelte/store';
-	// Controls is not used on the canvas itself, but is part of the HUD of the dev homepage
-	// maybe not needed here
-
-	function addAndConnect(connect: (connections: string | number) => void) {
-		connect(totalNodes + 4);
-		totalNodes++;
-	}
-
-	let totalNodes = $state(0);
-	let widthCount = $state(1);
-	let graph = $state<any>(null);
-
-	$effect(() => {
-		const graphKey = 'G-1';
-		graph = graphStore.get(graphKey);
-	});
-
-	function logCurrentGraphState() {
-		const currentGraphMap = get(graphStore);
-		const graph = currentGraphMap.get('G-1');
-		if (graph) {
-			console.log('Current Graph State:', graph);
-		} else {
-			console.log('No current graph found');
-		}
-	}
+    import RealEstateBody from '$lib/components/Vistas/real-estate/RealEstateBody.svelte';
 </script>
+
+<RealEstateBody />
 
 <body>
 	<Svelvet minimap title="test" controls>
@@ -54,9 +17,8 @@
 			<button
 				style="cursor: pointer;"
 				onclick={() => {
-					// const graph = getContext('graph');
 					console.log('Graph on user interaction:', graph);
-					getJSONState(graph);
+					if (graph) getJSONState(graph);
 				}}>SAVE STATE</button
 				>
 			<button onclick={logCurrentGraphState}>Log Current Graph State</button>

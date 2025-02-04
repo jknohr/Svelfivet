@@ -2,14 +2,14 @@
 
 <script lang="ts">
   import { slide } from 'svelte/transition';
-  import { contextConfigs } from '$lib/components/Vistas/navigation';
-  import type { ContextType } from '$lib/types/context';
+  import { vistaConfigs } from '$lib/components/Vistas/navigation';
+  import type { VistaType } from '$lib/types/vista';
   import GlassPane from '$lib/components/Theme/GlassPane.svelte';
   import Typography from '$lib/components/Theme/Typography.svelte';
 
   // Types
   type VistaInfo = {
-    id: ContextType;
+    id: VistaType;
     name: string;
     icon: string;
     description: string;
@@ -17,15 +17,15 @@
 
   // Props
   let {
-    initialVista = 'real-estate' as ContextType,
-    onSelect = ((vista: ContextType): void => {}) as (vista: ContextType) => void
+    initialVista = 'real-estate' as VistaType,
+    onSelect = ((vista: VistaType): void => {}) as (vista: VistaType) => void
   } = $props();
 
   // State
   let isOpen = $state(false);
   let isHovered = $state(false);
   let isActive = $state(false);
-  let selectedVista = $state<ContextType>(initialVista);
+  let selectedVista = $state<VistaType>(initialVista);
 
   // Derived state
   let buttonState = $derived(() => {
@@ -34,10 +34,10 @@
     return 'default';
   });
 
-  // Convert contextConfigs to array for rendering
+  // Convert vistaConfigs to array for rendering
   function computeVistas(): VistaInfo[] {
-    return Object.entries(contextConfigs).map(([id, config]): VistaInfo => ({
-      id: id as ContextType,
+    return Object.entries(vistaConfigs).map(([id, config]): VistaInfo => ({
+      id: id as VistaType,
       name: config.label,
       icon: config.icon,
       description: config.description
@@ -49,8 +49,39 @@
   // Handle vista selection
   function selectVista(vista: VistaInfo) {
     selectedVista = vista.id;
-    isOpen = false;
     onSelect(vista.id);
+    isOpen = false;
+  }
+
+  // Event handlers
+  function handleMouseEnter() {
+    isHovered = true;
+  }
+
+  function handleMouseLeave() {
+    isHovered = false;
+  }
+
+  function handleClick() {
+    isOpen = !isOpen;
+    isActive = isOpen;
+  }
+
+  function handleBlur(event: FocusEvent) {
+    const relatedTarget = event.relatedTarget as HTMLElement;
+    const currentTarget = event.currentTarget as HTMLElement;
+    if (!relatedTarget || !currentTarget.contains(relatedTarget)) {
+      isOpen = false;
+      isActive = false;
+    }
+  }
+
+  function handleItemHover(vista: VistaInfo) {
+    // Add hover logic here if needed
+  }
+
+  function handleItemLeave(vista: VistaInfo) {
+    // Add leave logic here if needed
   }
 </script>
 
@@ -63,17 +94,18 @@
   >
     <button 
       class="vista-button"
-      onmouseenter={() => isHovered = true}
-      onmouseleave={() => isHovered = false}
+      onmouseenter={handleMouseEnter}
+      onmouseleave={handleMouseLeave}
       onmousedown={() => isActive = true}
       onmouseup={() => isActive = false}
-      onclick={() => isOpen = !isOpen}
+      onclick={handleClick}
+      onblur={handleBlur}
       aria-expanded={isOpen}
       aria-haspopup="true"
     >
-      <span class="material-icons">{contextConfigs[selectedVista].icon}</span>
+      <span class="material-icons">{vistaConfigs[selectedVista].icon}</span>
       <Typography size="base" weight="medium">
-        <span class="vista-name">{contextConfigs[selectedVista].label}</span>
+        <span class="vista-name">{vistaConfigs[selectedVista].label}</span>
       </Typography>
     </button>
   </GlassPane>
@@ -90,6 +122,8 @@
           class="vista-option"
           class:selected={vista.id === selectedVista}
           onclick={() => selectVista(vista)}
+          onmouseenter={() => handleItemHover(vista)}
+          onmouseleave={() => handleItemLeave(vista)}
           role="menuitem"
           aria-label={vista.description}
         >
@@ -123,8 +157,8 @@
     height: 100%;
     padding: 0.5rem;
     border: none;
-    background: transparent;
     cursor: pointer;
+    background: transparent;
     color: var(--color-text);
     transition: all 0.2s;
     border-radius: var(--radius-md);
@@ -155,8 +189,8 @@
     width: 100%;
     padding: 0.75rem;
     border: none;
-    background: transparent;
     cursor: pointer;
+    background: transparent;
     color: var(--color-text);
     transition: all 0.2s;
     border-radius: var(--radius-md);
@@ -231,4 +265,4 @@
       transform: translateZ(var(--depth-ui));
     }
   }
-</style> 
+</style>

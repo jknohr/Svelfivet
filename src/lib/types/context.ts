@@ -1,4 +1,5 @@
 import type { NavigationConfig } from './navigation';
+import type { FeatureConfig } from './feature';
 
 // Vista types
 export type ContextType = 'real-estate' | 'aisearch' | 'systemadmin' | 'user';
@@ -55,14 +56,6 @@ export interface RouteConfig {
         };
         ai?: Record<string, string>;
     };
-}
-
-// Feature configuration
-export interface FeatureConfig {
-    enabled: boolean;
-    provider?: string;
-    capabilities?: string[];
-    config?: Record<string, any>;
 }
 
 // Context configuration

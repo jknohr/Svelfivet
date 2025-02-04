@@ -1,11 +1,7 @@
 <script lang="ts">
-	import { run, stopPropagation, preventDefault } from 'svelte/legacy';
-
-	import { initialClickPosition } from '$lib/components/Templates/Canvas/stores/CursorStore';
 	import { getContext } from 'svelte';
 	import { isArrow } from '$lib/types';
 	import { roundNum } from '$lib/utils';
-	import { tracking } from '$lib/components/Templates/Canvas/stores/CursorStore';
 	import type { Graph, Node, CustomWritable } from '$lib/types';
 	import type { CSSColorString } from '$lib/types';
 
@@ -38,16 +34,16 @@
 
 	let graph = getContext<Graph>('graph');
 	let node = getContext<Node>('node');
+	let groups = $state(graph.groups);
+	let selected = $state($groups.selected);
+	let activeGroup = $state(graph.activeGroup);
 
-	const groups = graph.groups;
-	const selected = $groups.selected;
-	const activeGroup = graph.activeGroup;
 
-
-	let sliderWidth: number = $state(); // Width of slider on DOM (relative to scale)
-	let sliderElement: HTMLInputElement = $state();
+	let sliderWidth: number = $state(0); // Width of slider on DOM (relative to scale)
+	let sliderElement: HTMLInputElement | null = $state(null);
 	let sliding = $state(false); // Whether the slider is currently being dragged
 	let previousX = $state(0); // Represents previous cursor position
+	let initialPos = $state({ x: 0, y: 0 }); // Initial click position using $state
 	let pixelsMoved = 0; // Number of pixels moved during slide
 
 
@@ -56,7 +52,7 @@
 	function startSlide(e: MouseEvent) {
 		e.stopPropagation();
 		e.preventDefault();
-		$initialClickPosition = { x: $cursor.x, y: $cursor.y };
+		initialPos = { x: $cursor.x, y: $cursor.y };
 		previousX = $cursor.x;
 		window.addEventListener('mouseup', stopSlide, { once: true });
 		sliding = true;
@@ -68,7 +64,7 @@
 		tracking.set(false);
 		e.stopPropagation();
 		e.preventDefault();
-		$initialClickPosition = { x: $cursor.x, y: $cursor.y };
+		initialPos = { x: $cursor.x, y: $cursor.y };
 		previousX = $cursor.x;
 		window.addEventListener('touchend', stopSlide, { once: true });
 		sliding = true;
@@ -77,8 +73,8 @@
 	// Stop sliding on mouseup
 	function stopSlide() {
 		if (previousValue === $parameterStore) {
-			sliderElement.focus();
-			sliderElement.select();
+			sliderElement?.focus();
+			sliderElement?.select();
 		} else {
 			previousValue = $parameterStore;
 		}
@@ -107,7 +103,7 @@
 
 	function calculateSlide(cursorChange: number, increment = step) {
 		if (typeof $parameterStore !== 'number') return;
-		const pixelsToMove = ($width * 0.7) / ((max - min) / increment);
+		const pixelsToMove = (sliderWidth * 0.7) / ((max - min) / increment);
 		pixelsMoved += cursorChange;
 
 		if (Math.abs(pixelsMoved) >= pixelsToMove) {
@@ -126,7 +122,7 @@
 
 	// This prevents users from typing in invalid characters
 	function validateInput() {
-		const number = parseFloat(sliderElement.value);
+		const number = parseFloat(sliderElement?.value ?? '');
 		if (!Number.isNaN(number)) {
 			if (number <= min) {
 				$parameterStore = min;
@@ -138,8 +134,10 @@
 		}
 		// For some reason, this line is necessary
 		// Absurdly large or small numbers do not get reset without it
-		sliderElement.value = JSON.stringify($parameterStore);
-		sliderElement.blur();
+		if (sliderElement) {
+			sliderElement.value = JSON.stringify($parameterStore);
+			sliderElement.blur();
+		}
 	}
 
 
@@ -155,15 +153,18 @@
 
 	let connected = $derived(typeof parameterStore.set !== 'function');
 	let width = $derived(node.dimensions.width);
-	// Grab cursor from store
 	let cursor = $derived(graph.cursor);
-	run(() => {
+
+	// Handle sliding updates
+	$effect(() => {
 		if (sliding) {
 			const deltaX = $cursor.x - previousX;
 			calculateSlide(deltaX);
 			previousX = $cursor.x;
 		}
 	});
+
+	// Calculate derived values
 	let percentageSlid = $derived(((($parameterStore as number) - min) / (max - min)) * 100);
 	let CSSpercentage = $derived(`${percentageSlid}%`);
 	let sliderStyle = $derived(`linear-gradient(
@@ -171,8 +172,9 @@
 			${barColor || 'var(--primary-color, var(--default-primary-color))'} ${CSSpercentage},
 			${bgColor || 'var(--accent-color, var(--default-accent-color))'} ${CSSpercentage}
 		)`);
-	// Handle edge cases for sliding and input value changes
-	run(() => {
+
+	// Handle value constraints
+	$effect(() => {
 		if ($parameterStore < min) {
 			$parameterStore = min;
 		} else if ($parameterStore > max) {
@@ -185,8 +187,8 @@
 	<div class="wrapper" style:color={fontColor}>
 		<button
 			class="button"
-			ontouchstart={stopPropagation(() => updateValue(-1))}
-			onmousedown={stopPropagation(() => updateValue(-1))}>−</button
+			ontouchstart={(e) => { e.stopPropagation(); updateValue(-1); }}
+			onmousedown={(e) => { e.stopPropagation(); updateValue(-1); }}>−</button
 		>
 		<div class="slider" bind:offsetWidth={sliderWidth}>
 			<label for="slider-input" class="input-label">{label}</label>
@@ -199,10 +201,13 @@
 				type="text"
 				value={$parameterStore.toFixed(fixed)}
 				aria-label={label}
-				onwheel={stopPropagation(preventDefault((event) => {
+				onwheel={(event) => {
+					event.stopPropagation();
+					event.preventDefault();
 					updateValue(Math.sign(event.deltaY), step);
-				}))}
-				onkeydown={stopPropagation((e) => {
+				}}
+				onkeydown={(e) => {
+					e.stopPropagation();
 					const { key } = e;
 
 					if (isArrow(key)) {
@@ -211,7 +216,7 @@
 					}
 
 					if (key === 'Enter') validateInput();
-				})}
+				}}
 				use:slideable
 				bind:this={sliderElement}
 				oninput={validateInputValue}
@@ -219,8 +224,8 @@
 		</div>
 		<button
 			class="button"
-			ontouchstart={stopPropagation(() => updateValue(1))}
-			onmousedown={stopPropagation(() => updateValue(1))}>+</button
+			ontouchstart={(e) => { e.stopPropagation(); updateValue(1); }}
+			onmousedown={(e) => { e.stopPropagation(); updateValue(1); }}>+</button
 		>
 	</div>
 {:else}

@@ -2,10 +2,14 @@
 
 <script lang="ts">
     import { slide } from 'svelte/transition';
-    import { contextConfigs } from '$lib/components/Vistas/navigation';
-    import type { ContextType, NavigationItem } from '$lib/types/context';
+    import { vistaConfigs } from '$lib/components/Vistas/navigation';
+    import type { VistaType } from '$lib/types/vista';
+    import type { NavigationItem } from '$lib/types/navigation';
     import GlassPane from '$lib/components/Theme/GlassPane.svelte';
     import Typography from '$lib/components/Theme/Typography.svelte';
+    import LoginModal from '$lib/services/neuralauth/components/LoginModal.svelte';
+    import { currentUser, isAuthenticated } from '$lib/services/neuralauth/store/auth';
+    import { logout } from '$lib/services/neuralauth/api/auth';
     
     // Types
     type User = {
@@ -24,10 +28,12 @@
         action: () => void;
     };
 
+    // State
+    let showLoginModal = $state(false);
+
     // Props with defaults
     let { 
-        vista = 'real-estate' as ContextType,
-        user = null as User | null,
+        vista = 'real-estate' as VistaType,
         onNavigate = ((path: string): void => {}) as (path: string) => void,
         onLogin = ((): void => {}) as () => void,
         onLogout = ((): void => {}) as () => void,
@@ -59,17 +65,17 @@
 
     // Compute menu items
     function computeMenuItems(): MenuItem[] {
-        const config = contextConfigs[vista];
+        const config = vistaConfigs[vista];
         if (!config) return [];
 
-        if (!user) {
+        if (!currentUser) {
             return [
                 { 
                     id: 'login',
                     label: 'Login',
                     icon: 'login',
                     path: '/auth/login',
-                    action: onLogin
+                    action: () => showLoginModal = true
                 },
                 {
                     id: 'register',
@@ -81,8 +87,9 @@
             ];
         }
 
-        const userNav = config.navigation.user || [];
-        const adminNav = user.roles?.includes('admin') ? (config.navigation.admin || []) : [];
+        // Filter navigation items based on authentication and roles
+        const userNav = config.navigation.items.filter(item => item.requiresAuth);
+        const adminNav = currentUser.roles?.includes('admin') ? config.navigation.items.filter(item => item.roles?.includes('admin')) : [];
         
         return [
             ...userNav.map(navItemToMenuItem),
@@ -92,7 +99,10 @@
                 label: 'Logout',
                 icon: 'logout',
                 path: '#',
-                action: onLogout
+                action: async () => {
+                    await logout();
+                    isOpen = false;
+                }
             }
         ];
     }
@@ -114,23 +124,23 @@
             onmouseleave={() => isHovered = false}
             onmousedown={() => isActive = true}
             onmouseup={() => isActive = false}
-            onclick={() => isOpen = !isOpen}
+            onclick={() => isAuthenticated ? (isOpen = !isOpen) : (showLoginModal = true)}
             aria-expanded={isOpen}
             aria-haspopup="true"
         >
-            {#if user}
+            {#if currentUser}
                 <div class="user-info">
-                    {#if user.avatar}
+                    {#if currentUser.avatar}
                         <img 
-                            src={user.avatar} 
-                            alt={user.name} 
+                            src={currentUser.avatar} 
+                            alt={currentUser.name} 
                             class="avatar"
                         />
                     {:else}
                         <span class="material-icons avatar-fallback">account_circle</span>
                     {/if}
                     <Typography size="base" weight="medium">
-                        <span class="user-name">{user.name}</span>
+                        <span class="user-name">{currentUser.name}</span>
                     </Typography>
                 </div>
             {:else}
@@ -295,3 +305,12 @@
         }
     }
 </style>
+
+<LoginModal
+    show={showLoginModal}
+    onClose={() => showLoginModal = false}
+    onRegister={() => {
+        showLoginModal = false;
+        // TODO: Show registration modal
+    }}
+/>

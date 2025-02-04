@@ -216,4 +216,17 @@ export interface HistoryManager {
     clear(): Promise<void>;
     undo(): Promise<void>;
     redo(): Promise<void>;
-} 
+}
+
+export interface InputStore {
+    // TODO: Define properties and methods for InputStore
+}
+
+export interface OutputStore {
+    // TODO: Define properties and methods for OutputStore
+}
+
+export type GraphDimensions = {
+    width: number;
+    height: number;
+}

@@ -10,85 +10,151 @@ A comprehensive, type-safe, and environment-aware theming system for Svelte appl
 4. **Composition Over Inheritance**: Modular design with clear boundaries
 5. **Reactive by Default**: Built with Svelte 5 runes for optimal reactivity
 
-## Module Structure
+## Type System Organization
 
-### Core Files
+### Central Type Management (`src/lib/types/`)
 
-#### `Theme.types.ts`
-- **Responsibility**: Central type definitions for the entire theme system
-- **Boundaries**:
-  - Defines all theme-related interfaces and types
-  - No implementation logic
-  - No runtime code
-  - Single source of truth for type definitions
+The type system is organized into three main categories for better maintainability and clarity:
+
+#### 1. Theme Types (`/theme`)
+- **Core Theme Types**: Color, layout, and transition configurations
+- **Typography Types**: Text styling and formatting
+- **Theme Mode Types**: Light, dark, and high-contrast modes
+- **Glass Effect Types**: Glass morphism and effects
+- **Element Types**: Component-specific theme configurations
+
+#### 2. Component Types (`/components`)
+Organized following atomic design principles:
+- **Atoms**: Basic building blocks (Anchor, ThemeToggle, Tooltip)
+- **Molecules**: Combinations of atoms (Controls)
+- **Organisms**: Complex components (Node, Edge, Minimap)
+- **Utility**: Helper components (Group)
+
+#### 3. Shared Types (`/shared`)
+Common types used across the application:
+- Position and dimension types (XYPair, Dimensions)
+- Style types (CSSColorString)
+- Layout types (Direction)
+
+### Usage
+
+```typescript
+// Import theme-related types
+import type { ColorConfig, ThemeMode } from '$lib/types/theme';
+
+// Import component types
+import type { NodeProps, EdgeConfig } from '$lib/types/components';
+
+// Import shared types
+import type { XYPair, Dimensions } from '$lib/types/shared';
+```
+
+## Core Components
 
 #### `ThemeProvider.svelte`
 - **Responsibility**: Root theme context provider
-- **Boundaries**:
-  - Manages theme context
-  - Handles theme mode switching
-  - Provides theme state to child components
-  - No direct styling or component-specific logic
+- **Features**:
+  - Manages theme context using Svelte's context API
+  - Handles theme mode switching (light/dark/high-contrast)
+  - Provides unified theme interface to child components
+  - Manages CSS variable injection
+  - Type-safe theme configuration using centralized types
 
-#### `ThemeComposition.ts`
-- **Responsibility**: Theme system orchestration
-- **Boundaries**:
-  - Integrates all theme subsystems
-  - Manages state composition
-  - Handles cross-system communication
-  - No direct UI or component logic
+#### `CanvasThemeProvider.svelte`
+- **Responsibility**: Canvas-specific theme provider
+- **Features**:
+  - Extends base theme for canvas environments
+  - Manages canvas-specific theme properties
+  - Handles spatial and interaction themes
+  - Integrates with component-specific types for canvas elements
+  - Provides type safety for the entire theme system
+  - Includes environment-specific type definitions
+  - Defines event and configuration types
 
-### Configuration Files
-
-#### `defaulttheme.ts`
-- **Responsibility**: Default theme configuration
-- **Boundaries**:
-  - Defines default values for all theme properties
-  - No dynamic logic
-  - No state management
-  - Pure configuration data
-
-#### `SpatialDesign.ts`
-- **Responsibility**: Spatial design system constants
-- **Boundaries**:
-  - Defines spatial measurements and scales
-  - Provides 3D space configurations
-  - No runtime logic
-  - No state management
+#### `Typography.types.ts`
+- **Responsibility**: Typography-specific type definitions
+- **Features**:
+  - Defines typography scales and variants
+  - Type definitions for text components
+  - Font configuration interfaces
 
 ### Feature Components
 
-#### `GlassPane.svelte`
-- **Responsibility**: Glass effect UI elements
-- **Boundaries**:
-  - Manages glass effect rendering
-  - Handles glass-specific interactions
-  - Uses theme context for styling
-  - No layout or positioning logic
+#### `Typography.svelte`
+- **Responsibility**: Typography component implementation
+- **Features**:
+  - Implements typography system
+  - Handles text scaling and styles
+  - Manages font loading and application
 
 #### `UIScalingLayout.svelte`
-- **Responsibility**: Responsive scaling and layout
-- **Boundaries**:
-  - Manages component scaling
-  - Handles density adjustments
-  - Spatial anchoring in AR/VR
-  - No visual styling or effects
+- **Responsibility**: Responsive layout scaling
+- **Features**:
+  - Handles component density and scaling
+  - Manages spatial layout in AR/VR
+  - Provides responsive container system
 
-#### `Typography.svelte`
-- **Responsibility**: Typography management
-- **Boundaries**:
-  - Text styling and scaling
-  - Font management
-  - No layout or positioning
-  - No non-text-related styling
+#### `GlassPane.svelte`
+- **Responsibility**: Glass effect component
+- **Features**:
+  - Implements glass morphism effects
+  - Manages backdrop filters
+  - Handles glass pane interactions
 
-#### `ContrastTheme.svelte`
-- **Responsibility**: Accessibility theming
-- **Boundaries**:
-  - High contrast mode
-  - Color scheme management
-  - Accessibility settings
-  - No general theme management
+### Configuration and Presets
+
+#### `presets.ts`
+- **Responsibility**: Theme presets and defaults
+- **Features**:
+  - Defines default theme configurations
+  - Provides preset color schemes
+  - Contains animation and transition presets
+
+#### `ThemeAnimations.ts`
+- **Responsibility**: Animation system
+- **Features**:
+  - Defines animation presets
+  - Manages transition timings
+  - Provides animation utilities
+
+#### `SpatialDesign.ts`
+- **Responsibility**: Spatial design system
+- **Features**:
+  - Defines spatial measurements
+  - Manages 3D space configurations
+  - Handles environment-specific layouts
+
+### Composition and Integration
+
+#### `ThemeComposition.ts`
+- **Responsibility**: Theme system orchestration
+- **Features**:
+  - Integrates theme subsystems
+  - Manages state composition
+  - Handles cross-system communication
+  - Provides unified theme API
+
+#### `ThemeElements.ts`
+- **Responsibility**: Element configuration system
+- **Features**:
+  - Defines element requirements
+  - Manages platform-specific configurations
+  - Handles element state management
+
+### Notes on Redundancy
+
+1. **State Management Consolidation**:
+   - `theme.store.ts` should be removed in favor of `theme.state.ts`
+   - All state management should use Svelte 5 runes
+
+2. **Type Definition Organization**:
+   - Consider merging `Typography.types.ts` into `Theme.types.ts`
+   - Keep type definitions centralized unless they grow too large
+
+3. **Theme Provider Hierarchy**:
+   - `ThemeProvider.svelte` is the root provider
+   - `CanvasThemeProvider.svelte` extends for canvas contexts
+   - Avoid creating additional providers unless absolutely necessary
 
 ### Utility Files
 

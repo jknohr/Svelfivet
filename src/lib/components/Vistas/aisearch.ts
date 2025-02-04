@@ -1,258 +1,309 @@
-import { commonUserMenu } from './common';
-import type { ContextConfig } from '$lib/components/Utility/content_context/;
+import { adminConfig } from './systemadmin';
+import { userConfig } from './user';
 
+import type { NavigationItem } from '$lib/types/navigation';
+import type { VistaConfig, VistaType } from '$lib/types/vista';
+import type { FeatureConfig } from '$lib/types/feature';
+import type { ThemeConfig } from '$lib/components/Theme/Theme.types';
+import Typography from '$lib/components/Theme/Typography.svelte';
 
-export const aiSearchConfig: ContextConfig = {
+export const aiSearchConfig: VistaConfig = {
     type: 'aisearch',
     label: 'AI Search',
     icon: 'manage_search',
     description: 'AI-powered search across all contexts',
     theme: {
-        primary: '#6200EA',
-        secondary: '#00BFA5',
-        accent: '#FF4081',
-        background: '@variables.context.location.images.background',
-        primaryfont: 'Roboto',
-        secondaryfont: 'Open Sans',
-        tertiaryfont: 'Lato'
+        colors: {
+            primary: '#6200EA',
+            secondary: '#00BFA5',
+            accent: '#651FFF',
+            background: '#FFFFFF',
+            surface: '#FFFFFF',
+            text: '#000000',
+            textLight: '#FFFFFF',
+            textDark: '#000000',
+            border: '#E0E0E0',
+            shadow: 'rgba(0, 0, 0, 0.1)',
+            glass: {
+                tint: 'rgba(98, 0, 234, 0.1)',
+                blur: '16px',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                shadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+                background: 'rgba(255, 255, 255, 0.7)',
+                backdrop: 'blur(16px)'
+            },
+            states: {
+                hover: 'rgba(98, 0, 234, 0.1)',
+                active: 'rgba(98, 0, 234, 0.2)',
+                focus: 'rgba(98, 0, 234, 0.3)',
+                selected: 'rgba(98, 0, 234, 0.4)'
+            }
+        },
+        components: {
+            button: {
+                borderRadius: '8px',
+                padding: '12px 24px',
+                fontSize: '16px'
+            },
+            input: {
+                borderRadius: '8px',
+                padding: '12px',
+                fontSize: '16px'
+            },
+            card: {
+                borderRadius: '12px',
+                padding: '16px',
+                shadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
+            },
+            node: {
+                background: '#FFFFFF',
+                borderColor: '#B0BEC5',
+                borderWidth: '1px',
+                textColor: '#000000'
+            },
+            edge: {
+                color: '#B0BEC5',
+                width: '2px',
+                hoverColor: '#6200EA',
+                selectedColor: '#4527A0'
+            },
+            anchor: {
+                size: '8px',
+                color: '#B0BEC5',
+                hoverColor: '#6200EA',
+                activeColor: '#4527A0'
+            },
+            tooltip: {
+                background: '#263238',
+                textColor: '#FFFFFF',
+                borderRadius: '4px',
+                padding: '8px'
+            },
+            glass: {
+                blur: '10px',
+                opacity: 0.7,
+                borderOpacity: 0.3,
+                lightEffect: true,
+                lightIntensity: 0.2
+            }
+        },
+        typography: {
+            fontFamily: {
+                base: 'Inter, system-ui, sans-serif',
+                heading: 'Inter, system-ui, sans-serif',
+                mono: 'JetBrains Mono, monospace'
+            },
+            fontSize: {
+                xs: '12px',
+                sm: '14px',
+                base: '16px',
+                lg: '18px',
+                xl: '24px',
+                xxl: '32px'
+            },
+            fontWeight: {
+                normal: '400',
+                medium: '500',
+                semibold: '600',
+                bold: '700'
+            }
+        },
+        transitions: {
+            duration: {
+                fast: '150ms',
+                normal: '250ms',
+                slow: '350ms'
+            },
+            timing: {
+                default: 'cubic-bezier(0.4, 0, 0.2, 1)',
+                linear: 'linear',
+                ease: 'ease',
+                easeIn: 'ease-in',
+                easeOut: 'ease-out'
+            }
+        },
+        spatial: {
+            spacing: {
+                xs: '4px',
+                sm: '8px',
+                md: '16px',
+                lg: '24px',
+                xl: '32px'
+            },
+            layout: {
+                maxWidth: '1200px',
+                gutter: '24px'
+            }
+        },
+        effects: {
+            glass: {
+                blur: '16px',
+                opacity: 0.7,
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                background: 'rgba(255, 255, 255, 0.7)',
+                shadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
+            },
+            lighting: {
+                ambient: 'rgba(255, 255, 255, 0.1)',
+                key: 'rgba(255, 255, 255, 0.2)',
+                fill: 'rgba(255, 255, 255, 0.05)',
+                intensity: 0.5,
+                angle: 45
+            }
+        }
     },
+    social: [
+        {
+            platform: 'twitter',
+            icon: 'flutter_dash',
+            label: 'Twitter',
+            url: 'https://twitter.com/aisearch',
+            handle: '@aisearch'
+        },
+        {
+            platform: 'github',
+            icon: 'code',
+            label: 'GitHub',
+            url: 'https://github.com/aisearch',
+            handle: 'aisearch'
+        },
+        {
+            platform: 'discord',
+            icon: 'forum',
+            label: 'Discord',
+            url: 'https://discord.gg/aisearch',
+            handle: 'aisearch'
+        }
+    ],
     routes: {
-        browse: {
-            type: 'browse',
-            label: 'Universal Search',
-            path: '/aisearch/browse',
-            icon: 'search',
-            description: 'AI-powered universal search',
-            api: {
-                endpoints: {
-                    search: '/api/aisearch/universal',
-                    filters: '/api/aisearch/filters',
-                    suggestions: '/api/aisearch/suggestions',
-                    trending: '/api/aisearch/trending',
-                    nearby: '/api/shared/nearby',
-                    semantic: '/api/aisearch/semantic',
-                    visual: '/api/aisearch/visual',
-                    voice: '/api/aisearch/voice'
-                },
-                cache: {
-                    ttl: 300,
-                    strategy: 'stale-while-revalidate'
-                },
-                ai: {
-                    contextAnalysis: '/api/ai/context-analysis',
-                    intentRecognition: '/api/ai/intent-recognition',
-                    entityExtraction: '/api/ai/entity-extraction',
-                    multimodalSearch: '/api/ai/multimodal-search',
-                    crossContextual: '/api/ai/cross-contextual'
-                }
-            },
-            metadata: {
-                order: 1,
-                category: 'search',
-                features: [
-                    'universal-search',
-                    'semantic-search',
-                    'visual-search',
-                    'voice-search',
-                    'multimodal-search'
-                ]
+        search: {
+            path: '/aisearch/search',
+            meta: {
+                title: 'Search',
+                description: 'AI-powered search',
+                requiresAuth: true
             }
         },
-        explore: {
-            type: 'explore',
-            label: 'Contextual Search',
-            path: '/aisearch/explore',
-            icon: 'travel_explore',
-            description: 'Context-aware search exploration',
-            api: {
-                endpoints: {
-                    contexts: '/api/aisearch/contexts',
-                    topics: '/api/aisearch/topics',
-                    locations: '/api/aisearch/locations',
-                    insights: '/api/aisearch/insights',
-                    patterns: '/api/aisearch/patterns'
-                },
-                ai: {
-                    contextualRanking: '/api/ai/contextual-ranking',
-                    topicModeling: '/api/ai/topic-modeling',
-                    locationAnalysis: '/api/ai/location-analysis',
-                    patternRecognition: '/api/ai/pattern-recognition'
-                }
-            },
-            metadata: {
-                order: 2,
-                category: 'exploration',
-                features: [
-                    'context-exploration',
-                    'topic-discovery',
-                    'location-based',
-                    'pattern-analysis'
-                ]
+        history: {
+            path: '/aisearch/history',
+            meta: {
+                title: 'History',
+                description: 'Search history',
+                requiresAuth: true,
+                roles: ['user']
             }
         },
-        services: {
-            type: 'services',
-            label: 'Search Services',
-            path: '/aisearch/services',
-            icon: 'miscellaneous_services',
-            description: 'Advanced search services',
-            api: {
-                endpoints: {
-                    customize: '/api/aisearch/customize',
-                    preferences: '/api/aisearch/preferences',
-                    alerts: '/api/aisearch/alerts',
-                    insights: '/api/aisearch/insights'
-                },
-                ai: {
-                    personalization: '/api/ai/search-personalization',
-                    alertGeneration: '/api/ai/alert-generation',
-                    insightDiscovery: '/api/ai/insight-discovery'
-                }
-            },
-            metadata: {
-                order: 3,
-                category: 'services',
-                features: [
-                    'custom-search',
-                    'search-alerts',
-                    'insights-generation',
-                    'search-analytics'
-                ]
+        saved: {
+            path: '/aisearch/saved',
+            meta: {
+                title: 'Saved',
+                description: 'Saved searches',
+                requiresAuth: true,
+                roles: ['user']
+            }
+        },
+        insights: {
+            path: '/aisearch/insights',
+            meta: {
+                title: 'Insights',
+                description: 'Search insights and analytics',
+                requiresAuth: true,
+                roles: ['admin']
+            }
+        },
+        management: {
+            path: '/admin/aisearch/management',
+            meta: {
+                title: 'Search Management',
+                description: 'Manage search settings and indices',
+                requiresAuth: true,
+                roles: ['admin']
             }
         }
     },
     navigation: {
-        main: [
+        items: [
             {
-                type: 'group',
-                label: 'Search Contexts',
-                path: '/aisearch/contexts',
-                icon: 'category',
-                description: 'Browse by context',
-                items: [
-                    { type: 'link', label: 'Global Search', path: '/aisearch/global', icon: 'public', description: 'Search across all contexts' },
-                    { type: 'link', label: 'Local Search', path: '/aisearch/local', icon: 'location_on', description: 'Location-based search' },
-                    { type: 'link', label: 'News Search', path: '/aisearch/news', icon: 'newspaper', description: 'News and events search' },
-                    { type: 'link', label: 'Business Search', path: '/aisearch/business', icon: 'business', description: 'Business and services search' }
-                ]
-            }
-        ],
-        user: [
-            ...commonUserMenu,
+                id: 'search',
+                label: 'Search',
+                icon: 'search',
+                path: '/aisearch/search',
+                description: 'AI-powered search',
+                requiresAuth: true
+            },
             {
-                type: 'link',
-                label: 'Search History',
-                path: '/aisearch/user/history',
+                id: 'history',
+                label: 'History',
                 icon: 'history',
-                description: 'View search history',
-                requiresAuth: true
-            },
-            {
-                type: 'link',
-                label: 'Search Preferences',
-                path: '/aisearch/user/preferences',
-                icon: 'tune',
-                description: 'Customize search settings',
-                requiresAuth: true
-            }
-        ],
-        admin: [
-            {
-                type: 'link',
-                label: 'Search Analytics',
-                path: '/aisearch/admin/analytics',
-                icon: 'analytics',
-                description: 'Search usage analytics',
+                path: '/aisearch/history',
+                description: 'Search history',
                 requiresAuth: true,
-                roles: ['admin', 'analyst']
+                roles: ['user']
             },
             {
-                type: 'link',
-                label: 'AI Configuration',
-                path: '/aisearch/admin/ai',
+                id: 'saved',
+                label: 'Saved',
+                icon: 'bookmark',
+                path: '/aisearch/saved',
+                description: 'Saved searches',
+                requiresAuth: true,
+                roles: ['user']
+            },
+            {
+                id: 'insights',
+                label: 'Insights',
+                icon: 'insights',
+                path: '/aisearch/insights',
+                description: 'Search insights and analytics',
+                requiresAuth: true,
+                roles: ['admin']
+            },
+            {
+                id: 'management',
+                label: 'Search Management',
                 icon: 'settings_applications',
-                description: 'Configure AI search settings',
+                path: '/admin/aisearch/management',
+                description: 'Manage search settings and indices',
                 requiresAuth: true,
-                roles: ['admin', 'ai-engineer']
+                roles: ['admin']
             }
         ]
     },
     features: {
-        map: {
-            type: 'map',
-            enabled: true,
-            config: {
-                provider: 'mapbox',
-                apiKey: process.env.MAPBOX_API_KEY,
-                defaultView: {
-                    zoom: 12,
-                    center: [-73.935242, 40.730610]
-                }
-            },
-            capabilities: [
-                'search-results',
-                'local-context',
-                'global-context',
-                'topic-clusters'
-            ]
-        },
-        chat: {
-            type: 'chat',
-            enabled: true,
-            config: {},
-            capabilities: [
-                'natural-language-search',
-                'search-assistance',
-                'result-explanation'
-            ]
-        },
-        voice: {
-            type: 'voice',
-            enabled: true,
-            config: {},
-            capabilities: [
-                'voice-commands',
-                'voice-search',
-                'voice-results'
-            ]
-        },
         ai: {
-            type: 'ai',
+            id: 'ai',
+            name: 'AI Search Engine',
             enabled: true,
+            provider: 'openai',
+            capabilities: ['semantic-search', 'natural-language-processing', 'context-awareness'],
             config: {
-                models: [
-                    'semantic-search',
-                    'contextual-analysis',
-                    'multimodal-processing',
-                    'natural-language-understanding'
-                ]
-            },
-            capabilities: [
-                'intent-recognition',
-                'entity-extraction',
-                'sentiment-analysis',
-                'topic-modeling',
-                'cross-contextual-search'
-            ]
+                provider: 'openai'
+            }
+        },
+        analytics: {
+            id: 'analytics',
+            name: 'Search Analytics',
+            enabled: true,
+            provider: 'elastic',
+            capabilities: ['usage-tracking', 'performance-metrics', 'trend-analysis'],
+            config: {
+                provider: 'elastic'
+            }
+        },
+        recommendations: {
+            enabled: true,
+            capabilities: ['personalized-results', 'related-searches', 'trending-topics'],
+            config: {
+                provider: 'recommender'
+            }
         }
     },
     metadata: {
-        version: '1.0.0',
+        version: '2.0.0',
         category: 'search',
-        tags: ['ai', 'search', 'global', 'local', 'contextual', 'multimodal'],
-        permissions: ['basic', 'search-management'],
-        analytics: {
-            trackingId: 'UA-AISEARCH-1',
-            features: [
-                'search-queries',
-                'result-clicks',
-                'context-switches',
-                'ai-interactions'
-            ]
-        },
-        cache: {
-            ttl: 300,
-            strategy: 'stale-while-revalidate'
-        }
+        tags: ['ai', 'search', 'analytics'],
+        permissions: ['basic', 'search-management']
     }
 };
+
+export default aiSearchConfig;

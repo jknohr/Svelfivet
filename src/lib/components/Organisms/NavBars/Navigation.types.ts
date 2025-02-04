@@ -1,23 +1,41 @@
 // Navigation.types.ts
 
 /**
+ * Represents the available view modes for navigation items.
+ */
+export type ViewMode = 'desktop' | 'vr' | 'ar' | 'all';
+
+/**
  * Represents a single category in the navigation menu.
  */
 export interface Category {
   /**
-   * The unique identifier or name of the category.
+   * The unique identifier of the category.
+   */
+  id: string;
+
+  /**
+   * The name or display text of the category.
    */
   name: string;
 
   /**
    * The icon associated with the category. This could be a string representing an icon name or a component.
    */
-  icon: string;
+  icon?: string;
 
   /**
-   * An array of subcategories or items under the main category.
+   * Optional description of the category
    */
-  sub: string[];
+  description?: string;
+
+  /**
+   * An array of subcategories under the main category.
+   * Each subcategory is itself a Category with additional visibility options.
+   */
+  sub?: (Category & {
+    visibility?: 'desktop-only' | 'vr-only' | 'ar-only' | 'all';
+  })[];
 }
 
 /**

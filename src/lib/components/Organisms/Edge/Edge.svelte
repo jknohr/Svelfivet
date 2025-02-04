@@ -1,15 +1,19 @@
 <svelte:options runes={true} />
 
 <script lang="ts">
-	import { calculateStepPath, calculateRadius, calculatePath, calculateSubwayPath, calculateHorizontalPath, calculateVerticalPath, calculateDagrePath, calculateTokyoPath } from '$lib/utils/calculators';
+	import { calculateStepPath, calculateRadius, calculatePath, calculateTokyoPath, calculateSubwayPath } from '$lib/components/Templates/Canvas/utils/calculators';
+import type { CardinalDirection } from '$lib/components/Templates/Canvas/constants/math';
+import type { FlowAnimationType } from '$lib/components/Templates/Canvas/types/animation';
 	import { getContext } from 'svelte';
-	import { directionVectors, stepBuffer } from '$lib/constants';
-	import { buildPath, rotateVector } from '$lib/utils/helpers';
-	import { buildArcStringKey, constructArcString } from '$lib/utils/helpers';
-	import type { CSSColorString, Direction, XYPair } from '$lib/types/general';
+	import { directionVectors, stepBuffer } from '$lib/components/Templates/Canvas/constants/index';
+	import { buildPath, rotateVector } from '$lib/components/Templates/Canvas/utils/helpers';
+	import { buildArcStringKey, constructArcString } from '$lib/components/Templates/Canvas/utils/helpers';
+	import type { CSSColorString } from '$lib/components/Templates/Canvas/types/theme';
+	import type { Direction, XYPair } from '$lib/components/Templates/Canvas/types/logic';
 	import type { Graph } from '$lib/components/Templates/Canvas/Graph/Graph.types';
-	import type { EdgeStyle, EndStyle, WritableEdge, EdgeProps } from './Edge.types';
-	import type { VectorPlusPosition } from '$lib/utils/calculators/calculateStepPath';
+	import type { EdgeStyle, EndStyle, WritableEdge, EdgeProps, EdgeStore } from './Edge.types';
+	import type { VectorPlusPosition } from '$lib/components/Templates/Canvas/utils/calculators/index';
+	import type { Node, Anchor } from '$lib/components/Templates/Canvas/types/logic';
 
 	interface Connected {
 		source: {
@@ -30,12 +34,7 @@
 		};
 	}
 
-	interface $$Props extends EdgeProps {}
-
-	let props = $props<$$Props>();
-
-	// Props
-	let {
+	const {
 		edge = getContext<WritableEdge>('edge'),
 		straight = false,
 		step = false,
@@ -43,11 +42,12 @@
 		start = getContext<EndStyle[]>('endStyles')?.[0],
 		end = getContext<EndStyle[]>('endStyles')?.[1],
 		animate = false,
-		label = '',
+		labelText = '',
 		enableHover = false,
 		edgeClick = null,
 		labelPosition = 0.5,
 		width = null,
+		lineWidth = width,
 		color = null,
 		labelColor = null,
 		textColor = null,
@@ -57,8 +57,30 @@
 		edgeType = '',
 		sourceDynamic = false,
 		targetDynamic = false,
-		sourceDirection = 'north' as Direction,
-		targetDirection = 'south' as Direction,
+		initialSourceDirection = $derived(() => {
+			const dx = targetNodePosition.x - sourceNodePosition.x;
+			const dy = targetNodePosition.y - sourceNodePosition.y;
+			const absDx = Math.abs(dx);
+			const absDy = Math.abs(dy);
+
+			if (absDx > absDy) {
+				return dx > 0 ? 'east' : 'west';
+			} else {
+				return dy > 0 ? 'south' : 'north';
+			}
+		}),
+		initialTargetDirection = $derived(() => {
+			const dx = targetNodePosition.x - sourceNodePosition.x;
+			const dy = targetNodePosition.y - sourceNodePosition.y;
+			const absDx = Math.abs(dx);
+			const absDy = Math.abs(dy);
+
+			if (absDx > absDy) {
+				return dx > 0 ? 'west' : 'east';
+			} else {
+				return dy > 0 ? 'north' : 'south';
+			}
+		}),
 		sourceRotation = 0,
 		targetRotation = 0,
 		sourceMoving = false,
@@ -67,24 +89,37 @@
 		targetPosition: initialTargetPosition = { x: 0, y: 0 },
 		sourceNodePosition: initialSourceNodePosition = { x: 0, y: 0 },
 		targetNodePosition: initialTargetNodePosition = { x: 0, y: 0 },
-		edgeColor = null,
-		source = null,
-		target = null,
-		flowAnimation = 'none',
-		dotSize = 4,
-		dotOpacity = 0.75,
-		dotColor = null,
-		lineWidth = null,
-		dynamic = false
-	} = props;
+		edgeColor: initialEdgeColor = null,
+		source: initialSource = null,
+		target: initialTarget = null,
+		flowAnimation: initialFlowAnimation = 'none',
+		dotSize: initialDotSize = 4,
+		dotOpacity: initialDotOpacity = 0.75,
+		dotColor: initialDotColor = null,
+		dynamic: initialDynamic = false
+	} = $props();
+
+	let sourcePosition = $state(initialSourcePosition);
+	let targetPosition = $state(initialTargetPosition);
+	let sourceNodePosition = $state(initialSourceNodePosition);
+	let targetNodePosition = $state(initialTargetNodePosition);
+	let edgeColor = $state(initialEdgeColor);
+	let source = $state(initialSource);
+	let target = $state(initialTarget);
+	let flowAnimation = $state(initialFlowAnimation);
+	let dotSize = $state(initialDotSize);
+	let dotOpacity = $state(initialDotOpacity);
+	let dotColor = $state(initialDotColor);
+	let dynamic = $state(initialDynamic);
+	let sourceDirection = $state<Direction>(initialSourceDirection);
+	let targetDirection = $state<Direction>(initialTargetDirection);
 
 	// Context
-	const edgeStore = getContext<ReturnType<typeof import('$lib/utils/creators/createEdgeStore').createEdgeStore>>('edgeStore');
+	const edgeStore = getContext<EdgeStore>('edgeStore');
 	const raiseEdgesOnSelect = getContext<boolean>('raiseEdgesOnSelect');
 	const edgesAboveNode = getContext<boolean>('edgesAboveNode');
 
 	// State
-	let isDynamic = $state(dynamic);
 	let animationFrameId = $state(0);
 	let path = $state('');
 	let DOMPath = $state<SVGPathElement | null>(null);
@@ -96,19 +131,9 @@
 	let hovering = $state(false);
 	let edgeElement = $state<SVGElement | null>(null);
 
-	// Position state
-	let sourcePosition = $state(initialSourcePosition);
-	let targetPosition = $state(initialTargetPosition);
-	let sourceNodePosition = $state(initialSourceNodePosition);
-	let targetNodePosition = $state(initialTargetNodePosition);
-	let sourceX = $derived(sourcePosition.x);
-	let sourceY = $derived(sourcePosition.y);
-	let targetX = $derived(targetPosition.x);
-	let targetY = $derived(targetPosition.y);
-
 	// Derived values
 	let isConnected = $derived(!!source && !!target);
-	let edgeLabel = $derived(label || edge?.label?.text || '');
+	let edgeLabel = $derived(labelText || edge?.label?.text || '');
 	let isMoving = $derived(sourceMoving || targetMoving);
 	let deltaX = $derived(Math.abs(sourceNodePosition.x - targetNodePosition.x));
 	let deltaY = $derived(Math.abs(sourceNodePosition.y - targetNodePosition.y));
@@ -122,30 +147,30 @@
 	let targetControlVector = $state<XYPair>({ x: 0, y: 0 });
 	let anchorWidth = $state(100); // Default value, should be updated based on context
 	let anchorHeight = $state(100); // Default value, should be updated based on context
-	let sourceControlX = $derived(sourceX + sourceControlVector.x * anchorWidth);
-	let sourceControlY = $derived(sourceY + sourceControlVector.y * anchorHeight);
-	let targetControlX = $derived(targetX + targetControlVector.x * anchorWidth);
-	let targetControlY = $derived(targetY + targetControlVector.y * anchorHeight);
+	let sourceControlX = $derived(sourcePosition.x + sourceControlVector.x * anchorWidth);
+	let sourceControlY = $derived(sourcePosition.y + sourceControlVector.y * anchorHeight);
+	let targetControlX = $derived(targetPosition.x + targetControlVector.x * anchorWidth);
+	let targetControlY = $derived(targetPosition.y + targetControlVector.y * anchorHeight);
 	let controlPointString = $derived(`${sourceControlX},${sourceControlY} ${targetControlX},${targetControlY}`);
 
 	// Effects
 	$effect(() => {
 		if (!isConnected) return;
 		
-		const sourceDir = directionVectors[sourceDirection];
-		const targetDir = directionVectors[targetDirection];
+		const sourceDir = directionVectors[sourceDirection as CardinalDirection];
+		const targetDir = directionVectors[targetDirection as CardinalDirection];
 
 		if (!sourceDir || !targetDir) return;
 
 		const sourceVec: VectorPlusPosition = {
-			x: sourceX,
-			y: sourceY,
+			x: sourcePosition.x,
+			y: sourcePosition.y,
 			direction: sourceDir
 		};
 
 		const targetVec: VectorPlusPosition = {
-			x: targetX,
-			y: targetY,
+			x: targetPosition.x,
+			y: targetPosition.y,
 			direction: targetDir
 		};
 
@@ -153,13 +178,16 @@
 		const effectiveStyle = straight ? 'straight' : step ? 'step' : style;
 		let pathData: string;
 
+		// Ensure vectors are defined before using them
+		if (!sourceVec || !targetVec) return;
+
 		switch (effectiveStyle) {
 			case 'step':
 				const steps = calculateStepPath(sourceVec, targetVec, stepBuffer);
-				pathData = steps.reduce((acc, step) => `${acc} L ${step.x},${step.y}`, `M ${sourceX},${sourceY}`);
+				pathData = steps.reduce((acc, step) => `${acc} L ${step.x},${step.y}`, `M ${sourcePosition.x},${sourcePosition.y}`);
 				break;
 			case 'straight':
-				pathData = `M ${sourceX},${sourceY} L ${targetX},${targetY}`;
+				pathData = `M ${sourcePosition.x},${sourcePosition.y} L ${targetPosition.x},${targetPosition.y}`;
 				break;
 			case 'subway':
 				pathData = calculateSubwayPath(sourceVec, targetVec, cornerRadius);
@@ -171,14 +199,23 @@
 				pathData = calculateVerticalPath(sourceVec, targetVec, cornerRadius);
 				break;
 			case 'dagre':
-				pathData = calculateDagrePath(sourceVec, targetVec, cornerRadius);
+				// Generate intermediate points for smooth curve
+				const midX = (sourcePosition.x + targetPosition.x) / 2;
+				const midY = (sourcePosition.y + targetPosition.y) / 2;
+				
+				// Create a smooth curve using multiple control points
+				pathData = `M ${sourcePosition.x},${sourcePosition.y} `;
+				pathData += `C ${midX},${sourcePosition.y} `;
+				pathData += `${midX},${midY} `;
+				pathData += `${midX},${targetPosition.y} `;
+				pathData += `${targetPosition.x},${targetPosition.y}`;
 				break;
 			case 'tokyo':
 				pathData = calculateTokyoPath(sourceVec, targetVec, cornerRadius);
 				break;
 			case 'bezier':
 			default:
-				pathData = `M ${sourceX},${sourceY} C ${sourceControlX},${sourceControlY} ${targetControlX},${targetControlY} ${targetX},${targetY}`;
+				pathData = `M ${sourcePosition.x},${sourcePosition.y} C ${sourceControlX},${sourceControlY} ${targetControlX},${targetControlY} ${targetPosition.x},${targetPosition.y}`;
 		}
 
 		path = pathData;
@@ -195,7 +232,7 @@
 
 	// Dynamic edge direction
 	$effect(() => {
-		if (isDynamic && source?.node && target?.node) {
+		if (dynamic && source && target) {
 			prefersVertical = deltaY > deltaX;
 			sourceAbove = sourceNodePosition.y < targetNodePosition.y;
 			sourceLeft = sourceNodePosition.x < targetNodePosition.x;
@@ -278,6 +315,16 @@
 
 	// Mark edge as rendered
 	edge.rendered.set(true);
+
+
+	function calculateHorizontalPath(sourceVec: VectorPlusPosition, targetVec: VectorPlusPosition, cornerRadius: number): string {
+		throw new Error('Function not implemented.');
+	}
+
+
+	function calculateVerticalPath(sourceVec: VectorPlusPosition, targetVec: VectorPlusPosition, cornerRadius: number): string {
+		throw new Error('Function not implemented.');
+	}
 </script>
 
 {#if source && target}
@@ -323,7 +370,7 @@
 			bind:this={DOMPath}
 		/>
 
-		{#snippet edgeContent()}
+		{#snippet EdgeContent}
 			<path
 				id={edgeKey}
 				class="edge"
@@ -335,12 +382,12 @@
 				style:--prop-stroke-width={(lineWidth || width) ? (lineWidth || width) + 'px' : null}
 			/>
 		{/snippet}
-		{@render edgeContent()}
+		{EdgeContent()}
 
 		{#if edgeLabel}
 			<foreignObject x={labelPoint.x} y={labelPoint.y} width="100%" height="100%">
 				<span class="label-wrapper">
-					{#snippet label(destroy: () => void, hovering: boolean)}
+					{#snippet Label(destroy: () => void, hovering: boolean)}
 						<div
 							class="default-label"
 							style:--prop-label-color={labelColor}
@@ -349,7 +396,7 @@
 							{edgeLabel}
 						</div>
 					{/snippet}
-					{@render label(destroy, hovering)}
+					{Label(destroy, hovering)}
 				</span>
 			</foreignObject>
 		{/if}
@@ -474,6 +521,6 @@
 	}
 </style>
 
-<div class="edge" {...props}>
+<div class="edge" {...$props()}>
 	<slot />
 </div>

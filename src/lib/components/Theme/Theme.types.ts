@@ -6,10 +6,37 @@
  */
 
 import type { Snippet } from 'svelte';
+import type { 
+  SpatialAnchorConfig,
+  SpatialConfig,
+  Density,
+  ScaleContext,
+  ScalingConstraints
+} from '../../types/spatial';
 
 /**
  * Core theme and spatial system type definitions
  */
+
+// Spatial Environment Types
+export type SpatialEnvironment = 'default' | 'desktop' | 'mobile' | 'tablet' | 'vr' | 'ar';
+
+export interface SpatialConstraints {
+  minWidth?: string;
+  maxWidth?: string;
+  minHeight?: string;
+  maxHeight?: string;
+  padding?: string;
+  margin?: string;
+  gap?: string;
+  perspective?: string;
+  elevation?: number;
+  rotation?: {
+    x?: number;
+    y?: number;
+    z?: number;
+  };
+}
 
 // Theme Mode
 export type ThemeMode = 'light' | 'dark' | 'high-contrast';
@@ -45,85 +72,7 @@ export interface ContrastThemeProps {
   onThemeChange?: (theme: ContrastThemeName | ContrastConfig) => void;
 }
 
-// Spatial System Types
-export type Density = 'compact' | 'comfortable' | 'spacious';
 
-export interface ScaleContext {
-  density: Density;
-  scale: number;
-  baseUnit: number;
-  gridUnit: number;
-  spaceUnit: number;
-}
-
-/**
- * Spatial Anchor System Types
- */
-
-// Spatial Environment Type
-export type SpatialEnvironment = 'desktop' | 'ar' | 'vr' | 'mixed';
-
-// Spatial Anchor Position
-export interface SpatialAnchorPosition {
-  x: number;
-  y: number;
-  z: number;
-  rotation?: {
-    x: number;
-    y: number;
-    z: number;
-  };
-}
-
-// Spatial Bounds
-export interface SpatialBounds {
-  width: number;
-  height: number;
-  depth: number;
-}
-
-// Environment Constraints
-export interface EnvironmentConstraints {
-  minScale: number;
-  maxScale: number;
-  minDistance: number;
-  maxDistance: number;
-  viewingAngle: number;
-}
-
-// Spatial Anchor Configuration
-export interface SpatialAnchorConfig {
-  enabled: boolean;
-  position?: SpatialAnchorPosition;
-  bounds?: SpatialBounds;
-  constraints?: EnvironmentConstraints;
-  adaptiveScaling?: boolean;
-  followUser?: boolean;
-  collisionDetection?: boolean;
-}
-
-export interface SpatialConstraints {
-  minScale: number;
-  maxScale: number;
-  minDistance?: number;
-  maxDistance?: number;
-  viewingAngle?: number;
-}
-
-export interface SpatialRatios {
-  phi: number;
-  minor: number;
-  major: number;
-}
-
-export interface SpatialConfig {
-  base: {
-    unit: number;
-    scale: number;
-  };
-  ratios: SpatialRatios;
-  constraints: Record<SpatialEnvironment, SpatialConstraints>;
-}
 
 /**
  * Glass Effect System Types
@@ -232,27 +181,36 @@ export interface TooltipConfig {
   padding: string;
 }
 
+export interface ControlsConfig {
+  background: string;
+  border: string;
+  text: string;
+  icon: string;
+  hoverState: {
+    background: string;
+    border: string;
+  };
+  activeState: {
+    background: string;
+  };
+}
+
 export interface ComponentConfig {
   node: NodeConfig;
   edge: EdgeConfig;
   anchor: AnchorConfig;
   tooltip: TooltipConfig;
-  glass: {
-    blur: string;
-    opacity: number;
-    borderOpacity: number;
-    lightEffect: boolean;
-    lightIntensity: number;
-  };
+  controls: ControlsConfig;
+  glass: GlassConfig;
 }
 
 export interface TransitionConfig {
-  duration: {
+  durationValues: {
     fast: string;
     normal: string;
     slow: string;
   };
-  easing: {
+  easingValues: {
     standard: string;
     accelerate: string;
     decelerate: string;
@@ -265,17 +223,78 @@ export interface ThemeConfig {
   colors: ColorConfig;
   typography: TypographyConfig;
   components: ComponentConfig;
-  transitions: TransitionConfig;
-  spatial: SpatialConfig;
+  transitionConfig: TransitionConfig;
   effects: {
     glass: GlassEffectConfig;
-    lighting: {
+    lightingConfig: {
       ambient: string;
       key: string;
       fill: string;
       intensity: number;
       angle: number;
     };
+  };
+  spatial?: {
+    constraints?: Record<SpatialEnvironment, ScalingConstraints>;
+    depth?: {
+      base: number;
+      surface: number;
+      floating: number;
+      popup: number;
+      modal: number;
+      overlay: number;
+    };
+    space3d?: {
+      layerGap: number;
+      perspective: string;
+      rotation: {
+        subtle: number;
+        medium: number;
+        strong: number;
+      };
+      elevation: {
+        pressed: number;
+        default: number;
+        raised: number;
+        floating: number;
+      };
+    };
+  };
+}
+
+// Theme Type
+export interface Theme {
+  /** Name identifier for the theme */
+  name?: string;
+  colors: ColorConfig;
+  typography: TypographyConfig;
+  components: ComponentConfig;
+  transitionConfig: TransitionConfig;
+  transitions?: TransitionConfig;
+  effects: {
+    glass: GlassEffectConfig;
+    lightingConfig: {
+      ambient: string;
+      key: string;
+      fill: string;
+      intensity: number;
+      angle: number;
+    };
+  };
+  spatial?: {
+    constraints?: Record<SpatialEnvironment, ScalingConstraints>;
+  };
+  colorScheme: string;
+  isDark: boolean;
+  custom: {
+    primary: string;
+    [key: string]: string;
+  };
+  utils: {
+    getCSSVariable: (name: string) => string;
+    setCSSVariable: (name: string, value: string) => void;
+    getComputedTheme: () => ThemeConfig;
+    getDerivedValues: () => Record<string, string>;
   };
 }
 

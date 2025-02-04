@@ -14,17 +14,18 @@ canvas-specific theme values to its children.
     }
 
     const props = $props();
-    const { canvas, setCanvasTheme } = useTheme();
+    const theme = useTheme();
 
     // Effect to update canvas theme when props change
     $effect(() => {
         if (props.theme) {
-            setCanvasTheme(props.theme);
+            // Merge the provided theme with the current theme
+            Object.assign(theme, props.theme);
         }
     });
 
     // Provide canvas theme context to children
-    setContext('canvas-theme', canvas);
+    setContext('canvas-theme', theme);
 </script>
 
 <div class="canvas-theme-provider">

@@ -1,39 +1,91 @@
+<svelte:options runes={true} />
+
 <script lang="ts">
-	import { Svelvet, Node, Anchor, Edge } from '$lib';
+	import type { Snippet } from 'svelte';
+	import { getContext } from 'svelte';
 	import ArrowEdge from './ArrowEdge.svelte';
 	import ArrowEdgeBlue from './ArrowEdgeBlue.svelte';
+	import { theme } from '$lib/components/Theme/ThemeComposition';
 
 	interface NodeSlotProps {
 		grabHandle: (node: HTMLElement) => void;
 		selected: boolean;
 	}
+
+	let graphConfig = $state({
+		theme: theme.config,
+		controls: true,
+		minimap: true,
+		width: 1200,
+		height: 800,
+		endStyles: [null, 'arrow']
+	});
+
+	let nodePositions = $state({
+		tdOut: { x: 100, y: 200 },
+		tdIn: { x: 100, y: 500 },
+		lrOut: { x: 400, y: 200 },
+		lrIn: { x: 400, y: 500 }
+	});
+
+	let nodeDimensions = $state({
+		width: 100,
+		height: 100
+	});
 </script>
 
-<Svelvet minimap controls theme={'dark'} width={1200} height={800} endStyles={[null, 'arrow']}>
+<div class="graph-container">
+	<GraphRenderer {...graphConfig}>
 	<Node
-		position={{ x: 100, y: 200 }}
-		dimensions={{ width: 100, height: 100 }}
+		position={nodePositions.tdOut}
+		dimensions={nodeDimensions}
 		TD
 		label={'TD-OUT'}
 		edge={ArrowEdge}
 	/>
-	<Node position={{ x: 100, y: 500 }} dimensions={{ width: 100, height: 100 }} TD label={'TD-IN'} />
+	<Node position={nodePositions.tdIn} dimensions={nodeDimensions} TD label={'TD-IN'} />
 	<Node
-		position={{ x: 400, y: 200 }}
-		dimensions={{ width: 100, height: 100 }}
+		position={nodePositions.lrOut}
+		dimensions={nodeDimensions}
 		TD
 		label={'TD-OUT-B'}
 		edge={ArrowEdgeBlue}
 	/>
 	<Node
-		position={{ x: 400, y: 500 }}
-		dimensions={{ width: 100, height: 100 }}
+		position={nodePositions.lrIn}
+		dimensions={nodeDimensions}
 		TD
 		label={'TD-IN-B'}
 	/>
-	<Node position={{ x: 200, y: 100 }} dimensions={{ width: 100, height: 100 }} useDefaults let:grabHandle let:selected>
-		<div class="node" use:grabHandle class:selected>
-			<Anchor output />
-		</div>
-	</Node>
-</Svelvet>
+
+</GraphRenderer>
+</div>
+
+<style>
+	.graph-container {
+		width: 100%;
+		height: 100vh;
+		background: var(--surface-1);
+		position: relative;
+		overflow: hidden;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	:global(.node-content) {
+		width: 100%;
+		height: 100%;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		background: var(--surface-2);
+		border-radius: var(--radius-2);
+		box-shadow: var(--shadow-2);
+	}
+
+	:global(.node-content:hover) {
+		background: var(--surface-3);
+	}
+</style>
+

@@ -1,265 +1,300 @@
-# BaseLayout.svelte
 <svelte:options runes={true} />
 
 <script lang="ts">
-  import { onMount } from 'svelte';
   import { fly } from 'svelte/transition';
+  import { quartOut } from 'svelte/easing';
+  import UIScalingLayout from '$lib/components/Theme/UIScalingLayout.svelte';
+  import type { LayoutContent, LayoutDimensions, LayoutAccessibility } from '../types';
+  import { defaultDimensions, defaultAccessibility } from '../types';
   import type { Snippet } from 'svelte';
 
-  // Props using proper $props rune syntax
+  // State for sidebar and content scroll
+  let sidebarState = $state({
+    side: 'left',
+    expanded: false
+  });
+  
+  let scrollState = $state({
+    scrollTop: 0,
+    scrollHeight: 0
+  });
+
+  // Props and state
+  let headerExpanded = $state(false);
+  let showFilters = $state(false);
+  
   let { 
     leftComponent,
     rightComponent,
     mainContent,
-    headerExpanded = false 
+    dimensions = defaultDimensions,
+    accessibility = defaultAccessibility,
+    filters,
+    keyboard = {
+      leftSidebar: { expand: 'Alt+[', collapse: 'Alt+]' },
+      rightSidebar: { expand: 'Alt+;', collapse: "Alt+'" }
+    }
   } = $props<{
-    leftComponent?: Snippet;
-    rightComponent?: Snippet;
-    mainContent?: Snippet;
-    headerExpanded?: boolean;
+    leftComponent?: LayoutContent['leftSidebar'];
+    rightComponent?: LayoutContent['rightSidebar'];
+    mainContent?: LayoutContent['mainContent'];
+    dimensions?: Partial<LayoutDimensions>;
+    accessibility?: LayoutAccessibility;
+    filters?: Snippet;
+    keyboard?: {
+      leftSidebar: { expand: string; collapse: string };
+      rightSidebar: { expand: string; collapse: string };
+    };
   }>();
 
-  // State declarations
+  // Reactive state
   let isLeftExpanded = $state(false);
   let isRightExpanded = $state(false);
   let isLeftLocked = $state(false);
   let isRightLocked = $state(false);
+  let mainContentRef = $state<HTMLElement | null>(null);
+  let scrollTop = $state(0);
+  let scrollHeight = $state(0);
 
   // Derived values
-  let bodyHeight = $derived(headerExpanded ? '78.5vh' : '85vh');
-  
+  let bodyHeight = $derived(
+    headerExpanded 
+      ? `${dimensions.headerHeight}%`
+      : `${dimensions.expandedHeaderHeight}%`
+  );
+
   let widths = $derived({
-    left: isLeftExpanded ? '25%' : '2.5%',
-    right: isRightExpanded ? '25%' : '2.5%',
-    main: (() => {
-      if (isLeftExpanded && isRightExpanded) return '50%';
-      if (isLeftExpanded || isRightExpanded) return '72.5%';
-      return '95%';
-    })()
+    left: `${isLeftExpanded 
+      ? dimensions.expandedSidebarWidth 
+      : dimensions.leftSidebarWidth}%`,
+    right: `${isRightExpanded 
+      ? dimensions.expandedSidebarWidth 
+      : dimensions.rightSidebarWidth}%`,
+    main: `${100 - 
+      (isLeftExpanded ? dimensions.expandedSidebarWidth : dimensions.leftSidebarWidth) -
+      (isRightExpanded ? dimensions.expandedSidebarWidth : dimensions.rightSidebarWidth)}%`
   });
 
-  // Event handlers
-  function handleMouseEnter(side: 'left' | 'right') {
-    if (side === 'left' && !isLeftLocked) {
-      isLeftExpanded = true;
-    } else if (side === 'right' && !isRightLocked) {
-      isRightExpanded = true;
+  // Methods
+  function handleSidebarInteraction(side: 'left' | 'right', action: 'enter' | 'leave' | 'click', event?: MouseEvent | KeyboardEvent) {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+
+    const isLeft = side === 'left';
+    const locked = isLeft ? isLeftLocked : isRightLocked;
+    
+    switch (action) {
+      case 'enter':
+        if (!locked) {
+          if (isLeft) isLeftExpanded = true;
+          else isRightExpanded = true;
+        }
+        break;
+      case 'leave':
+        if (!locked) {
+          if (isLeft) isLeftExpanded = false;
+          else isRightExpanded = false;
+        }
+        break;
+      case 'click':
+        if (isLeft) {
+          isLeftLocked = !isLeftLocked;
+          isLeftExpanded = isLeftLocked;
+        } else {
+          isRightLocked = !isRightLocked;
+          isRightExpanded = isRightLocked;
+        }
+        sidebarState = { side, expanded: isLeft ? isLeftExpanded : isRightExpanded };
+        break;
     }
   }
 
-  function handleMouseLeave(side: 'left' | 'right') {
-    if (side === 'left' && !isLeftLocked) {
-      isLeftExpanded = false;
-    } else if (side === 'right' && !isRightLocked) {
-      isRightExpanded = false;
-    }
-  }
-
-  function handleClick(side: 'left' | 'right', event: MouseEvent | KeyboardEvent) {
-    event.stopPropagation();
-    if (side === 'left') {
-      isLeftLocked = !isLeftLocked;
-      isLeftExpanded = isLeftLocked;
-    } else {
-      isRightLocked = !isRightLocked;
-      isRightExpanded = isRightLocked;
-    }
-  }
-
-  // Handle outside click using $effect
+  // Content scroll effect
   $effect(() => {
-    function handleOutsideClick(event: MouseEvent) {
-      const target = event.target as HTMLElement;
+    if (!mainContentRef) return;
+    
+    function handleScroll(event: Event) {
+      if (!(event.target instanceof HTMLElement)) return;
       
-      if (isLeftLocked) {
-        const leftSidebar = document.querySelector('.left-sidebar');
-        if (leftSidebar && !leftSidebar.contains(target)) {
-          isLeftLocked = false;
-          isLeftExpanded = false;
-        }
-      }
-      
-      if (isRightLocked) {
-        const rightSidebar = document.querySelector('.right-sidebar');
-        if (rightSidebar && !rightSidebar.contains(target)) {
-          isRightLocked = false;
-          isRightExpanded = false;
+      scrollState = { scrollTop: event.target.scrollTop, scrollHeight: event.target.scrollHeight };
+    }
+
+    mainContentRef.addEventListener('scroll', handleScroll);
+    return () => mainContentRef?.removeEventListener('scroll', handleScroll);
+  });
+
+  // Keyboard shortcuts effect
+  $effect(() => {
+    function handleKeydown(event: KeyboardEvent) {
+      if (event.altKey) {
+        switch (event.key) {
+          case keyboard.leftSidebar.expand:
+          case keyboard.leftSidebar.collapse:
+            handleSidebarInteraction('left', 'click', event);
+            break;
+          case keyboard.rightSidebar.expand:
+          case keyboard.rightSidebar.collapse:
+            handleSidebarInteraction('right', 'click', event);
+            break;
         }
       }
     }
 
-    document.addEventListener('click', handleOutsideClick);
-    return () => document.removeEventListener('click', handleOutsideClick);
+    window.addEventListener('keydown', handleKeydown);
+    return () => window.removeEventListener('keydown', handleKeydown);
   });
 </script>
 
-<div class="layout-container" style:height={bodyHeight}>
-  <!-- Left Sidebar - AI Content Panel -->
-  <aside 
-    class="sidebar left-sidebar frosted-glass"
-    class:expanded={isLeftExpanded}
-    class:locked={isLeftLocked}
-    style:width={widths.left}
-    onmouseenter={() => handleMouseEnter('left')}
-    onmouseleave={() => handleMouseLeave('left')}
-    aria-label="Left sidebar"
-    transition:fly={{x: -20, duration: 300}}
-  >
-    <button 
-      class="sidebar-button"
-      onclick={(e) => handleClick('left', e)}
-      onkeydown={(e) => e.key === 'Enter' && handleClick('left', e)}
-      aria-label="Toggle left sidebar"
+<svelte:boundary>
+  <UIScalingLayout>
+    <div 
+      class="layout-container" 
+      style="height: {bodyHeight}"
+      role={accessibility.aria.role}
+      aria-label={accessibility.aria.label}
     >
-      <div class="sidebar-content">
-        {#if leftComponent}
-          {@render leftComponent()}
-        {/if}
-      </div>
-      <div class="lock-indicator" class:active={isLeftLocked}>
-        <span class="sr-only">{isLeftLocked ? 'Sidebar locked' : 'Sidebar unlocked'}</span>
-      </div>
-    </button>
-  </aside>
+      {#if leftComponent}
+        <div
+          role="region"
+          aria-label={accessibility.aria.leftSidebar}
+          transition:fly|local={{ x: -20, duration: 200, easing: quartOut }}
+        >
+          <button 
+            class="sidebar left-sidebar"
+            class:expanded={isLeftExpanded}
+            class:locked={isLeftLocked}
+            style="width: {widths.left}"
+            onmouseenter={() => handleSidebarInteraction('left', 'enter')}
+            onmouseleave={() => handleSidebarInteraction('left', 'leave')}
+            onclick={() => handleSidebarInteraction('left', 'click')}
+            onkeydown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                handleSidebarInteraction('left', 'click', e);
+              }
+            }}
+            type="button"
+            aria-expanded={isLeftExpanded}
+          >
+            {@render leftComponent?.()}
+          </button>
+        </div>
+      {/if}
 
-  <!-- Main Content Area -->
-  <main 
-    class="main-content frosted-glass"
-    style:width={widths.main}
-  >
-    {#if mainContent}
-      {@render mainContent()}
-    {/if}
-  </main>
-
-  <!-- Right Sidebar - User Control Panel -->
-  <aside 
-    class="sidebar right-sidebar frosted-glass"
-    class:expanded={isRightExpanded}
-    class:locked={isRightLocked}
-    style:width={widths.right}
-    onmouseenter={() => handleMouseEnter('right')}
-    onmouseleave={() => handleMouseLeave('right')}
-    aria-label="Right sidebar"
-    transition:fly={{x: 20, duration: 300}}
-  >
-    <button 
-      class="sidebar-button"
-      onclick={(e) => handleClick('right', e)}
-      onkeydown={(e) => e.key === 'Enter' && handleClick('right', e)}
-      aria-label="Toggle right sidebar"
-    >
-      <div class="sidebar-content">
-        {#if rightComponent}
-          {@render rightComponent()}
+      <main 
+        class="main-content"
+        style="width: {widths.main}"
+        aria-label={accessibility.aria.mainContent}
+        bind:this={mainContentRef}
+      >
+        {@render mainContent?.()}
+        {#if showFilters}
+          {@render filters?.()}
         {/if}
-      </div>
-      <div class="lock-indicator" class:active={isRightLocked}>
-        <span class="sr-only">{isRightLocked ? 'Sidebar locked' : 'Sidebar unlocked'}</span>
-      </div>
-    </button>
-  </aside>
-</div>
+      </main>
+
+      {#if rightComponent}
+        <div 
+          class="sidebar right-sidebar"
+          class:expanded={isRightExpanded}
+          class:locked={isRightLocked}
+          style="width: {widths.right}"
+          role="button"
+          tabindex="0"
+          onmouseenter={handleSidebarInteraction.bind(null, 'right', 'enter')}
+          onmouseleave={handleSidebarInteraction.bind(null, 'right', 'leave')}
+          onclick={handleSidebarInteraction.bind(null, 'right', 'click')}
+          onkeydown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              handleSidebarInteraction('right', 'click', e);
+            }
+          }}
+          aria-label={accessibility.aria.rightSidebar}
+          aria-expanded={isRightExpanded}
+          transition:fly|local={{ x: 20, duration: 200, easing: quartOut }}
+        >
+          {@render rightComponent?.()}
+        </div>
+      {/if}
+    </div>
+  </UIScalingLayout>
+
+  {#snippet failed(error, reset)}
+    <div class="error-boundary">
+      <p>Something went wrong in the layout: {(error as Error).message}</p>
+      <button onclick={reset}>Reset Layout</button>
+    </div>
+  {/snippet}
+</svelte:boundary>
 
 <style>
   .layout-container {
     display: flex;
     width: 100%;
-    gap: var(--spacing-md, 1rem);
     position: relative;
-    transition: height 0.3s ease;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm);
+    background: var(--surface-1);
   }
 
   .sidebar {
     position: sticky;
     top: 0;
     height: 100%;
-    transition: all 0.3s ease;
-    border-radius: var(--radius-lg, 0.5rem);
-    border: 1px solid rgba(255, 255, 255, 0.18);
-    overflow: hidden;
-    cursor: pointer;
+    transition: width var(--transition-duration) var(--transition-timing);
+    background: var(--surface-2);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-md);
+    box-shadow: var(--shadow-sm);
   }
 
   .sidebar.expanded {
-    backdrop-filter: blur(10px);
-    background: linear-gradient(
-      135deg,
-      rgba(255, 255, 255, 0.15),
-      rgba(255, 255, 255, 0.05)
-    );
-    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+    box-shadow: var(--shadow-lg);
   }
 
   .sidebar.locked {
-    border-color: var(--color-primary, #6200ea);
+    border: 2px solid var(--accent);
+  }
+
+  .left-sidebar {
+    border-right: 1px solid var(--border);
+  }
+
+  .right-sidebar {
+    border-left: 1px solid var(--border);
   }
 
   .main-content {
-    flex: 1;
-    min-width: 0;
-    border-radius: var(--radius-lg, 0.5rem);
-    padding: var(--spacing-lg, 1.5rem);
-    transition: width 0.3s ease;
-    backdrop-filter: blur(10px);
-    background: linear-gradient(
-      135deg,
-      rgba(255, 255, 255, 0.1),
-      rgba(255, 255, 255, 0.05)
-    );
-    border: 1px solid rgba(255, 255, 255, 0.18);
-    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+    transition: width var(--transition-duration) var(--transition-timing);
+    background: var(--surface-1);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-lg);
+    overflow-y: auto;
+    min-height: 100%;
   }
 
-  .sidebar-content {
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    padding: var(--spacing-md, 1rem);
+  .error-boundary {
+    padding: var(--spacing-lg);
+    background: var(--error-surface);
+    color: var(--error-text);
+    border-radius: var(--radius-lg);
+    text-align: center;
   }
 
-  .sidebar.expanded .sidebar-content {
-    opacity: 1;
-  }
-
-  .lock-indicator {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background-color: var(--color-secondary, #03dac6);
-    opacity: 0;
-    transition: opacity 0.3s ease;
-  }
-
-  .lock-indicator.active {
-    opacity: 1;
-  }
-
-  /* Frosted glass effect base styles */
-  .frosted-glass {
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(10px);
-  }
-
-  /* Ensure proper spacing for nested content */
-  :global(.sidebar > *) {
-    margin: var(--spacing-md, 1rem);
-  }
-
-  /* Hide content when sidebar is collapsed */
-  .sidebar:not(.expanded) .sidebar-content {
-    visibility: hidden;
-  }
-
-  .sidebar-button {
-    width: 100%;
-    height: 100%;
-    padding: 0;
-    margin: 0;
+  .error-boundary button {
+    margin-top: var(--spacing-md);
+    padding: var(--spacing-sm) var(--spacing-lg);
+    background: var(--error-action);
+    color: var(--error-action-text);
     border: none;
-    background: none;
+    border-radius: var(--radius-md);
     cursor: pointer;
+  }
+
+  .error-boundary button:hover {
+    background: var(--error-action-hover);
   }
 </style>

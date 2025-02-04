@@ -1,20 +1,25 @@
+import type { ColorConfig, ComponentConfig, TransitionConfig, ThemeConfig, UnifiedThemeContext } from './Theme.types';
+import type { TypographyConfig, TextSize, TextWeight, TextAlign, TextTransform, TextDecoration, TextOverflow, TextWrap } from './Typography.types';
+
+// Re-export types
+export type {
+    ColorConfig,
+    ComponentConfig,
+    TransitionConfig,
+    ThemeConfig,
+    UnifiedThemeContext,
+    TypographyConfig,
+    TextSize,
+    TextWeight,
+    TextAlign,
+    TextTransform,
+    TextDecoration,
+    TextOverflow,
+    TextWrap
+};
+
 // Base theme types
-export interface ThemeColors {
-    // Base colors
-    primary: string;
-    secondary: string;
-    success: string;
-    warning: string;
-    error: string;
-    info: string;
-    background: string;
-    surface: string;
-    text: string;
-    border: string;
-
-    // State variants and additional colors
-    [key: string]: string | undefined;
-
+export interface ThemeColors extends ColorConfig {
     // Canvas-specific colors
     grid?: string;
     node?: string;
@@ -77,9 +82,9 @@ export interface ThemeLayout {
 
 export interface ThemeTransitions {
     duration: {
-        fast: number;
-        normal: number;
-        slow: number;
+        fast: string;
+        normal: string;
+        slow: string;
     };
     easing: {
         default: string;
@@ -90,10 +95,44 @@ export interface ThemeTransitions {
     properties: string[];
 }
 
+// Spatial configuration types
+export interface SpatialConfig {
+    defaultConstraints: {
+        [key: string]: {
+            maxWidth?: number;
+            maxHeight?: number;
+            minWidth?: number;
+            minHeight?: number;
+        };
+    };
+}
+
 export interface Theme {
     colors: ThemeColors;
     layout: ThemeLayout;
     transitions: ThemeTransitions;
+    edges: {
+        default: {
+            stroke: string;
+            width: number;
+        };
+        hover: {
+            stroke: string;
+            width: number;
+        };
+    };
+    group?: {
+        border: string;
+        background: string;
+        text: string;
+        anchor: string;
+        label: string;
+        hover: {
+            border: string;
+            background: string;
+        };
+    };
+    spatial?: SpatialConfig;
 }
 
 // Theme-aware component props

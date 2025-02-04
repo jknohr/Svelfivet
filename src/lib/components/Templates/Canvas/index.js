@@ -6,18 +6,18 @@ import Node from '../../Organisms/Node/Node.svelte';
 import Edge from '../../Organisms/Edge/Edge.svelte';
 import Group from '../../Utility/Group/CanvasGroup.svelte';
 import Knob from '../../Atoms/Knob/Knob.svelte';
-import Drawer from './components/Drawer/Drawer.svelte';
-import Slider from './components/data/Slider/Slider.svelte';
+import Drawer from '$lib/components/Molecules/Drawer/CanvasDrawer.svelte';
+import Slider from '$lib/components/Atoms/Slider/Slider.svelte';
 import Toggle from '../../Atoms/Toggle/Toggle.svelte';
-import RadioGroup from './components/data/RadioGroup/RadioGroup.svelte';
+import RadioGroup from '$lib/components/data/RadioGroup/RadioGroup.svelte';
 import Background from './Background/Canvas.svelte';
-import ThemeToggle from './components/ThemeToggle/ThemeToggle.svelte';
+import ThemeToggle from '$lib/components/Atoms/ThemeToggle/CanvasThemeToggle.svelte';
 import ColorPicker from '../../Atoms/ColorPicker/CanvasColorWheel.svelte';
 import Resizer from '../../Utility/Resizer/CanvasResizer.svelte';
-import TextField from './components/data/TextField/TextField.svelte';
+import TextField from '../../Atoms/TextField/TextField.svelte';
 import { generateInput, generateOutput } from './utils/creators';
 import { getViewportCenter } from './utils/getters/getViewportCenter';
-import ContrastTheme from './components/ContrastTheme/ContrastTheme.svelte';
+import ContrastTheme from '$lib/components/Theme/ContrastTheme.svelte';
 export {
 	Svelvet,
 	Controls,

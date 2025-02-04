@@ -9,6 +9,8 @@ import type {
 	PixelValue,
 	RemValue
 } from '$lib/components/Templates/Canvas/types';
+import type { CardinalDirection } from '$lib/components/Templates/Canvas/constants/math';
+import type { FlowAnimationType } from '$lib/components/Templates/Canvas/types/animation';
 import type { SvelteComponent, Snippet } from 'svelte';
 
 export type EdgeStyle = 'bezier' | 'straight' | 'step' | 'subway' | 'horizontal' | 'vertical' | 'dagre' | 'tokyo';
@@ -140,13 +142,16 @@ export type CustomEdgeKey = Set<Anchor | Node> | 'cursor';
 export type FlowAnimation = 'none' | 'forward' | 'backward' | 'bidirectional';
 
 export interface EdgeStore {
-	add(key: CustomEdgeKey, value: WritableEdge): void;
-	remove(key: CustomEdgeKey): void;
-	match(source: Node | null, target: Node, anchor?: Anchor | null): CustomEdgeKey[];
-	get(key: CustomEdgeKey): WritableEdge | undefined;
+	subscribe: (subscriber: (value: Map<`E-${string}`, Edge>) => void) => () => void;
+	set: (value: Map<`E-${string}`, Edge>) => void;
+	update: (updater: (value: Map<`E-${string}`, Edge>) => Map<`E-${string}`, Edge>) => void;
+	add(item: Edge, key: `E-${string}`): Map<`E-${string}`, Edge>;
+	remove(key: `E-${string}`): void;
+	match(...args: Array<Node | Anchor | null>): Array<`E-${string}`>;
+	get(key: `E-${string}`): Edge | null;
 	clear(): void;
-	getAll(): WritableEdge[];
-	fetch(source: Anchor, target: Anchor): WritableEdge | null;
+	getAll(): Edge[];
+	fetch(...args: Array<Anchor>): Edge | null;
 	onEdgeChange(callback: (edge: WritableEdge, type: 'connection' | 'disconnection') => void): void;
 }
 
@@ -171,8 +176,8 @@ export interface EdgeProps {
 	edgeType?: string;
 	sourceDynamic?: boolean;
 	targetDynamic?: boolean;
-	sourceDirection?: string;
-	targetDirection?: string;
+	sourceDirection?: CardinalDirection;
+	targetDirection?: CardinalDirection;
 	sourceRotation?: number;
 	targetRotation?: number;
 	sourceMoving?: boolean;
@@ -184,7 +189,7 @@ export interface EdgeProps {
 	edgeColor?: CSSColorString | null;
 	source?: Node | null;
 	target?: Node | null;
-	flowAnimation?: FlowAnimation;
+	flowAnimation?: FlowAnimationType;
 	dotSize?: number;
 	dotOpacity?: number;
 	dotColor?: CSSColorString | null;

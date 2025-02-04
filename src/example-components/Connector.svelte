@@ -44,7 +44,7 @@
 {/snippet}
 
 <svelte:element this={'div'} data-svelte-ignore>
-	{/* @ts-ignore - Library type definitions need updating for Svelte 5 */}
+	<!-- @ts-ignore - Library type definitions need updating for Svelte 5 -->
 	<Node
 		position={{ x: 100, y: 300 }}
 		dimensions={{ width: 400, height: 300 }}

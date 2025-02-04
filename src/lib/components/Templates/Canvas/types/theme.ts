@@ -1,3 +1,6 @@
+// Pixel Value Type
+export type PixelValue = number | `${number}px`;
+
 // Color Types
 export type CSSColorString = string;
 export type ThemeMode = 'light' | 'dark' | 'system';

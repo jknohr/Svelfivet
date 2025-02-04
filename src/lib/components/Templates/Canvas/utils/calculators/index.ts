@@ -367,12 +367,135 @@ export function calculateStepPath(
     return steps;
 }
 
+// ===================== PATH CALCULATION SYSTEM =====================
+/**
+ * IMPORTANT: The path calculation system follows a strict pattern:
+ * 1. Input: All path calculators take (source, target, radius/buffer)
+ * 2. Types: source and target are VectorPlusPosition containing:
+ *    - x, y coordinates
+ *    - direction vector from directionVectors constant
+ * 3. Output: Must return a valid SVG path string
+ *
+ * When adding new path styles:
+ * - Follow the same parameter pattern
+ * - Use the direction vectors for smart path calculation
+ * - Return SVG path string in the same format
+ * - Update Edge.svelte's style type and switch statement
+ */
+
+/**
+ * Calculates a subway-style path with 45-degree angles
+ * Used in: Edge.svelte
+ * 
+ * @param source - Start point with position and direction
+ * @param target - End point with position and direction
+ * @param cornerRadius - Radius for smooth corners
+ * @returns SVG path string with 45-degree angles and smooth transitions
+ */
+export function calculateSubwayPath(source: VectorPlusPosition, target: VectorPlusPosition, cornerRadius: number): string {
+    const sourceX = source.x;
+    const sourceY = source.y;
+    const targetX = target.x;
+    const targetY = target.y;
+    
+    const deltaX = Math.abs(targetX - sourceX);
+    const deltaY = Math.abs(targetY - sourceY);
+    const isVertical = deltaY > deltaX;
+    
+    if (isVertical) {
+        const midY = sourceY + (targetY - sourceY) / 2;
+        return `M ${sourceX},${sourceY} 
+                L ${sourceX},${midY - cornerRadius} 
+                Q ${sourceX},${midY} ${sourceX + (targetX > sourceX ? cornerRadius : -cornerRadius)},${midY} 
+                L ${targetX - (targetX > sourceX ? cornerRadius : -cornerRadius)},${midY} 
+                Q ${targetX},${midY} ${targetX},${midY + cornerRadius} 
+                L ${targetX},${targetY}`;
+    } else {
+        const midX = sourceX + (targetX - sourceX) / 2;
+        return `M ${sourceX},${sourceY} 
+                L ${midX - cornerRadius},${sourceY} 
+                Q ${midX},${sourceY} ${midX},${sourceY + (targetY > sourceY ? cornerRadius : -cornerRadius)} 
+                L ${midX},${targetY - (targetY > sourceY ? cornerRadius : -cornerRadius)} 
+                Q ${midX},${targetY} ${midX + cornerRadius},${targetY} 
+                L ${targetX},${targetY}`;
+    }
+}
+
 /**
  * Calculates a point along an SVG path
  * Used in: Edge.svelte, EdgeRenderer.svelte
  */
-export function calculatePath(path: SVGPathElement, position: number) {
-    const pathLength = path.getTotalLength();
-    const halfLength = pathLength * position;
-    return path.getPointAtLength(halfLength);
+/**
+ * Calculates a Tokyo metro style path with orthogonal lines and smooth corners
+ * Used in: Edge.svelte
+ * 
+ * This style is characterized by:
+ * - Multiple segments for gradual transitions
+ * - Larger corner radius (1.5x) for smoother curves
+ * - Quarter-point segments for more natural flow
+ * 
+ * @param source - Start point with position and direction
+ * @param target - End point with position and direction
+ * @param cornerRadius - Base radius for corners (actual radius is 1.5x this)
+ * @returns SVG path string with Tokyo metro style characteristics
+ */
+export function calculateTokyoPath(source: VectorPlusPosition, target: VectorPlusPosition, cornerRadius: number): string {
+    const sourceX = source.x;
+    const sourceY = source.y;
+    const targetX = target.x;
+    const targetY = target.y;
+    
+    const deltaX = Math.abs(targetX - sourceX);
+    const deltaY = Math.abs(targetY - sourceY);
+    const isVertical = deltaY > deltaX;
+    
+    // Tokyo metro style uses a more gradual curve with multiple segments
+    const segmentRadius = cornerRadius * 1.5;
+    
+    if (isVertical) {
+        const midY = sourceY + (targetY - sourceY) / 2;
+        const quarterY = sourceY + (targetY - sourceY) / 4;
+        const threeQuarterY = sourceY + (targetY - sourceY) * 3 / 4;
+        
+        return `M ${sourceX},${sourceY}
+                L ${sourceX},${quarterY - segmentRadius}
+                Q ${sourceX},${quarterY} ${sourceX + (targetX > sourceX ? segmentRadius : -segmentRadius)},${quarterY}
+                L ${targetX - (targetX > sourceX ? segmentRadius : -segmentRadius)},${quarterY}
+                Q ${targetX},${quarterY} ${targetX},${quarterY + segmentRadius}
+                L ${targetX},${threeQuarterY - segmentRadius}
+                Q ${targetX},${threeQuarterY} ${targetX},${threeQuarterY + segmentRadius}
+                L ${targetX},${targetY}`;
+    } else {
+        const midX = sourceX + (targetX - sourceX) / 2;
+        const quarterX = sourceX + (targetX - sourceX) / 4;
+        const threeQuarterX = sourceX + (targetX - sourceX) * 3 / 4;
+        
+        return `M ${sourceX},${sourceY}
+                L ${quarterX - segmentRadius},${sourceY}
+                Q ${quarterX},${sourceY} ${quarterX},${sourceY + (targetY > sourceY ? segmentRadius : -segmentRadius)}
+                L ${quarterX},${targetY - (targetY > sourceY ? segmentRadius : -segmentRadius)}
+                Q ${quarterX},${targetY} ${quarterX + segmentRadius},${targetY}
+                L ${threeQuarterX - segmentRadius},${targetY}
+                Q ${threeQuarterX},${targetY} ${threeQuarterX + segmentRadius},${targetY}
+                L ${targetX},${targetY}`;
+    }
 }
+    /**
+     * Calculates a point along an SVG path - used for edge decorations and labels
+     * Used in: Edge.svelte, EdgeRenderer.svelte
+     * 
+     * This is a utility function that works with ALL path styles.
+     * It finds a point at a specific position along any SVG path,
+     * regardless of how that path was calculated.
+     * 
+     * @param path - The SVG path element to measure
+     * @param position - Position along the path (0 to 1)
+     * @returns Point coordinates {x, y} at the specified position
+     */
+    
+    export function calculatePath(path: SVGPathElement, position: number) {
+        const pathLength = path.getTotalLength();
+        const halfLength = pathLength * position;
+        return path.getPointAtLength(halfLength);
+    }
+

@@ -9,7 +9,7 @@ A Svelte 5 graph component that manages the overall graph state and rendering.
 	import type { EdgeStore } from '../types/stores';
 	import type { EndStyle } from '$lib/components/Organisms/Edge/Edge.types';
 	import type { WritableEdge } from '$lib/components/Organisms/Edge/Edge.types';
-	import { onMount, setContext } from 'svelte';
+	import { onMount } from 'svelte';
 	import { createGraph } from '../utils/creators/createGraph';
 	import { reloadStore } from '../utils/savers/reloadStore';
 	import GraphRenderer from '../renderers/GraphRenderer/GraphRenderer.svelte';
@@ -30,32 +30,24 @@ A Svelte 5 graph component that manages the overall graph state and rendering.
 	// Props declaration
 	let props = $props();
 
-	// State declarations using $state rune
+	// State declarations using $state
 	let stateManager = $state(createGraphStateManager());
 	let direction = $state(props.direction || 'LR');
 	let graph = $state<Graph | null>(null);
 	let edgeStore = $state<EdgeStore | null>(null);
 	let edges = $state<WritableEdge[]>([]);
+	let snapTo = $state(props.snapTo || 1);
+	let edgeStyle = $state(props.edgeStyle);
+	let endStyles = $state(props.endStyles);
+	let graphEdge = $state(props.edge);
+	let raiseEdgesOnSelect = $state(props.raiseEdgesOnSelect);
+	let edgesAboveNode = $state(props.edgesAboveNode);
 
-	// Derived state using $derived rune
+	// Derived state
 	let backgroundExists = $derived(!!props.children);
 	let isLocked = $derived(!!props.locked);
 	let currentZoom = $derived(props.zoom || 1);
-
-	// Context setup
-	setContext('snapTo', props.snapTo);
-	setContext('edgeStyle', props.edgeStyle);
-	setContext('endStyles', props.endStyles);
-	setContext('graphEdge', props.edge);
-	setContext('raiseEdgesOnSelect', props.raiseEdgesOnSelect);
-	setContext('edgesAboveNode', props.edgesAboveNode);
-	
-	// Effect for graph context
-	$effect(() => {
-		if (graph) {
-			setContext('graph', graph);
-		}
-	});
+	let isMovable = $derived(!isLocked);
 
 	// Initialize graph
 	onMount(() => {
@@ -143,7 +135,11 @@ A Svelte 5 graph component that manages the overall graph state and rendering.
 </script>
 
 {#if graph}
-	<GraphRenderer isMovable={!isLocked}>
+	<GraphRenderer
+		{graph}
+		{snapTo}
+		isMovable={!isLocked}
+	>
 		{#if props.mermaid}
 			<FlowChart
 				{...props}

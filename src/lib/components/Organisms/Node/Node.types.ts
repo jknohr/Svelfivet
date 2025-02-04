@@ -1,8 +1,7 @@
 import type { SvelteComponent, Snippet } from 'svelte';
-import type { XYPair, CSSColorString, Direction, Dimensions } from '$lib/components/Templates/Canvas/types';
-import type { Anchor } from '$lib/components/Atoms/Anchor/Anchor.types';
-import type { GlassEffect, GlassState } from '$lib/components/Theme/Theme.types';
-import type { ElementType } from '$lib/components/Theme/ThemeElements';
+import type { XYPair, CSSColorString, Direction, Dimensions } from '$lib/types/shared';
+import type { Anchor } from '$lib/types/components';
+import type { GlassEffect, GlassState, ElementType } from '$lib/types/theme';
 
 /**
  * Type aliases for better semantic meaning in the graph system

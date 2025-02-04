@@ -3,7 +3,7 @@
  * Standardizes requirements for UI elements across different interaction modes
  */
 
-import type { CSSColorString } from '$lib/components/Templates/Canvas/types/general';
+import type { CSSColorString } from '$lib/components/Templates/Canvas/types/theme';
 import type { BaseElementRequirements, UnifiedThemeContext } from './Theme.types';
 
 

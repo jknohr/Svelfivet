@@ -1,20 +1,17 @@
 import { realEstateConfig } from './real-estate';
-
 import { aiSearchConfig } from './aisearch';
-
 import { adminConfig } from './systemadmin';
-import { commonUserMenu } from './common';
+import { userConfig } from './user';
 
-import type { ContextConfig, NavigationItem } from '$lib/types/navigation';
-import type { ContextType } from '$lib/components/Templates/Canvas/types/context';
+import type { VistaConfig, NavigationItem } from '$lib/types/navigation';
+import type { VistaType } from '$lib/types/vista';
 
 // Export all configurations
-export const contextConfigs: Record<ContextType | 'system', ContextConfig> = {
+export const vistaConfigs: Record<VistaType, VistaConfig> = {
     'real-estate': realEstateConfig,
-  
-    aisearch: aiSearchConfig,
-
-    system: adminConfig
+    'aisearch': aiSearchConfig,
+    'systemadmin': adminConfig,
+    'user': userConfig
 };
 
 // Core layout configuration
@@ -33,12 +30,11 @@ export const layoutConfig = {
     buffer: { width: '22.5%' }
 };
 
-// Re-export common menu items
-export { commonUserMenu };
 
 // System admin menu items
 export const systemAdminMenu: NavigationItem[] = [
     {
+        id: 'admin-dashboard',
         label: 'Dashboard',
         path: '/admin/system/dashboard',
         icon: 'dashboard',
@@ -50,84 +46,25 @@ export const systemAdminMenu: NavigationItem[] = [
             category: 'admin',
             features: ['admin-dashboard']
         }
-    },
-    {
-        label: 'Users',
-        path: '/admin/system/users',
-        icon: 'group',
-        description: 'Manage system users',
-        requiresAuth: true,
-        roles: ['admin'],
-        metadata: {
-            order: 2,
-            category: 'admin',
-            features: ['user-management']
-        }
-    },
-    {
-        label: 'Content',
-        path: '/admin/system/content',
-        icon: 'article',
-        description: 'Manage system content',
-        requiresAuth: true,
-        roles: ['admin'],
-        metadata: {
-            order: 3,
-            category: 'admin',
-            features: ['content-management']
-        }
-    },
-    {
-        label: 'Analytics',
-        path: '/admin/system/analytics',
-        icon: 'analytics',
-        description: 'System analytics and reporting',
-        requiresAuth: true,
-        roles: ['admin'],
-        metadata: {
-            order: 4,
-            category: 'admin',
-            features: ['analytics']
-        }
     }
 ];
 
-// Role-based access configuration
+// Navigation access control
 export const navigationAccess = {
     roles: {
-        user: ['main', 'user'],
-        admin: ['main', 'user', 'admin'],
-        superadmin: ['main', 'user', 'admin', 'system']
-    },
-    requiresAuth: {
-        user: true,
-        admin: true,
-        system: true
+        admin: ['admin', 'system', 'user'],
+        user: ['user'],
+        guest: ['public']
     }
 };
 
-// Core application configuration
-export const appConfig = {
-    name: 'AI-Powered Context-Aware Platform',
-    version: '1.0.0',
-    api: {
-        baseUrl: '/api',
-        version: 'v1',
-        timeout: 30000
-    },
-    auth: {
-        tokenKey: 'auth_token',
-        refreshTokenKey: 'refresh_token',
-        expiryKey: 'token_expiry'
-    }
-};
-
-// Dynamic context loading helper
-export const loadContext = async (ContextType: ContextType): Promise<ContextConfig | null> => {
+// Dynamic vista loading helper
+export async function loadVista(vistaId: string): Promise<VistaConfig | null> {
     try {
-        return contextConfigs[ContextType] || null;
+        const module = await import(`./${vistaId}`);
+        return module.default as VistaConfig;
     } catch (error) {
-        console.error(`Failed to load context: ${ContextType}`, error);
+        console.error(`Failed to load vista: ${vistaId}`, error);
         return null;
     }
-};
+}
