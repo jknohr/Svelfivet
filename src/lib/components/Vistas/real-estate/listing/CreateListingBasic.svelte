@@ -1,27 +1,31 @@
 <script lang="ts">
-  import type { Card } from '$lib/components/common/molecules/cards/card';
-  import type { PropertyBasicInfo } from '$lib/types/components/real-estate';
+  import type { Card, ListingCardContent } from '$lib/components/common/molecules/cards/cards';
   import { BaseCard } from '$lib/components/common/molecules/cards/base';
   import { Button } from '$lib/components/common';
-  import { createEventDispatcher } from 'svelte';
 
-  const dispatch = createEventDispatcher<{
-    step: { step: number; data: PropertyBasicInfo };
-    analyze: { data: PropertyBasicInfo };
-  }>();
-
-  let { card } = $props();
+  let { card } = $props<{ card: Card & { content: ListingCardContent } }>();
+  let element: HTMLElement;
 
   function handleAnalyze() {
-    dispatch('analyze', { data: card.content.basicInfo });
+    element?.dispatchEvent(
+      new CustomEvent('analyze', { 
+        detail: { data: card.content.basicInfo },
+        bubbles: true
+      })
+    );
   }
 
   function handleNext() {
-    dispatch('step', { step: 2, data: card.content.basicInfo });
+    element?.dispatchEvent(
+      new CustomEvent('step', { 
+        detail: { step: 2, data: card.content.basicInfo },
+        bubbles: true
+      })
+    );
   }
 </script>
 
-<BaseCard {card}>
+<BaseCard {card} bind:this={element}>
   {#snippet front()}
     <div class="listing-basic">
       <header>
@@ -34,7 +38,7 @@
           ariaHaspopup={false}
           ariaControls="analyze-result"
           tabindex={0}
-          onClick={handleAnalyze}
+          onclick={handleAnalyze}
         >
           Analyze with AI
         </Button>
@@ -57,7 +61,7 @@
             id="description"
             bind:value={card.content.basicInfo.description}
             placeholder="Enter property description"
-          />
+          ></textarea>
         </div>
 
         <div class="form-group">
@@ -94,7 +98,7 @@
           ariaHaspopup={false}
           ariaControls="next-step"
           tabindex={0}
-          onClick={handleNext}
+          onclick={handleNext}
         >
           Next: Location & Documents
         </Button>

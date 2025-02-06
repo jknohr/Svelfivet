@@ -4,7 +4,7 @@
     import { slide } from 'svelte/transition';
     import { vistaConfigs } from '$lib/components/Vistas/navigation';
     import type { VistaType } from '$lib/types/vista';
-    import type { NavigationItem } from '$lib/types/navigation';
+    import type { NavigationItem } from '$lib/types/vista';
     import GlassPane from '$lib/components/Theme/GlassPane.svelte';
     import Typography from '$lib/components/Theme/Typography.svelte';
     import LoginModal from '$lib/services/neuralauth/components/LoginModal.svelte';

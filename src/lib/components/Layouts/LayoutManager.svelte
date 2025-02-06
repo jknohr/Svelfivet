@@ -1,9 +1,9 @@
 <script lang="ts">
+  export { default } from './LayoutManager.svelte';
   import { onMount, onDestroy } from 'svelte';
-  import { layoutConfig } from '$lib/components/Vistas/navigation';
-  import { vistaConfigs } from '$lib/components/Vistas/navigation';
-  import type { VistaType } from '$lib/types/vista';
-  import type { LayoutProps } from '$lib/types/layout';
+  import { layoutConfig, vistaConfigs } from '$lib/components/Vistas/navigation';
+  import type { VistaType, LayoutProps } from '$lib/types/vista';
+  import type { Snippet } from 'svelte';
   import HeaderLayout from './Header/HeaderLayout.svelte';
   import BaseLayout from './Body/BaseBodyLayout.svelte';
   import LayoutFooter from './Footer/LayoutFooter.svelte';
@@ -17,11 +17,13 @@
   let { 
     layoutChange = (event: CustomEvent<{ type: string; dimension: string }>) => {},
     vistaSwitch = (event: CustomEvent<{ from: VistaType | null; to: VistaType }>) => {},
-    themeChange = (event: CustomEvent<{ mode: 'light' | 'dark' | 'system' }>) => {}
+    themeChange = (event: CustomEvent<{ mode: 'light' | 'dark' | 'system' }>) => {},
+    children
   } = $props<{
     layoutChange?: (event: CustomEvent<{ type: string; dimension: string }>) => void;
     vistaSwitch?: (event: CustomEvent<{ from: VistaType | null; to: VistaType }>) => void;
     themeChange?: (event: CustomEvent<{ mode: 'light' | 'dark' | 'system' }>) => void;
+    children?: any;
   }>();
 
   // Base accessibility requirements
@@ -62,7 +64,7 @@
       label: string;
       description?: string;
     },
-    mainContent?: () => void;
+    mainContent?: Snippet;
   }>({
     showNav: true,
     showLeftSidebar: true,
@@ -90,7 +92,7 @@
       tabIndex: 0,
       shortcuts: {}
     },
-    mainContent: () => {}
+    mainContent: undefined
   });
 
   // Helper functions for navigation state management
@@ -406,20 +408,9 @@
       
       {#key $currentVista}
         {#if ContentLayoutComponent}
-          {#snippet mainContent}
-            {#if defaultLayoutProps.mainContent && typeof defaultLayoutProps.mainContent === 'function'}
-              <div role="main" aria-label="Main content">
-                {defaultLayoutProps.mainContent()}
-              </div>
-            {/if}
-          {/snippet}
-
-          <BaseContentLayout
-            {mainContent}
-            dimensions={defaultLayoutProps.dimensions}
-            accessibility={{ aria: defaultLayoutProps.aria, keyboard: { focusable: true } }}
-            filters={defaultLayoutProps.filters}
-          />
+          <div role="main" aria-label="Main content">
+            {@render defaultLayoutProps.mainContent?.()}
+          </div>
         {/if}
       {/key}
       

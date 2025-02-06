@@ -1,11 +1,4 @@
-import { adminConfig } from './systemadmin';
-import { userConfig } from './user';
-
-import type { NavigationItem } from '$lib/types/navigation';
-import type { VistaConfig, VistaType } from '$lib/types/vista';
-import type { FeatureConfig } from '$lib/types/feature';
-import type { ThemeConfig } from '$lib/components/Theme/Theme.types';
-import Typography from '$lib/components/Theme/Typography.svelte';
+import type { VistaConfig } from '$lib/types/vista';
 
 export const aiSearchConfig: VistaConfig = {
     type: 'aisearch',
@@ -17,139 +10,7 @@ export const aiSearchConfig: VistaConfig = {
             primary: '#6200EA',
             secondary: '#00BFA5',
             accent: '#651FFF',
-            background: '#FFFFFF',
-            surface: '#FFFFFF',
-            text: '#000000',
-            textLight: '#FFFFFF',
-            textDark: '#000000',
-            border: '#E0E0E0',
-            shadow: 'rgba(0, 0, 0, 0.1)',
-            glass: {
-                tint: 'rgba(98, 0, 234, 0.1)',
-                blur: '16px',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                shadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-                background: 'rgba(255, 255, 255, 0.7)',
-                backdrop: 'blur(16px)'
-            },
-            states: {
-                hover: 'rgba(98, 0, 234, 0.1)',
-                active: 'rgba(98, 0, 234, 0.2)',
-                focus: 'rgba(98, 0, 234, 0.3)',
-                selected: 'rgba(98, 0, 234, 0.4)'
-            }
-        },
-        components: {
-            button: {
-                borderRadius: '8px',
-                padding: '12px 24px',
-                fontSize: '16px'
-            },
-            input: {
-                borderRadius: '8px',
-                padding: '12px',
-                fontSize: '16px'
-            },
-            card: {
-                borderRadius: '12px',
-                padding: '16px',
-                shadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
-            },
-            node: {
-                background: '#FFFFFF',
-                borderColor: '#B0BEC5',
-                borderWidth: '1px',
-                textColor: '#000000'
-            },
-            edge: {
-                color: '#B0BEC5',
-                width: '2px',
-                hoverColor: '#6200EA',
-                selectedColor: '#4527A0'
-            },
-            anchor: {
-                size: '8px',
-                color: '#B0BEC5',
-                hoverColor: '#6200EA',
-                activeColor: '#4527A0'
-            },
-            tooltip: {
-                background: '#263238',
-                textColor: '#FFFFFF',
-                borderRadius: '4px',
-                padding: '8px'
-            },
-            glass: {
-                blur: '10px',
-                opacity: 0.7,
-                borderOpacity: 0.3,
-                lightEffect: true,
-                lightIntensity: 0.2
-            }
-        },
-        typography: {
-            fontFamily: {
-                base: 'Inter, system-ui, sans-serif',
-                heading: 'Inter, system-ui, sans-serif',
-                mono: 'JetBrains Mono, monospace'
-            },
-            fontSize: {
-                xs: '12px',
-                sm: '14px',
-                base: '16px',
-                lg: '18px',
-                xl: '24px',
-                xxl: '32px'
-            },
-            fontWeight: {
-                normal: '400',
-                medium: '500',
-                semibold: '600',
-                bold: '700'
-            }
-        },
-        transitions: {
-            duration: {
-                fast: '150ms',
-                normal: '250ms',
-                slow: '350ms'
-            },
-            timing: {
-                default: 'cubic-bezier(0.4, 0, 0.2, 1)',
-                linear: 'linear',
-                ease: 'ease',
-                easeIn: 'ease-in',
-                easeOut: 'ease-out'
-            }
-        },
-        spatial: {
-            spacing: {
-                xs: '4px',
-                sm: '8px',
-                md: '16px',
-                lg: '24px',
-                xl: '32px'
-            },
-            layout: {
-                maxWidth: '1200px',
-                gutter: '24px'
-            }
-        },
-        effects: {
-            glass: {
-                blur: '16px',
-                opacity: 0.7,
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                background: 'rgba(255, 255, 255, 0.7)',
-                shadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
-            },
-            lighting: {
-                ambient: 'rgba(255, 255, 255, 0.1)',
-                key: 'rgba(255, 255, 255, 0.2)',
-                fill: 'rgba(255, 255, 255, 0.05)',
-                intensity: 0.5,
-                angle: 45
-            }
+            background: '#FFFFFF'
         }
     },
     social: [
@@ -178,117 +39,122 @@ export const aiSearchConfig: VistaConfig = {
     routes: {
         search: {
             path: '/aisearch/search',
+            component: 'pages/SearchPage.svelte',
             meta: {
                 title: 'Search',
-                description: 'AI-powered search',
-                requiresAuth: true
-            }
-        },
-        history: {
-            path: '/aisearch/history',
-            meta: {
-                title: 'History',
-                description: 'Search history',
+                description: 'AI-powered search interface',
                 requiresAuth: true,
                 roles: ['user']
             }
         },
-        saved: {
-            path: '/aisearch/saved',
+        history: {
+            path: '/aisearch/history',
+            component: 'pages/HistoryPage.svelte',
             meta: {
-                title: 'Saved',
-                description: 'Saved searches',
+                title: 'Search History',
+                description: 'View past searches and results',
                 requiresAuth: true,
                 roles: ['user']
             }
         },
         insights: {
             path: '/aisearch/insights',
+            component: 'pages/InsightsPage.svelte',
             meta: {
-                title: 'Insights',
-                description: 'Search insights and analytics',
+                title: 'Search Insights',
+                description: 'Analytics and insights from searches',
                 requiresAuth: true,
                 roles: ['admin']
             }
         },
-        management: {
-            path: '/admin/aisearch/management',
+        settings: {
+            path: '/aisearch/settings',
+            component: 'pages/SettingsPage.svelte',
             meta: {
-                title: 'Search Management',
-                description: 'Manage search settings and indices',
+                title: 'Search Settings',
+                description: 'Configure search preferences',
                 requiresAuth: true,
-                roles: ['admin']
+                roles: ['user']
+            }
+        },
+        help: {
+            path: '/aisearch/help',
+            component: 'pages/HelpPage.svelte',
+            meta: {
+                title: 'Search Help',
+                description: 'Search usage guide and tips',
+                requiresAuth: true,
+                roles: ['user']
             }
         }
     },
     navigation: {
         items: [
             {
-                id: 'search',
-                label: 'Search',
-                icon: 'search',
+                id: 'aisearch-main',
+                label: 'AI Search',
                 path: '/aisearch/search',
-                description: 'AI-powered search',
-                requiresAuth: true
-            },
-            {
-                id: 'history',
-                label: 'History',
-                icon: 'history',
-                path: '/aisearch/history',
-                description: 'Search history',
+                icon: 'manage_search',
+                description: 'AI-powered search interface',
                 requiresAuth: true,
-                roles: ['user']
-            },
-            {
-                id: 'saved',
-                label: 'Saved',
-                icon: 'bookmark',
-                path: '/aisearch/saved',
-                description: 'Saved searches',
-                requiresAuth: true,
-                roles: ['user']
-            },
-            {
-                id: 'insights',
-                label: 'Insights',
-                icon: 'insights',
-                path: '/aisearch/insights',
-                description: 'Search insights and analytics',
-                requiresAuth: true,
-                roles: ['admin']
-            },
-            {
-                id: 'management',
-                label: 'Search Management',
-                icon: 'settings_applications',
-                path: '/admin/aisearch/management',
-                description: 'Manage search settings and indices',
-                requiresAuth: true,
-                roles: ['admin']
+                roles: ['user'],
+                subItems: [
+                    { id: 'search', label: 'Search', path: '/aisearch/search', icon: 'search', description: 'AI-powered search' },
+                    { id: 'history', label: 'History', path: '/aisearch/history', icon: 'history', description: 'View search history' },
+                    { id: 'insights', label: 'Insights', path: '/aisearch/insights', icon: 'analytics', description: 'Search analytics', roles: ['admin'] },
+                    { id: 'settings', label: 'Settings', path: '/aisearch/settings', icon: 'settings', description: 'Search preferences' },
+                    { id: 'help', label: 'Help', path: '/aisearch/help', icon: 'help', description: 'Search help and tips' }
+                ]
             }
         ]
     },
     features: {
-        ai: {
-            id: 'ai',
-            name: 'AI Search Engine',
+        search: {
             enabled: true,
-            provider: 'openai',
-            capabilities: ['semantic-search', 'natural-language-processing', 'context-awareness'],
+            id: 'search',
+            name: 'AI Search',
+            capabilities: ['semantic-search', 'natural-language-queries', 'context-aware-results'],
             config: {
-                provider: 'openai'
+                provider: 'openai',
+                model: 'gpt-4'
             }
         },
-        analytics: {
-            id: 'analytics',
-            name: 'Search Analytics',
+        history: {
             enabled: true,
-            provider: 'elastic',
-            capabilities: ['usage-tracking', 'performance-metrics', 'trend-analysis'],
+            id: 'history',
+            name: 'Search History',
+            capabilities: ['view', 'export', 'delete'],
             config: {
-                provider: 'elastic'
+                retention: 30 // days
             }
+        },
+        insights: {
+            enabled: true,
+            id: 'insights',
+            name: 'Search Analytics',
+            capabilities: ['usage-tracking', 'performance-metrics', 'user-behavior'],
+            config: {
+                provider: 'mixpanel'
+            }
+        },
+        settings: { enabled: true },
+        help: { enabled: true },
+        export: { enabled: true },
+        filters: { enabled: true },
+        suggestions: { enabled: true }
+    },
+    metadata: {
+        version: '1.0.0',
+        category: 'search',
+        tags: ['ai', 'search', 'nlp', 'analytics'],
+        permissions: ['search:use', 'history:view', 'insights:view'],
+        analytics: {
+            trackingId: 'analytics',
+            features: ['usage-tracking', 'performance-metrics', 'trend-analysis']
+        },
+        cache: {
+            ttl: 3600,
+            strategy: 'stale-while-revalidate'
         },
         recommendations: {
             enabled: true,
@@ -296,14 +162,7 @@ export const aiSearchConfig: VistaConfig = {
             config: {
                 provider: 'recommender'
             }
-        }
+        },
     },
-    metadata: {
-        version: '2.0.0',
-        category: 'search',
-        tags: ['ai', 'search', 'analytics'],
-        permissions: ['basic', 'search-management']
-    }
-};
-
+}
 export default aiSearchConfig;

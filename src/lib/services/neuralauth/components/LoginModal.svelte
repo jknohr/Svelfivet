@@ -2,13 +2,18 @@
 
 <script lang="ts">
     import Modal from '$lib/components/Utility/Modal/Modal.svelte';
-    import { goto } from '$app/navigation';
     import { login } from '../api/auth';
+    import { currentUser } from '../store/auth';
     import type { LoginCredentials } from '../types';
+    import { validateLoginCredentials } from '../validation/schemas';
+    import { AUTH_CONSTANTS, ERROR_MESSAGES } from '../constants/auth';
 
-    export let show = false;
-    export let onClose: () => void;
-    export let onRegister: () => void;
+    let { show = false, onClose, onRegister, onLoginSuccess } = $props<{
+        show?: boolean;
+        onClose?: () => void;
+        onRegister?: () => void;
+        onLoginSuccess?: (user: any) => void;
+    }>();
 
     let email = $state('');
     let password = $state('');
@@ -16,24 +21,33 @@
     let isLoading = $state(false);
     let error = $state<string | null>(null);
 
+    function validateForm(): string | null {
+        return validateLoginCredentials({ email, password, rememberMe });
+    }
+
     async function handleSubmit() {
         error = null;
         isLoading = true;
 
         try {
+            // Validate form before submission
+            const validationError = validateForm();
+            if (validationError) {
+                error = validationError;
+                return;
+            }
+
             const credentials: LoginCredentials = { email, password, rememberMe };
-            await login(credentials);
+            const user = await login(credentials);
+            
+            // Clear any previous errors
+            error = null;
             
             // On success
             onClose();
-            // If user has admin role, go to admin, otherwise go to profile
-            if (currentUser?.roles?.includes('admin')) {
-                goto('/admin');
-            } else {
-                goto('/profile');
-            }
+            onLoginSuccess?.(user);
         } catch (e) {
-            error = e instanceof Error ? e.message : 'Invalid email or password';
+            error = e instanceof Error ? e.message : ERROR_MESSAGES.INVALID_CREDENTIALS;
         } finally {
             isLoading = false;
         }
@@ -46,7 +60,7 @@
 </script>
 
 <Modal {show} {onClose} title="Login">
-    <form onsubmit|preventDefault={handleSubmit}>
+    <form onsubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
         {#if error}
             <div class="error-message">
                 <i class="material-icons">error</i>

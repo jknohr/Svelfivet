@@ -75,7 +75,7 @@
 		edgeLabel = undefined;
 		labelColor = undefined;
 		textColor = undefined;
-		//edgeClick: () => void | null;
+		// edgeClick: () => void | null;
 		const target = e.target as HTMLFormElement;
 		target.reset();
 	};

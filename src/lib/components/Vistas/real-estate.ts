@@ -1,8 +1,7 @@
 import { adminConfig } from './systemadmin';
 import { userConfig } from './user';
 
-import type { NavigationItem } from '$lib/types/navigation';
-import type { VistaConfig, VistaType } from '$lib/types/vista';
+import type { NavigationItem, VistaConfig, VistaType } from '$lib/types/vista';
 import type { FeatureConfig } from '$lib/types/feature';
 
 export const realEstateConfig: VistaConfig = {
@@ -12,159 +11,63 @@ export const realEstateConfig: VistaConfig = {
     description: 'Discover and explore properties',
     theme: {
         colors: {
-            primary: '#2196F3',
-            secondary: '#1976D2',
-            accent: '#64B5F6',
-            surface: '#FFFFFF'
-        },
-        typography: {
-            fontFamily: {
-                base: 'system-ui',
-                heading: 'system-ui',
-                mono: 'monospace'
-            },
-            fontSize: {
-                xs: '0.75rem',
-                sm: '0.875rem',
-                base: '1rem',
-                lg: '1.125rem',
-                xl: '1.25rem',
-                xxl: '1.5rem'
-            },
-            fontWeight: {
-                light: 300,
-                regular: 400,
-                medium: 500,
-                bold: 700
-            },
-            lineHeight: {
-                tight: 1.25,
-                normal: 1.5,
-                relaxed: 1.75
-            }
-        },
-        components: {
-            node: {
-                background: '#FFFFFF',
-                borderColor: '#E0E0E0',
-                borderWidth: '1px',
-                textColor: '#000000'
-            },
-            edge: {
-                color: '#E0E0E0',
-                width: '1px',
-                hoverColor: '#2196F3',
-                selectedColor: '#1976D2'
-            },
-            anchor: {
-                size: '8px',
-                color: '#E0E0E0',
-                hoverColor: '#2196F3',
-                activeColor: '#1976D2'
-            },
-            tooltip: {
-                background: '#FFFFFF',
-                textColor: '#000000',
-                borderRadius: '4px',
-                padding: '8px'
-            },
-            controls: {
-                background: '#FFFFFF',
-                border: '#E0E0E0',
-                text: '#000000',
-                icon: '#000000',
-                hoverState: {
-                    background: '#F5F5F5',
-                    border: '#E0E0E0'
-                },
-                activeState: {
-                    background: '#EEEEEE'
-                }
-            },
-            glass: {
-                blur: '10px',
-                opacity: 0.8,
-                borderOpacity: 0.2,
-                lightEffect: true,
-                lightIntensity: 0.5,
-                lightColor: '#FFFFFF',
-                tint: '#FFFFFF',
-                glowRadius: '10px'
-            }
-        },
-        transitionConfig: {
-            durationValues: {
-                fast: '150ms',
-                normal: '300ms',
-                slow: '500ms'
-            },
-            easingValues: {
-                standard: 'cubic-bezier(0.4, 0, 0.2, 1)',
-                accelerate: 'cubic-bezier(0.4, 0, 1, 1)',
-                decelerate: 'cubic-bezier(0, 0, 0.2, 1)',
-                sharp: 'cubic-bezier(0.4, 0, 0.6, 1)',
-                linear: 'linear'
-            }
+            primary: '#2563eb',
+            secondary: '#4f46e5',
+            accent: '#06b6d4',
+            background: '#ffffff'
         }
     },
-    social: [
-        {
-            platform: 'facebook',
-            icon: '𝕏',
-            label: 'Facebook',
-            url: 'https://Facebook.com/looking4realestate',
-            handle: '@realestate'
-        },
-        {
-            platform: 'youtube',
-            icon: '🔗',
-            label: 'Youtube',
-            url: 'https://youtube.com/looking4realestate',
-            handle: 'realestate'
-        },
-        {
-            platform: 'instagram',
-            icon: '📸',
-            label: 'Instagram',
-            url: 'https://instagram.com/looking4realestate',
-            handle: '@realestate'
-        }
-    ],
-    routes: {
+ 
+ routes: {
         browse: {
-            meta: { type: 'browse' },
-            path: '/real-estate/browse',
-            label: 'Browse',
-            icon: 'search',
-            description: 'Browse properties'
+            path: '/admin/browse',
+            component: 'pages/BrowsePage.svelte',
+            meta: {
+                title: 'Browse Systems',
+                description: 'Browse system components',
+                requiresAuth: true,
+                roles: ['admin']
+            }
         },
         list: {
-            meta: { type: 'list' },
-            path: '/real-estate/list',
-            label: 'List',
-            icon: 'add_home',
-            description: 'List your property'
+            path: '/admin/list',
+            component: 'pages/ListPage.svelte',
+            meta: {
+                title: 'Add Component',
+                description: 'Add new system component',
+                requiresAuth: true,
+                roles: ['admin']
+            }
         },
         explore: {
-            meta: { type: 'explore' },
-            path: '/real-estate/explore',
-            label: 'Explore',
-            icon: 'explore',
-            description: 'Explore neighborhoods'
+            path: '/admin/explore',
+            component: 'pages/ExplorePage.svelte',
+            meta: {
+                title: 'System Health',
+                description: 'Monitor system health',
+                requiresAuth: true,
+                roles: ['admin']
+            }
         },
         services: {
-            meta: { type: 'services' },
-            path: '/real-estate/services',
-            label: 'Services',
-            icon: 'home_repair_service',
-            description: 'Property services'
+            path: '/admin/services',
+            component: 'pages/ServicesPage.svelte',
+            meta: {
+                title: 'System Services',
+                description: 'Manage system services',
+                requiresAuth: true,
+                roles: ['admin']
+            }
         },
         connect: {
-            meta: { type: 'connect' },
-            path: '/real-estate/connect',
-            label: 'Connect',
-            icon: 'link',
-            description: 'Connect with agents'
+            path: '/admin/connect',
+            component: 'pages/ConnectPage.svelte',
+            meta: {
+                title: 'Support',
+                description: 'System support and help',
+                requiresAuth: true,
+                roles: ['admin']
+            }
         }
     },
     navigation: {
@@ -257,11 +160,14 @@ export const realEstateConfig: VistaConfig = {
             }
         ]
     },
+
+
+    
     features: {
         map: {
+            enabled: true,
             id: 'map',
             name: 'Map Integration',
-            enabled: true,
             provider: 'mapbox',
             capabilities: ['location-search', 'routing', 'geocoding'],
             config: {
@@ -269,9 +175,9 @@ export const realEstateConfig: VistaConfig = {
             }
         },
         chat: {
+            enabled: true,
             id: 'chat',
             name: 'Chat System',
-            enabled: true,
             provider: 'telnyx',
             capabilities: ['text', 'media', 'presence'],
             config: {
@@ -280,6 +186,8 @@ export const realEstateConfig: VistaConfig = {
         },
         voice: {
             enabled: true,
+            id: 'voice',
+            name: 'Voice System',
             capabilities: ['call', 'voicemail', 'transcription'],
             config: {
                 provider: 'speechomatic'
@@ -287,18 +195,57 @@ export const realEstateConfig: VistaConfig = {
         },
         ai: {
             enabled: true,
+            id: 'ai',
+            name: 'AI Features',
             capabilities: ['valuation', 'recommendations', 'market-analysis'],
             config: {
                 provider: 'openai'
             }
-        }
+        },
+        monitoring: { enabled: true },
+        analytics: { enabled: true },
+        search: { enabled: true },
+        notifications: { enabled: true },
+        help: { enabled: true }
     },
     metadata: {
-        version: '2.0.0',
-        category: 'real-estate',
-        tags: ['properties', 'homes', 'real-estate'],
-        permissions: ['basic', 'property-management']
-    }
+        version: '1.0.0',
+        category: 'Real Estate',
+        tags: ['property', 'real-estate', 'agents'],
+        permissions: ['view_properties', 'manage_properties'],
+        analytics: {
+            trackingId: 'RE-001',
+            features: ['property_views', 'agent_contact']
+        },
+        cache: {
+            ttl: 3600,
+            strategy: 'stale-while-revalidate'
+        }
+    },
+    social: [
+        {
+            platform: 'facebook',
+            icon: 'facebook',
+            label: 'Facebook',
+            url: 'https://facebook.com/looking4realestate',
+            handle: '@realestate'
+        },
+        {
+            platform: 'youtube',
+            icon: 'youtube',
+            label: 'Youtube',
+            url: 'https://youtube.com/looking4realestate',
+            handle: '@realestate'
+        },
+        {
+            platform: 'instagram',
+            icon: 'instagram',
+            label: 'Instagram',
+            url: 'https://instagram.com/looking4realestate',
+            handle: '@realestate'
+        }
+    ]
+
 };
 
 export default realEstateConfig;

@@ -1,6 +1,5 @@
 import type { VistaConfig } from '$lib/types/vista';
 
-
 export const adminConfig: VistaConfig = {
     type: 'systemadmin',
     label: 'Admin',
@@ -8,222 +7,61 @@ export const adminConfig: VistaConfig = {
     description: 'System administration and management',
     theme: {
         colors: {
-            primary: '#263238',
-            secondary: '#37474F',
-            accent: '#FF5722',
-            background: '#ECEFF1',
-            surface: '#FFFFFF',
-            text: '#263238',
-            textLight: '#78909C',
-            textDark: '#102027',
-            border: '#B0BEC5',
-            shadow: 'rgba(38, 50, 56, 0.1)',
-            glass: {
-                tint: 'rgba(236, 239, 241, 0.7)',
-                border: 'rgba(176, 190, 197, 0.3)',
-                glow: 'rgba(255, 87, 34, 0.2)',
-                shadow: 'rgba(38, 50, 56, 0.1)',
-                highlight: 'rgba(255, 255, 255, 0.1)',
-                backdrop: 'rgba(236, 239, 241, 0.5)'
-            },
-            states: {
-                focus: '#2196F3',
-                attention: '#FFC107',
-                error: '#F44336',
-                success: '#4CAF50'
-            }
-        },
-        typography: {
-            fontFamily: {
-                base: 'Roboto, system-ui, sans-serif',
-                heading: 'Roboto, system-ui, sans-serif',
-                mono: 'Roboto Mono, monospace'
-            },
-            fontSize: {
-                xs: '0.75rem',
-                sm: '0.875rem',
-                base: '1rem',
-                lg: '1.125rem',
-                xl: '1.25rem',
-                xxl: '1.5rem'
-            },
-            fontWeight: {
-                light: 300,
-                regular: 400,
-                medium: 500,
-                bold: 700
-            },
-            lineHeight: {
-                tight: 1.25,
-                normal: 1.5,
-                relaxed: 1.75
-            }
-        },
-        components: {
-            node: {
-                background: '#FFFFFF',
-                borderColor: '#B0BEC5',
-                borderWidth: '1px',
-                textColor: '#263238'
-            },
-            edge: {
-                color: '#78909C',
-                width: '2px',
-                hoverColor: '#455A64',
-                selectedColor: '#FF5722'
-            },
-            anchor: {
-                size: '8px',
-                color: '#78909C',
-                hoverColor: '#455A64',
-                activeColor: '#FF5722'
-            },
-            tooltip: {
-                background: '#263238',
-                textColor: '#FFFFFF',
-                borderRadius: '4px',
-                padding: '8px'
-            },
-            glass: {
-                blur: '10px',
-                opacity: 0.2,
-                borderOpacity: 0.2,
-                lightEffect: true,
-                lightIntensity: 0.5,
-                lightColor: '#ffffff',
-                tint: 'rgba(255, 255, 255, 0.1)',
-                glowRadius: '15px'
-            }
-        },
-        transitions: {
-            duration: {
-                fast: '150ms',
-                normal: '300ms',
-                slow: '450ms'
-            },
-            easing: {
-                standard: 'cubic-bezier(0.4, 0, 0.2, 1)',
-                accelerate: 'cubic-bezier(0.4, 0, 1, 1)',
-                decelerate: 'cubic-bezier(0, 0, 0.2, 1)',
-                sharp: 'cubic-bezier(0.4, 0, 0.2, 1)',
-                linear: 'linear'
-            }
-        },
-        spatial: {
-            spacing: {
-                xs: '0.25rem',
-                sm: '0.5rem',
-                md: '1rem',
-                lg: '1.5rem',
-                xl: '2rem'
-            },
-            borderRadius: {
-                sm: '0.25rem',
-                md: '0.5rem',
-                lg: '1rem',
-                full: '9999px'
-            },
-            elevation: {
-                low: '0 2px 4px rgba(38, 50, 56, 0.1)',
-                medium: '0 4px 8px rgba(38, 50, 56, 0.1)',
-                high: '0 8px 16px rgba(38, 50, 56, 0.1)'
-            }
-        },
-        effects: {
-            glass: {
-                base: {
-                    blur: '10px',
-                    opacity: 0.2,
-                    borderOpacity: 0.2,
-                    lightEffect: true,
-                    lightIntensity: 0.5
-                },
-                strong: {
-                    blur: '20px',
-                    opacity: 0.3,
-                    borderOpacity: 0.3,
-                    lightEffect: true,
-                    lightIntensity: 0.7
-                }
-            },
-            lighting: {
-                ambient: 'rgba(255, 255, 255, 0.1)',
-                key: 'rgba(255, 255, 255, 0.2)',
-                fill: 'rgba(255, 255, 255, 0.05)',
-                intensity: 0.5,
-                angle: 45
-            }
+            primary: '#2563eb',
+            secondary: '#4f46e5',
+            accent: '#06b6d4',
+            background: '#ffffff'
         }
     },
     routes: {
         browse: {
-            id: 'browse',
-            label: 'Browse Systems',
             path: '/admin/browse',
-            icon: 'dashboard',
-            description: 'Browse system components',
-            requiresAuth: true,
-            roles: ['admin'],
-            metadata: {
-                order: 1,
-                category: 'system',
-                features: ['system-browse']
+            component: 'pages/BrowsePage.svelte',
+            meta: {
+                title: 'Browse Systems',
+                description: 'Browse system components',
+                requiresAuth: true,
+                roles: ['admin']
             }
         },
         list: {
-            id: 'list',
-            label: 'Add Component',
             path: '/admin/list',
-            icon: 'add_circle',
-            description: 'Add new system component',
-            requiresAuth: true,
-            roles: ['admin'],
-            metadata: {
-                order: 2,
-                category: 'system',
-                features: ['component-creation']
+            component: 'pages/ListPage.svelte',
+            meta: {
+                title: 'Add Component',
+                description: 'Add new system component',
+                requiresAuth: true,
+                roles: ['admin']
             }
         },
         explore: {
-            id: 'explore',
-            label: 'System Health',
             path: '/admin/explore',
-            icon: 'health_and_safety',
-            description: 'Monitor system health',
-            requiresAuth: true,
-            roles: ['admin'],
-            metadata: {
-                order: 3,
-                category: 'monitoring',
-                features: ['health-monitoring']
+            component: 'pages/ExplorePage.svelte',
+            meta: {
+                title: 'System Health',
+                description: 'Monitor system health',
+                requiresAuth: true,
+                roles: ['admin']
             }
         },
         services: {
-            id: 'services',
-            label: 'System Services',
             path: '/admin/services',
-            icon: 'miscellaneous_services',
-            description: 'Manage system services',
-            requiresAuth: true,
-            roles: ['admin'],
-            metadata: {
-                order: 4,
-                category: 'services',
-                features: ['service-management']
+            component: 'pages/ServicesPage.svelte',
+            meta: {
+                title: 'System Services',
+                description: 'Manage system services',
+                requiresAuth: true,
+                roles: ['admin']
             }
         },
         connect: {
-            id: 'connect',
-            label: 'Support',
             path: '/admin/connect',
-            icon: 'support',
-            description: 'System support and help',
-            requiresAuth: true,
-            roles: ['admin'],
-            metadata: {
-                order: 5,
-                category: 'support',
-                features: ['admin-support']
+            component: 'pages/ConnectPage.svelte',
+            meta: {
+                title: 'Support',
+                description: 'System support and help',
+                requiresAuth: true,
+                roles: ['admin']
             }
         }
     },
@@ -361,8 +199,7 @@ export const adminConfig: VistaConfig = {
                 requiresAuth: true,
                 roles: ['admin'],
                 metadata: {
-                    category: 'tools',
-                    features: ['admin-tools']
+                    category: 'tools'
                 }
             },
             {
@@ -374,8 +211,7 @@ export const adminConfig: VistaConfig = {
                 requiresAuth: true,
                 roles: ['admin'],
                 metadata: {
-                    category: 'config',
-                    features: ['system-config']
+                    category: 'config'
                 },
                 subItems: [
                     { id: '/admin/config/general', label: 'General', path: '/admin/config/general', icon: 'settings' },
@@ -392,8 +228,7 @@ export const adminConfig: VistaConfig = {
                 requiresAuth: true,
                 roles: ['admin'],
                 metadata: {
-                    category: 'security',
-                    features: ['security-management']
+                    category: 'security'
                 }
             },
             {
@@ -405,8 +240,7 @@ export const adminConfig: VistaConfig = {
                 requiresAuth: true,
                 roles: ['admin'],
                 metadata: {
-                    category: 'backup',
-                    features: ['system-backup']
+                    category: 'backup'
                 }
             },
             {
@@ -419,7 +253,9 @@ export const adminConfig: VistaConfig = {
                 roles: ['admin'],
                 metadata: {
                     category: 'ai',
-                    features: ['ai-config']
+                    tags: ['ai-config'],
+                    version: '1.0.0'
+
                 }
             },
             {
@@ -431,8 +267,7 @@ export const adminConfig: VistaConfig = {
                 requiresAuth: true,
                 roles: ['admin'],
                 metadata: {
-                    category: 'automation',
-                    features: ['automation-config']
+                    category: 'automation',  
                 }
             }
         ]
@@ -443,20 +278,23 @@ export const adminConfig: VistaConfig = {
         voice: true,
         ai: true,
         monitoring: true,
-        analytics: true
+        analytics: true,
+        search: true,
+        notifications: true,
+        help: true
     },
     metadata: {
-        version: '2.0.0',
-        category: 'system',
-        tags: ['admin', 'system', 'management'],
-        permissions: ['admin', 'system-management'],
+        version: '1.0.0',
+        category: 'systemadmin',
+        tags: ['system-administration'],
+        permissions: [],
         analytics: {
-            features: [
-                'advanced-monitoring',
-                'ai-integration',
-                'resource-management',
-                'security-controls'
-            ]
+            trackingId: '',
+            features: []
+        },
+        cache: {
+            ttl: 0,
+            strategy: ''
         }
     }
-};
+};  

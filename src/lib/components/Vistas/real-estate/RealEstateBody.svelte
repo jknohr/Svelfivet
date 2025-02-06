@@ -17,19 +17,22 @@ Usage:
 <script lang="ts">
     import BaseContentLayout from '$lib/components/Layouts/Body/Content/BaseContentLayout.svelte';
     import { BASE } from '$lib/components/Theme/SpatialDesign';
-    import type { Snippet } from 'svelte';
     import PanelLoader from '$lib/utils/panels/PanelLoader.svelte';
     import { showPanel, hidePanel } from '$lib/utils/panels/store';
     import { realEstateConfig } from '../real-estate';
+    import IDSnippetContainer from '$lib/services/neuralid/IDSnippetContainer.svelte';
+    import { SnippetTypes } from '$lib/services/neuralid/IDSnippets';
+    import type { IDNode } from '$lib/services/neuralid/id-relations';
 
-    <!-- Component state -->
+    // Component state
     let pageTitle = $state('Real Estate Vista');
     let isLoading = $state(false);
+    let selectedPropertyId = $state<string | null>(null);
 
-    <!-- Derived state -->
+    // Derived state
     let displayTitle = $derived(`${pageTitle} ${isLoading ? '- Loading...' : ''}`);
 
-    <!-- Load panels based on route -->
+    // Load panels based on route
     $effect(() => {
         // Show filters by default
         showPanel({
@@ -43,14 +46,13 @@ Usage:
             }
         });
 
-        // Show property details when a property is selected from the Vista state
-        const selectedPropertyId = $state(null);
+        // Show property details when a property is selected
         if (selectedPropertyId) {
             showPanel({
                 id: 'property-details',
                 component: 'components/Vistas/real-estate/panels/PropertyDetails.svelte',
                 position: 'right',
-                props: { propertyId },
+                props: { propertyId: selectedPropertyId },
                 metadata: {
                     title: 'Property Details',
                     icon: 'info',
@@ -62,50 +64,44 @@ Usage:
         }
     });
 
-    // Main content snippet
-    const mainContent: Snippet = () => {
-        return () => `
-            <div class="real-estate-content">
-                <h1>{displayTitle}</h1>
-                <div class="content-area">
-                    {#if isLoading}
-                        <p>Loading...</p>
-                    {:else}
-                        <slot />
-                    {/if}
-                </div>
-            </div>
-        `;
-    };
-
-    // Panel loader snippets
-    const leftPanel: Snippet = () => {
-        return () => `<PanelLoader position="left" />`;
-    };
-
-    const rightPanel: Snippet = () => {
-        return () => `<PanelLoader position="right" />`;
-    };
+    // Track content children
+    let contentChildren = $state<IDNode[]>([]);
+    
+    function handleContentChange(children: IDNode[]) {
+        contentChildren = children;
+    }
 </script>
 
 <BaseContentLayout
     spatialConfig={BASE}
-    {mainContent}
-    leftComponent={leftPanel}
-    rightComponent={rightPanel}
     dimensions={{
         leftSidebarWidth: '250px',
         rightSidebarWidth: '250px',
         mainContentWidth: 'auto'
     }}
-/>
+>
+    <div>
+        <h1>{displayTitle}</h1>
+        <IDSnippetContainer
+            type={SnippetTypes.CONTAINER}
+            metadata={{
+                vistaType: 'real-estate',
+                isLoading
+            }}
+            onChildrenChange={handleContentChange}
+        />
+    </div>
+    
+    <PanelLoader position="left" />
+    <PanelLoader position="right" />
+</BaseContentLayout>
 
 <style>
-    .real-estate-content {
+    div {
         height: 100%;
     }
 
-    .content-area {
+    div {
         margin-top: var(--spacing-md);
     }
 

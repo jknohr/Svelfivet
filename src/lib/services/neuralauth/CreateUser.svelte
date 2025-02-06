@@ -1,7 +1,7 @@
 <svelte:options runes={true} />
 
 <script lang="ts">
-    import { Divider } from '$lib/components/Theme/Divider';
+    import SectionDivider from '$lib/components/Atoms/SectionDivider/SectionDivider.svelte';
     
     // Props
     let { onComplete = () => {} } = $props();
@@ -28,7 +28,7 @@
     let currentSection = $state('personal');
 
     // Save progress for current section
-    function saveSection(section: string) {
+    function saveSection(section: keyof typeof formData) {
         formData[section].completed = true;
         // Here you would typically save to backend
         console.log(`Saved section: ${section}`, formData[section]);

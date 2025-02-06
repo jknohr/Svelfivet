@@ -1,0 +1,106 @@
+# Lens configurations for different VR/AR devices
+# Each device can have multiple configurations for different use cases
+
+devices:
+  quest2:
+    name: "Meta Quest 2"
+    defaultConfig:
+      lensDistortion:
+        k1: 0.12  # Primary radial distortion coefficient
+        k2: 0.04  # Secondary radial distortion coefficient
+        centerOffset:
+          x: 0.0045  # Slight offset from center
+          y: 0.0023
+      displayParams:
+        pixelDensity: 773  # PPD (pixels per degree) at center
+        panelResolution:
+          width: 1832
+          height: 1920
+        physicalDimensions:
+          width: 0.0762  # meters
+          height: 0.0762
+    gaming:  # Gaming-optimized config
+      lensDistortion:
+        k1: 0.13
+        k2: 0.045
+        centerOffset:
+          x: 0.0045
+          y: 0.0023
+    productivity:  # Productivity-optimized config
+      lensDistortion:
+        k1: 0.11
+        k2: 0.035
+        centerOffset:
+          x: 0.004
+          y: 0.002
+
+  quest3:
+    name: "Meta Quest 3"
+    defaultConfig:
+      lensDistortion:
+        k1: 0.09  # Improved pancake lenses
+        k2: 0.03
+        centerOffset:
+          x: 0.003
+          y: 0.002
+      displayParams:
+        pixelDensity: 1218  # Higher PPD
+        panelResolution:
+          width: 2064
+          height: 2208
+        physicalDimensions:
+          width: 0.0762
+          height: 0.0762
+
+  pico4:
+    name: "Pico 4"
+    defaultConfig:
+      lensDistortion:
+        k1: 0.085
+        k2: 0.028
+        centerOffset:
+          x: 0.0025
+          y: 0.002
+      displayParams:
+        pixelDensity: 1200
+        panelResolution:
+          width: 2160
+          height: 2160
+        physicalDimensions:
+          width: 0.0762
+          height: 0.0762
+
+  appleVision:
+    name: "Apple Vision Pro"
+    defaultConfig:
+      lensDistortion:
+        k1: 0.075  # Micro-OLED with custom optics
+        k2: 0.025
+        centerOffset:
+          x: 0.002
+          y: 0.002
+      displayParams:
+        pixelDensity: 3386  # Extremely high PPD
+        panelResolution:
+          width: 3660
+          height: 3200
+        physicalDimensions:
+          width: 0.0762
+          height: 0.0762
+
+# Default fallback configuration for unknown devices
+defaultConfig:
+  lensDistortion:
+    k1: 0.1
+    k2: 0.035
+    centerOffset:
+      x: 0.003
+      y: 0.002
+  displayParams:
+    pixelDensity: 1000  # Conservative estimate
+    panelResolution:
+      width: 2000
+      height: 2000
+    physicalDimensions:
+      width: 0.0762
+      height: 0.0762

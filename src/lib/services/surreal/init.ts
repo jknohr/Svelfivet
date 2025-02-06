@@ -70,6 +70,8 @@ export interface DatabaseServices {
 export async function initializeDatabase(): Promise<DatabaseServices | null> {
   if (browser) {
     try {
+      // Get stored auth token if it exists
+      const storedToken = localStorage.getItem('auth_token');
       // Configure protocols
       const protocolConfig = getProtocolConfig(config.url);
 
@@ -87,6 +89,18 @@ export async function initializeDatabase(): Promise<DatabaseServices | null> {
       // Try primary protocol first
       try {
         await db.init();
+        
+        // If we have a stored token, authenticate with it
+        if (storedToken) {
+          try {
+            await db.setAuthToken(storedToken);
+          } catch (error) {
+            console.error('Failed to restore authentication:', error);
+            // Clear invalid token
+            localStorage.removeItem('auth_token');
+            localStorage.removeItem('auth_refresh_token');
+          }
+        }
       } catch (primaryError) {
         console.warn('Primary protocol failed, trying fallback...', primaryError);
         // Try fallback protocol

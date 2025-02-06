@@ -3,7 +3,7 @@ import { aiSearchConfig } from './aisearch';
 import { adminConfig } from './systemadmin';
 import { userConfig } from './user';
 
-import type { VistaConfig, NavigationItem } from '$lib/types/navigation';
+import type { VistaConfig, NavigationItem } from '$lib/types/vista.ts';
 import type { VistaType } from '$lib/types/vista';
 
 // Export all configurations

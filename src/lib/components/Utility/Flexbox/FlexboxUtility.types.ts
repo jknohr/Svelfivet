@@ -43,7 +43,10 @@ export interface FlexItemConfig {
  * Spatial configuration for flex container
  */
 export interface FlexSpatialConfig {
-  depth?: number;
+  depth?: number | 'base' | 'surface' | 'floating' | 'popup' | 'modal' | 'overlay' | 
+    'custom1' | 'custom2' | 'custom3' | 'custom4' | 'custom5' | 
+    'custom6' | 'custom7' | 'custom8' | 'custom9';
+  snapToDepth?: boolean;
   perspective?: number;
   rotateX?: number;
   rotateY?: number;

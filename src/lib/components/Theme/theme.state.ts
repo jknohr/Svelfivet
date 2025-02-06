@@ -131,6 +131,13 @@ let currentTheme = $state<ThemeConfig>({
             tint: 'rgba(255, 255, 255, 0.1)',
             glowRadius: '15px'
         }
+    },
+    virtualization: {
+        enabled: true,
+        overscan: 3,
+        chunkSize: 10,
+        scrollThreshold: 100,
+        measureTimeout: 150
     }
 });
 
@@ -205,11 +212,14 @@ let canvasTheme = $state({
 
 // Theme state management
 const defaultGlassConfig: GlassConfig = {
-    id: 'default',
+    blur: '10px',
     opacity: 0.5,
-    blur: 10,
-    border: 1,
-    radius: 8
+    borderOpacity: 1,
+    lightEffect: true,
+    lightIntensity: 0.5,
+    lightColor: '#ffffff',
+    tint: 'rgba(255, 255, 255, 0.1)',
+    glowRadius: '0px'
 };
 
 function createThemeState(): UnifiedThemeContext {
@@ -242,14 +252,19 @@ function createThemeState(): UnifiedThemeContext {
         // Glass effects
         glass: {
             createPane: (config: Partial<GlassConfig>): GlassConfig => {
-                const fullConfig: GlassConfig = {
-                    ...defaultGlassConfig,
-                    ...config
-                };
+                const fullConfig = { ...defaultGlassConfig, ...config };
                 return fullConfig;
             },
-            updatePane: (id: string, config: Partial<GlassConfig>): void => {},
-            registerPane: (id: string, config: GlassConfig): void => {}
+            updatePane: (id: string, config: Partial<GlassConfig>): void => {
+                // Update existing pane configuration
+            },
+            registerPane: (id: string, config: GlassConfig): void => {
+                // Register new pane configuration
+                if (id === 'default') {
+                    // Don't re-register default config
+                    return;
+                }
+            }
         },
 
         // Typography settings
@@ -286,6 +301,8 @@ function createThemeState(): UnifiedThemeContext {
 }
 
 const themeState = $state<UnifiedThemeContext>(createThemeState());
+
+themeState.glass.registerPane('default', defaultGlassConfig);
 
 export function useTheme(): UnifiedThemeContext {
     return themeState;

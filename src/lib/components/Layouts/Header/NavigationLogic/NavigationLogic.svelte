@@ -1,5 +1,5 @@
 <script lang="ts">
-    import type { NavigationItem, NavigationConfig } from '$lib/types/navigation';
+    import type { NavigationItem, NavigationConfig } from '$lib/types/vista';
     
     // Props
     let navigationItems: NavigationItem[] = [];

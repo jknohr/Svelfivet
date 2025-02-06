@@ -91,7 +91,7 @@
               aria-pressed={Boolean(activeControls[control.id])}
             >
               <span class="toggle-track">
-                <span class="toggle-thumb" />
+                <span class="toggle-thumb"></span>
               </span>
               <span class="sr-only">
                 {activeControls[control.id] ? 'Enabled' : 'Disabled'}
@@ -115,6 +115,7 @@
             <input
               type="range"
               id={control.id}
+              class="range-input"
               min={control.min}
               max={control.max}
               step={control.step}
@@ -143,7 +144,7 @@
 </UIScalingLayout>
 
 <style>
-  .control-panel {
+  :global(.control-panel) {
     display: flex;
     flex-direction: column;
     height: 100%;
@@ -255,27 +256,18 @@
     cursor: pointer;
   }
 
-  /* Range input styles */
-  .range-input {
-    width: 100%;
-    max-width: 200px;
-    height: 4px;
-    background: var(--surface-glass);
-    border-radius: var(--radius-full);
-    -webkit-appearance: none;
-  }
-
-  .range-input::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    width: 1rem;
-    height: 1rem;
-    background: var(--color-primary);
-    border-radius: 50%;
-    cursor: pointer;
-  }
-
   /* Text input styles */
   .text-input {
+    padding: var(--spacing-sm);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+    background: var(--surface-glass);
+    color: var(--text-primary);
+    font-size: var(--font-size-md);
+  }
+
+  /* Range input styles */
+  .range-input {
     padding: var(--spacing-sm);
     border-radius: var(--radius-md);
     border: 1px solid var(--border-color);
@@ -287,8 +279,8 @@
   /* Focus states */
   .toggle-button:focus-visible,
   .select-input:focus-visible,
-  .range-input:focus-visible,
-  .text-input:focus-visible {
+  .text-input:focus-visible,
+  .range-input:focus-visible {
     outline: 2px solid var(--focus-ring-color);
     outline-offset: 2px;
   }

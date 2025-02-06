@@ -1,10 +1,10 @@
 // lib/services/neuralid/IDSnippets.ts
-import { useIDContext } from './id-context';
-import { generateElementID } from './neuralID';
-import { IDMapper } from './id-mapper';
-import { $effect } from 'svelte';
-
-export interface SEOConfig {
+export { 
+    type SEOConfig,
+    type SnippetConfig,
+    SnippetTypes,
+    createSnippetConfig 
+} from './types'; {
     title?: string;
     description?: string;
     keywords?: string[];

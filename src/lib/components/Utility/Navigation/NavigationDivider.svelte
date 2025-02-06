@@ -4,7 +4,7 @@
     import type { Snippet } from 'svelte';
 
     // Props
-    let props = $props<{
+    type Props = {
         currentSection: string;
         currentSubsection?: string;
         sections: Array<{
@@ -17,41 +17,54 @@
                 icon?: string;
             }>;
         }>;
-        onSectionClick?: (sectionId: string) => void;
-        onSubsectionClick?: (sectionId: string, subsectionId: string) => void;
-    }>();
+        sectionclick?: (sectionId: string) => void;
+        subsectionclick?: (sectionId: string, subsectionId: string) => void;
+    };
+
+    let props = $props();
+    let { currentSection, currentSubsection, sections, sectionclick, subsectionclick }: Props = props;
 
     // Derived current section data
-    let currentSectionData = $derived(props.sections.find(s => s.id === props.currentSection));
+    type Section = Props['sections'][number];
+    type Subsection = NonNullable<Section['subsections']>[number];
+
+    let currentSectionData = $derived(props.sections.find((s: Section) => s.id === props.currentSection));
 </script>
 
 <div class="navigation-divider">
     <div class="section-path">
         {#if currentSectionData}
-            <div 
+            <button 
+                type="button"
                 class="section-item" 
-                onclick={() => props.onSectionClick?.(currentSectionData.id)}
+                onclick={() => props.onSectionClick?.(props.currentSection)}
+                onkeydown={(e) => e.key === 'Enter' && props.onSectionClick?.(props.currentSection)}
+                role="menuitem"
             >
                 {#if currentSectionData.icon}
                     <i class="material-icons">{currentSectionData.icon}</i>
                 {/if}
                 <span>{currentSectionData.label}</span>
-            </div>
+            </button>
 
             {#if props.currentSubsection && currentSectionData.subsections}
                 <div class="divider">
                     <i class="material-icons">chevron_right</i>
                 </div>
-                {#if const subsection = currentSectionData.subsections.find(s => s.id === props.currentSubsection)}
-                    <div 
+                {@const subsection = currentSectionData.subsections.find((s: Subsection) => s.id === props.currentSubsection)}
+                {#if subsection}
+                    <button 
+                        type="button"
                         class="section-item"
-                        onclick={() => props.onSubsectionClick?.(currentSectionData.id, subsection.id)}
+                        onclick={() => props.subsectionclick?.(currentSectionData.id, subsection.id)}
+                        onkeydown={(e) => e.key === 'Enter' && props.subsectionclick?.(currentSectionData.id, subsection.id)}
+                        role="menuitem"
                     >
                         {#if subsection.icon}
                             <i class="material-icons">{subsection.icon}</i>
                         {/if}
                         <span>{subsection.label}</span>
-                    </div>
+                    </button>
                 {/if}
             {/if}
         {/if}
@@ -60,16 +73,25 @@
     {#if currentSectionData?.subsections}
         <div class="subsections">
             {#each currentSectionData.subsections as subsection}
-                <div 
+                <button 
+                    type="button"
                     class="subsection-item"
                     class:active={subsection.id === props.currentSubsection}
                     onclick={() => props.onSubsectionClick?.(currentSectionData.id, subsection.id)}
+                    onkeydown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            props.onSubsectionClick?.(currentSectionData.id, subsection.id);
+                        }
+                    }}
+                    role="menuitem"
+                    aria-current={subsection.id === props.currentSubsection ? 'page' : undefined}
                 >
                     {#if subsection.icon}
-                        <i class="material-icons">{subsection.icon}</i>
+                        <i class="material-icons" aria-hidden="true">{subsection.icon}</i>
                     {/if}
                     <span>{subsection.label}</span>
-                </div>
+                </button>
             {/each}
         </div>
     {/if}

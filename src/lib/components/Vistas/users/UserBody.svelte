@@ -1,70 +1,160 @@
-<svelte:options runes={true} />
+<!-- UserProfile.svelte -->
+<svelte:options runes />
 
 <script lang="ts">
-    import BaseContentLayout from '$lib/components/Layouts/Body/Content/BaseContentLayout.svelte';
-    import { BASE } from '$lib/components/Theme/SpatialDesign';
-    import type { Snippet } from 'svelte';
+  // Importing $effect is implicit via runes (or from 'svelte/state' if needed)
+  import BaseContentLayout from '$lib/components/Layouts/Body/Content/BaseContentLayout.svelte';
+  import NavigationDivider from '$lib/components/Utility/Navigation/NavigationDivider.svelte';
+  import { BASE } from '$lib/components/Theme/SpatialDesign';
 
-    let pageTitle = $state('User Vista')
-    let isLoading = $state(false)
-    
-    // Example of derived state
-    let displayTitle = $derived(`${pageTitle} ${isLoading ? '- Loading...' : ''}`)
+  // Reactive state using runes:
+  let pageTitle = $state('User Profile');
+  let isActive = $state(false);
+  let contentElement: HTMLElement;
 
-    // Main content snippet
-    const mainContent: Snippet = () => {
-        return (
-            <div class="user-content">
-                <h1>{displayTitle}</h1>
-                <div class="content-area">
-                    <p>User Profile Content Area</p>
-                </div>
-            </div>
-        )
+  // Scroll to section helper:
+  function scrollToSection(sectionId: string) {
+    const element = document.getElementById(sectionId);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
     }
+  }
 
-    // Optional side panel snippets
-    const leftPanel: Snippet = () => {
-        return (
-            <div class="left-panel">
-                <h3>User Navigation</h3>
-                <!-- Add user navigation here -->
-            </div>
-        )
+  // Side effect: attach scroll listener once contentElement is set.
+  $effect(() => {
+    if (!contentElement) return;
+    function handleScroll() {
+      // Optionally update reactive state based on scrolling.
     }
-
-    const rightPanel: Snippet = () => {
-        return (
-            <div class="right-panel">
-                <h3>User Settings</h3>
-                <!-- Add user settings here -->
-            </div>
-        )
-    }
+    contentElement.addEventListener('scroll', handleScroll);
+    return () => contentElement.removeEventListener('scroll', handleScroll);
+  });
 </script>
 
 <BaseContentLayout
-    spatialConfig={BASE}
-    {mainContent}
-    leftComponent={leftPanel}
-    rightComponent={rightPanel}
-    dimensions={{
-        leftSidebarWidth: '250px',
-        rightSidebarWidth: '250px',
-        mainContentWidth: 'auto'
-    }}
+  spatialConfig={BASE}
+  dimensions={{
+    leftSidebarWidth: '250px',
+    mainContentWidth: 'auto'
+  }}
+  mainContent={() => (
+  <div class="content-wrapper">
+    <NavigationDivider 
+      currentSection={pageTitle}
+      sections={[{ id: 'profile', label: 'Profile', icon: 'person' }]}
+      onSectionClick={scrollToSection}
+    />
+    <div class="user-content" bind:this={contentElement}>
+      <section id="profile">
+        <h1>User Profile</h1>
+        <div class="profile-details">
+          <h3>User Information</h3>
+          <p>Name: John Doe</p>
+          <p>Email: john.doe@example.com</p>
+          <p>Role: Administrator</p>
+        </div>
+        <div class="profile-actions">
+          <button onclick={() => isActive = !isActive}>
+            {isActive ? 'Deactivate' : 'Activate'} Account
+          </button>
+        </div>
+      </section>
+    </div>
+  </div>
+{/snippet}
+  )
+{#snippet leftPanel()}
+  <div class="left-panel">
+    <h3>Quick Navigation</h3>
+    <nav>
+      <ul>
+        <li 
+          class:active={pageTitle === 'Profile'}
+          onclick={() => scrollToSection('profile')}
+        >
+          <span class="material-icons">person</span>
+          <span>Profile</span>
+        </li>
+      </ul>
+    </nav>
+  </div>
+{/snippet}
+
+<BaseContentLayout
+  spatialConfig={BASE}
+  dimensions={{
+    leftSidebarWidth: '250px',
+    mainContentWidth: 'auto'
+  }}
+  mainContent={mainContent}
+  leftComponent={leftPanel}
 />
 
 <style>
-    .user-content {
-        height: 100%;
-    }
-
-    .content-area {
-        margin-top: var(--spacing-md);
-    }
-
-    :global(.left-panel), :global(.right-panel) {
-        padding: var(--spacing-sm);
-    }
+  .content-wrapper {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+  .user-content {
+    flex: 1;
+    overflow-y: auto;
+    scroll-behavior: smooth;
+    padding: var(--spacing-md);
+  }
+  section {
+    margin-bottom: var(--spacing-xl);
+  }
+  .profile-details {
+    margin: var(--spacing-lg) 0;
+    padding: var(--spacing-lg);
+    background: var(--surface-background);
+    border-radius: var(--radius-md);
+  }
+  .profile-actions {
+    margin-top: var(--spacing-md);
+  }
+  .profile-actions button {
+    padding: var(--spacing-sm) var(--spacing-xl);
+    background: var(--primary);
+    color: var(--surface);
+    border: none;
+    border-radius: var(--radius-sm);
+    font-weight: var(--fontWeight-medium);
+    cursor: pointer;
+    transition: all var(--duration-fast) var(--easing-standard);
+  }
+  .profile-actions button:hover {
+    background: var(--states-focus);
+  }
+  :global(.left-panel) {
+    padding: var(--spacing-sm);
+  }
+  :global(.left-panel) nav ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    position: sticky;
+    top: var(--spacing-md);
+  }
+  :global(.left-panel) nav ul li {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm);
+    margin-bottom: var(--spacing-xs);
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+    transition: all 0.2s ease;
+  }
+  :global(.left-panel) nav ul li:hover {
+    background: var(--surface-hover);
+  }
+  :global(.left-panel) nav ul li.active {
+    background: var(--primary-container);
+    color: var(--on-primary-container);
+  }
+  :global(.left-panel) nav ul li .material-icons {
+    font-size: 1.25rem;
+  }
 </style>

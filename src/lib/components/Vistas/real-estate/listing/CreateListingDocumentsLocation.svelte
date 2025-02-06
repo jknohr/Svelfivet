@@ -2,49 +2,32 @@
   import type { Card, ListingCardContent } from '$lib/components/common/molecules/cards/cards';
   import { BaseCard } from '$lib/components/common/molecules/cards/base';
   import { Button } from '$lib/components/common';
-  import { createEventDispatcher } from 'svelte';
 
-  const dispatch = createEventDispatcher<{
-    step: { step: number; data: ListingCardContent };
-    analyze: { data: ListingCardContent };
-  }>();
+  let card = $state<Card & { content: ListingCardContent }>();
 
-  let { card } = $props<{
-    card: Card & { content: ListingCardContent };
-  }>();
+  let uploadedDocuments = $state<File[]>([]);
+  let uploadedImages = $state<File[]>([]);
 
-  let uploadedDocuments: File[] = [];
-  let uploadedImages: File[] = [];
-
-  function handleAnalyze() {
-    dispatch('analyze', { data: card.content });
-  }
-
-  function handlePrevious() {
-    dispatch('step', { step: 1, data: card.content });
-  }
-
-  function handleNext() {
-    dispatch('step', { step: 3, data: card.content });
-  }
+  const analyzeData = () => ({ data: card.content });
+  const stepData = (step: number) => ({ step, data: card.content });
 
   function handleDocumentUpload(event: Event) {
     const input = event.target as HTMLInputElement;
     if (input.files) {
-      uploadedDocuments = [...uploadedDocuments, ...Array.from(input.files)];
+      uploadedDocuments = Array.from(input.files);
     }
   }
 
   function handleImageUpload(event: Event) {
     const input = event.target as HTMLInputElement;
     if (input.files) {
-      uploadedImages = [...uploadedImages, ...Array.from(input.files)];
+      uploadedImages = Array.from(input.files);
     }
   }
 </script>
 
 <BaseCard {card}>
-  {#snippet front()}
+  {#snippet front(@render)}
     <div class="listing-location">
       <header>
         <h3>Location & Documents</h3>
@@ -56,7 +39,7 @@
           ariaExpanded={false}
           ariaHaspopup={false}
           ariaControls="analyze-content"
-          onClick={handleAnalyze}
+          onclick={() => analyzeData()}
         >
           Analyze with AI
         </Button>
@@ -120,7 +103,7 @@
               id="documents"
               multiple
               accept=".pdf,.doc,.docx"
-              on:change={handleDocumentUpload}
+              onchange={handleDocumentUpload}
             />
             {#if uploadedDocuments.length > 0}
               <ul class="file-list">
@@ -138,7 +121,7 @@
               id="images"
               multiple
               accept="image/*"
-              on:change={handleImageUpload}
+              onchange={handleImageUpload}
             />
             {#if uploadedImages.length > 0}
               <ul class="file-list">
@@ -160,7 +143,7 @@
           ariaExpanded={false}
           ariaHaspopup={false}
           ariaControls="prev-content"
-          onClick={handlePrevious}
+          onclick={() => stepData(1)}
         >
           Previous: Basic Info
         </Button>
@@ -172,14 +155,16 @@
           ariaExpanded={false}
           ariaHaspopup={false}
           ariaControls="next-content"
-          onClick={handleNext}
+          onclick={() => stepData(3)}
         >
           Next: Review & Submit
         </Button>
       </footer>
     </div>
   {/snippet}
+
 </BaseCard>
+
 
 <style>
   .listing-location {

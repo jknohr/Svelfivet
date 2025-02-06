@@ -1,17 +1,23 @@
 import { SurrealDBService } from '$lib/services/surreal/surrealDBService';
 import type { AuthResponse, LoginCredentials, RegisterData, DeviceProfile, User } from '$lib/services/neuralauth/types';
-import jwt from 'jsonwebtoken';
+import { sign, verify } from 'jsonwebtoken';
+import { AUTH_CONSTANTS, ERROR_MESSAGES } from './constants/auth';
 
 // Simple browser environment detection
 const browser = typeof window !== 'undefined';
 
 export class AuthService {
   private static instance: AuthService;
-  private readonly JWT_SECRET = 'your-secret-key'; // Move to env
-  private readonly MAX_DEVICES = 10;
+  private readonly JWT_SECRET = process.env.JWT_SECRET || 'fallback-dev-secret';
+  private readonly MAX_DEVICES = parseInt(process.env.MAX_DEVICES || '10');
   private currentUser: User | null = null;
   
-  private constructor(private db: SurrealDBService) { }
+  private constructor(private db: SurrealDBService) { 
+    // Ensure we're using the same instance of SurrealDBService
+    if (!this.db.isInitialized()) {
+      throw new Error('SurrealDBService must be initialized before creating AuthService');
+    }
+  }
 
   static getInstance(db: SurrealDBService): AuthService {
     if (!AuthService.instance) {
@@ -21,16 +27,16 @@ export class AuthService {
   }
 
   private generateJWT(userId: string, deviceId: string): string {
-    return jwt.sign(
+    return sign(
       { userId, deviceId },
       this.JWT_SECRET,
-      { expiresIn: '7d' }
+      { expiresIn: AUTH_CONSTANTS.JWT_EXPIRY }
     );
   }
 
   private verifyJWT(token: string): { userId: string; deviceId: string } | null {
     try {
-      return jwt.verify(token, this.JWT_SECRET) as { userId: string; deviceId: string };
+      return verify(token, this.JWT_SECRET) as { userId: string; deviceId: string };
     } catch {
       return null;
     }
@@ -48,9 +54,11 @@ export class AuthService {
     };
   }
 
-  private setToken(token: string) {
+  private async setToken(token: string) {
     if (browser) {
       localStorage.setItem('jwt_token', token);
+      // Sync token with SurrealDB service
+      await this.db.setAuthToken(token);
     }
   }
 
@@ -67,6 +75,25 @@ export class AuthService {
     }
   }
 
+  private loginAttempts = new Map<string, { count: number; lastAttempt: number }>();
+
+  private async checkRateLimit(email: string): Promise<void> {
+    const attempts = this.loginAttempts.get(email) || { count: 0, lastAttempt: Date.now() };
+    
+    // Reset attempts if lockout duration has passed
+    if (Date.now() - attempts.lastAttempt > AUTH_CONSTANTS.LOCKOUT_DURATION) {
+      attempts.count = 0;
+    }
+    
+    if (attempts.count >= AUTH_CONSTANTS.MAX_LOGIN_ATTEMPTS) {
+      throw new Error(ERROR_MESSAGES.RATE_LIMIT_EXCEEDED);
+    }
+    
+    attempts.count++;
+    attempts.lastAttempt = Date.now();
+    this.loginAttempts.set(email, attempts);
+  }
+
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
     try {
       const deviceProfile = await this.getCurrentDeviceProfile();
@@ -75,8 +102,8 @@ export class AuthService {
         id: string;
         email: string;
         role: 'user' | 'admin';
-        created: string;
-        updated: string;
+        createdAt: string;
+        updatedAt: string;
       }
 
       const results = await this.db.query<UserResult>(
@@ -103,32 +130,32 @@ export class AuthService {
         }
       );
 
-      const userResult = results[0];
+      const userResult = results.result?.[0];
       if (!userResult) throw new Error('Invalid credentials or max devices reached');
 
       const token = this.generateJWT(userResult.id, deviceProfile.id!);
 
       const user: User = {
         id: userResult.id,
+        name: userResult.name || '',
         email: userResult.email,
         role: userResult.role,
         roles: [userResult.role],
-        created: new Date(userResult.created),
-        updated: new Date(userResult.updated),
-        deviceProfiles: [],
-        maxDevices: this.MAX_DEVICES
+        status: 'active',
+        createdAt: new Date(userResult.createdAt).toISOString(),
+        updatedAt: new Date(userResult.updatedAt).toISOString(),
+        deviceCount: 0,
+        verifiedEmail: false,
+        twoFactorEnabled: false
       };
 
       this.currentUser = user;
       this.setToken(token);
 
       const response: AuthResponse = {
-        id: user.id,
-        email: user.email,
-        role: user.role,
-        created: user.created.toISOString(),
-        updated: user.updated.toISOString(),
         token,
+        refreshToken: token, // Using same token as refresh token for now
+        expiresIn: 3600, // 1 hour expiry
         user,
         deviceProfile: deviceProfile as DeviceProfile
       };
@@ -181,6 +208,6 @@ export class AuthService {
       { userId: decoded.userId }
     );
 
-    return results || [];
+    return results.result || [];
   }
 } 

@@ -14,7 +14,7 @@ Features:
   import { getContext } from 'svelte';
   import type { UnifiedThemeContext } from '$lib/components/Theme/Theme.types';
   import type { ImageProps } from './Image.types';
-  import { GlassPane } from '$lib/components/Theme/GlassPane.svelte';
+  import GlassPane from '$lib/components/Theme/GlassPane.svelte';
   import * as Lazy from 'svelte-lazy';
   import * as ExifReader from 'exifreader';
 
@@ -43,7 +43,11 @@ Features:
   let selectedFile = $state<File | null>(null);
   let exifTags = $state<Array<{key: string, value: string}>>([]);
   let scene = $state('');
-  let optionalMetadata = $state({});
+  let optionalMetadata = $state<{
+    countryCode?: string;
+    creatorCity?: string;
+    location?: string;
+  }>({});
 
   // Derived styles
   const styles = $derived({
@@ -74,18 +78,25 @@ Features:
         }));
 
       // Update alt and scene if possible
-      if (tags['AltTextAccessibility']) {
-        alt = tags['AltTextAccessibility'].scene || alt;
+      const expandedTags = tags as Record<string, any>;
+      if (expandedTags?.AltTextAccessibility?.scene) {
+        alt = expandedTags.AltTextAccessibility.scene;
       }
-      if (tags['Scene']) {
-        scene = tags['Scene'].scene || '';
+      if (expandedTags?.Scene?.scene) {
+        scene = expandedTags.Scene.scene;
       }
 
       // Load other optional metadata
       optionalMetadata = {};
-      if (tags['CreatorCountry']) optionalMetadata.countryCode = tags['CountryCode'].value;
-      if (tags['CreatorCity']) optionalMetadata.creatorCity = tags['CreatorCity'].value;
-      if (tags['Location']) optionalMetadata.location = tags['Location'].value;
+      if (expandedTags?.CountryCode?.value) {
+        optionalMetadata.countryCode = expandedTags.CountryCode.value;
+      }
+      if (expandedTags?.CreatorCity?.value) {
+        optionalMetadata.creatorCity = expandedTags.CreatorCity.value;
+      }
+      if (expandedTags?.Location?.value) {
+        optionalMetadata.location = expandedTags.Location.value;
+      }
     } catch (error) {
       console.error('Error reading EXIF data:', error);
     }
@@ -101,7 +112,7 @@ Features:
     }
   }
 
-  function handleSubmit(event) {
+  function handleSubmit(event: Event) {
     event.preventDefault();
     // Your form handling logic here
   }

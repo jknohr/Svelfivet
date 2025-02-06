@@ -31,9 +31,9 @@ Features:
   import { getContext, setContext } from 'svelte';
   import type { 
     UnifiedThemeContext,
-    ScaleContext,
     SpatialEnvironment 
   } from '$lib/components/Theme/Theme.types';
+  import type { ScaleContext } from '$lib/types/spatial';
   import type {
     FlexboxUtilityProps,
     FlexItemConfig,
@@ -95,7 +95,7 @@ Features:
   let isTransitioning = $state(false);
 
   // Reactive values using derived
-  const effectiveScale = $derived(scale.scale);
+  const effectiveScale = $derived(scale.factor);
   const currentEnvironment = $derived(environment as SpatialEnvironment);
 
   // Calculate effective gap sizes
@@ -218,8 +218,26 @@ Features:
   }
 
   // Compute dynamic styles
+  // Get effective depth value from theme or numeric value
+  const effectiveDepth = $derived(() => {
+    const themeConfig = theme.utils.getComputedTheme();
+    if (typeof spatial.depth === 'string' && themeConfig.spatial?.depth) {
+      const depthKey = spatial.depth as keyof typeof themeConfig.spatial.depth;
+      return themeConfig.spatial.depth[depthKey] ?? 0;
+    }
+    if (spatial.snapToDepth && typeof spatial.depth === 'number' && themeConfig.spatial?.depth) {
+      // Find closest depth level
+      const depthLevels = Object.values(themeConfig.spatial.depth);
+      const closestDepth = depthLevels.reduce((prev, curr) => 
+        Math.abs(curr - spatial.depth) < Math.abs(prev - spatial.depth) ? curr : prev
+      );
+      return closestDepth;
+    }
+    return spatial.depth || 0;
+  });
+
   const styles = $derived(() => {
-    const transitionConfig = theme.utils.getComputedTheme().transitions;
+    const transitionConfig = theme.utils.getComputedTheme().transitionConfig;
     const { row, column } = gapSizes();
     
     return {
@@ -231,8 +249,8 @@ Features:
       alignContent,
       gap: `${row}px ${column}px`,
       transform: spatialTransform,
-      transition: isTransitioning ? `all ${transitionConfig.duration.normal} ${transitionConfig.easing.standard}` : '',
-      '--flex-depth': spatial.depth || 0,
+      transition: isTransitioning ? `all ${transitionConfig.durationValues.normal} ${transitionConfig.easingValues.standard}` : '',
+      '--flex-depth': effectiveDepth,
       '--flex-scale': effectiveScale
     };
   });

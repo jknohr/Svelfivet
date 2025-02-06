@@ -10,13 +10,30 @@
   import { createThemeComposition } from '$lib/components/Theme/ThemeComposition';
   import type { Snippet } from 'svelte';
 
-
+  interface $$Props {
+    accessibility?: LayoutAccessibility;
+    spatialConfig?: typeof BASE | typeof SPACE_3D;
+    mainContent?: Snippet;
+    leftComponent?: Snippet;
+    rightComponent?: Snippet;
+    dimensions?: {
+      headerHeight?: string;
+      footerHeight?: string;
+      leftSidebarWidth?: string;
+      rightSidebarWidth?: string;
+      mainContentWidth?: string;
+      expandedHeaderHeight?: string;
+      expandedSidebarWidth?: string;
+    };
+    filters?: Record<string, any>;
+    children?: Snippet;
+  }
 
   // Props with defaults using $props
   let { 
     accessibility = defaultAccessibility,
     spatialConfig = BASE,
-    mainContent = () => undefined,
+    mainContent,
     leftComponent = () => undefined,
     rightComponent = () => undefined,
     dimensions = {
@@ -28,24 +45,9 @@
       expandedHeaderHeight: '120px',
       expandedSidebarWidth: '300px'
     },
-    filters = {}
-  } = $props<{
-    accessibility?: LayoutAccessibility;
-    spatialConfig?: typeof BASE;
-    mainContent?: Snippet<any>;
-    leftComponent?: Snippet<any>;
-    rightComponent?: Snippet<any>;
-    dimensions?: {
-      headerHeight?: string;
-      footerHeight?: string;
-      leftSidebarWidth?: string;
-      rightSidebarWidth?: string;
-      mainContentWidth?: string;
-      expandedHeaderHeight?: string;
-      expandedSidebarWidth?: string;
-    };
-    filters?: Record<string, any>;
-  }>();
+    filters = {},
+    children
+  } = $props();
 
   // Default immutable states
   const defaultAccessibilityState = $state.raw(defaultAccessibility);
@@ -102,6 +104,9 @@
       class="content-main"
     >
       {@render mainContent()}
+      {#if children}
+        {@render children()}
+      {/if}
     </div>
 
     {#if rightComponent}

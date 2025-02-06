@@ -107,7 +107,7 @@
         return anchorsCreated;
     }
 
-    //Button Clicks for Anchors
+    // Button Clicks for Anchors
     const handleAnchorLockedButtonClick = (e: Event) => {
         const target = e.target as HTMLInputElement;
         anchorLocked = target.checked;

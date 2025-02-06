@@ -1,4 +1,7 @@
-import type { Node, Edge, GroupBox, NodeKey, EdgeKey, GroupKey, XYPair, Dimensions, Graph, GraphKey } from './logic';
+import type { Node, Edge, NodeKey, EdgeKey, GroupKey, XYPair, Dimensions, Graph, GraphKey } from './logic';
+
+// Re-export types from logic
+export type { GroupBox, InputStore, OutputStore } from './logic';
 
 // Version Types
 export type Version = string;

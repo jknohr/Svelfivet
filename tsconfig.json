@@ -1,24 +1,17 @@
 {
+	"extends": "./.svelte-kit/tsconfig.json",
 	"compilerOptions": {
 		"allowJs": true,
 		"checkJs": true,
 		"esModuleInterop": true,
-		"outDir": "./dist",
 		"forceConsistentCasingInFileNames": true,
 		"resolveJsonModule": true,
 		"skipLibCheck": true,
 		"sourceMap": true,
 		"strict": true,
-		"lib": ["es2022", "DOM", "DOM.Iterable"],
 		"moduleResolution": "node",
 		"module": "es2022",
-		"target": "es2022",
-		"baseUrl": ".",
-		"paths": {
-			"$lib": ["src/lib"],
-			"$lib/*": ["src/lib/*"]
-		},
-		"types": ["svelte"]
+		"target": "es2022"
 	},
 	"include": ["src/**/*.d.ts", "src/**/*.ts", "src/**/*.js", "src/**/*.svelte"],
 	"exclude": ["node_modules/*", "__sapper__/*", "public/*"]

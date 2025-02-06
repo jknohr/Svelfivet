@@ -1,16 +1,19 @@
-<!-- lib/services/neuralid/IDSnippetContainer.svelte -->
 <script lang="ts">
-    import { IDSnippet, createSnippetConfig, SnippetTypes } from './IDSnippets';
+    
+    export const ssr = false;
+    export const NeuralID = 'NeuralID';
+    import IDSnippet from './IDSnippet.svelte';
+    import { createSnippetConfig, SnippetTypes } from './types';
     import { IDElement } from './IDElement';
     import type { IDNode } from './id-relations';
 
-    interface $$Props {
+    let props = $props<{
         type?: (typeof SnippetTypes)[keyof typeof SnippetTypes];
         allowedTypes?: string[];
         metadata?: Record<string, any>;
         class?: string;
         onChildrenChange?: (children: IDNode[]) => void;
-    }
+    }>();
 
     let { 
         type = SnippetTypes.CONTAINER,
@@ -18,7 +21,7 @@
         metadata = {},
         class: className = '',
         onChildrenChange
-    } = $props<$$Props>();
+    } = props;
 
     // Initialize element with state management
     const element = new IDElement(type, metadata);
@@ -57,58 +60,46 @@
 
     // Child snippet rendering
     function renderChild(child: IDNode) {
-        return {
-            #snippet() {
-                const childConfig = createSnippetConfig({
-                    type: child.type,
-                    metadata: {
-                        ...child.metadata,
-                        parentId: element.elementId
-                    }
-                });
-
-                return (
-                    <div 
-                        class="neural-snippet-child"
-                        data-child-id={child.id}
-                        data-child-type={child.type}
-                    >
-                        <IDSnippet config={childConfig}>
-                            {#snippet}
-                                {child.metadata?.content || ''}
-                            {/snippet}
-                        </IDSnippet>
-                    </div>
-                );
+        const childConfig = createSnippetConfig({
+            type: child.type,
+            metadata: {
+                ...child.metadata,
+                parentId: element.elementId
             }
+        });
+
+        return {
+            config: childConfig,
+            child
         };
     }
+
 </script>
 
 <div 
     class="neural-snippet-wrapper {className}"
     onmouseenter={handleMouseEnter}
     onmouseleave={handleMouseLeave}
+    role="group"
+    aria-label="Interactive snippet container"
 >
-    <IDSnippet config={snippetConfig}>
-        {#snippet}
-            <div class="neural-snippet-container">
-                <!-- Render custom content if provided -->
-                {#if $$slots.default}
-                    {@render $$slots.default()}
-                {/if}
-
-                <!-- Render children snippets -->
-                {#if children.length > 0}
-                    <div class="neural-snippet-children">
-                        {#each children as child (child.id)}
-                            {@render renderChild(child)}
-                        {/each}
+    <IDSnippet config={snippetConfig} />
+    <div class="neural-snippet-container">
+        <!-- Render children snippets -->
+        {#if children.length > 0}
+            <div class="neural-snippet-children">
+                {#each children as child (child.id)}
+                    <div 
+                        class="neural-snippet-child"
+                        data-child-id={child.id}
+                        data-child-type={child.type}
+                    >
+                        <IDSnippet config={renderChild(child).config} />
                     </div>
-                {/if}
+                {/each}
             </div>
-        {/snippet}
-    </IDSnippet>
+        {/if}
+    </div>
 </div>
 
 <style>

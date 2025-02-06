@@ -1,6 +1,6 @@
 # Neural Authentication Service
 
-A modern authentication service implementation using Svelte 5's state management features and SurrealDB. This service provides comprehensive user authentication, device management, and session handling capabilities.
+A secure, modern authentication service implementation using Svelte 5's state management features and SurrealDB. This service provides comprehensive user authentication, device management, and session handling capabilities with strong security features and TypeScript support.
 
 ## Directory Structure
 
@@ -8,16 +8,29 @@ A modern authentication service implementation using Svelte 5's state management
 neuralauth/
 ├── api/              # API endpoints and handlers
 ├── components/       # Reusable auth components
-├── store/           # Svelte 5 state management
-├── types/           # TypeScript type definitions
-├── auth.ts          # Core authentication service
-├── scope.ts         # SurrealDB auth scope definitions
-└── user.ts          # User type definitions
+├── constants/        # Constants and configuration
+├── middleware/       # Auth guards and middleware
+├── store/            # Svelte 5 state management
+├── tests/            # Unit tests
+├── types/            # TypeScript type definitions
+├── validation/       # Form validation schemas
+├── auth.ts           # Core authentication service
+├── scope.ts          # SurrealDB auth scope definitions
+└── user.ts           # User type definitions
 ```
 
 ## Core Features
 
-### 1. State Management (store/auth.ts)
+### 1. Security Features
+- Rate limiting and brute force protection
+- JWT-based authentication with refresh tokens
+- Password strength validation
+- Two-factor authentication support
+- Device tracking and management
+- Email verification
+- Role-based access control
+
+### 2. State Management
 Uses Svelte 5's new reactivity primitives:
 ```typescript
 export let currentUser = $state<User | null>(null);
@@ -30,15 +43,16 @@ Key Features:
 - Reactive user state management
 - Derived authentication state
 - Token persistence in localStorage
-- Type-safe state management
+- Type-safe state management with strict typing
 
-### 2. Authentication Service (auth.ts)
+### 3. Authentication Service
 
 Core authentication functionality including:
-- JWT-based authentication
-- Device management
-- Session handling
-- Security features
+- Secure JWT-based authentication
+- Multi-device management with limits
+- Session handling and refresh tokens
+- Rate limiting and security features
+- Form validation with comprehensive error handling
 
 ```typescript
 class AuthService {

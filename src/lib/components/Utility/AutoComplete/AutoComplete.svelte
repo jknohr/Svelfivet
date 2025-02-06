@@ -44,17 +44,13 @@
     let debounceTimeout: number;
 
     // Calculate filtered suggestions
-    const filteredSuggestions = $derived<string[]>([]);
-    $effect(() => {
-        if (inputValue.length < minChars) {
-            filteredSuggestions.length = 0;
-        } else {
-            const filtered = items
+    let filteredSuggestions = $derived(
+        inputValue.length < minChars 
+            ? [] 
+            : items
                 .filter((item: string) => filterFn(item, inputValue))
-                .slice(0, maxSuggestions);
-            filteredSuggestions.splice(0, filteredSuggestions.length, ...filtered);
-        }
-    });
+                .slice(0, maxSuggestions)
+    );
 
     // Cleanup function for debounce timeout
     onDestroy(() => {
@@ -64,7 +60,7 @@
     // Handle input with debouncing
     function handleInput() {
         clearTimeout(debounceTimeout);
-        debounceTimeout = setTimeout(() => {
+        debounceTimeout = setTimeout((number: number) => {
             suggestions = Array.from(filteredSuggestions);
             showSuggestions = suggestions.length > 0;
             selectedIndex = -1;

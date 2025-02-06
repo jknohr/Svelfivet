@@ -41,14 +41,14 @@ export class AuthService {
                 RETURN $user;
             `;
 
-            const [result] = await this.db.query<UserAuthData>(query, {
+            const result = await this.db.query<UserAuthData>(query, {
                 user_id,
                 username,
                 email,
                 password
             });
 
-            if (!result) {
+            if (!result.result?.[0]) {
                 throw new Error('Failed to create user');
             }
 
@@ -60,7 +60,7 @@ export class AuthService {
                 DEFINE DATABASE profile;
             `);
 
-            return result;
+            return result.result?.[0] as UserAuthData;
         } catch (error) {
             console.error('Signup failed:', error);
             throw new Error('Signup failed');
@@ -100,7 +100,7 @@ export class AuthService {
                 };
             `;
 
-            const [result] = await this.db.query<{ user: UserAuthData; session: SessionData }>(
+            const result = await this.db.query<{ user: UserAuthData; session: SessionData }>(
                 query,
                 {
                     identifier,
@@ -109,14 +109,14 @@ export class AuthService {
                 }
             );
 
-            if (!result?.user || !result?.session) {
+            if (!result.result?.[0]?.user || !result.result?.[0]?.session) {
                 throw new Error('Invalid credentials');
             }
 
             // Store the session token
-            this.db.emit('authenticate', result.session.session_id);
+            this.db.emit('authenticate', result.result[0].session.session_id);
 
-            return result;
+            return result.result[0];
         } catch (error) {
             console.error('Login failed:', error);
             throw new Error('Login failed');
@@ -149,8 +149,8 @@ export class AuthService {
                 RETURN $session[0];
             `;
 
-            const [result] = await this.db.query<SessionData>(query, { session_id });
-            return result || null;
+            const result = await this.db.query<SessionData>(query, { session_id });
+            return result.result?.[0] as SessionData || null;
         } catch (error) {
             console.error('Session validation failed:', error);
             return null;
@@ -159,11 +159,11 @@ export class AuthService {
 
     async getUserData(user_id: string): Promise<UserAuthData | null> {
         try {
-            const [result] = await this.db.query<UserAuthData>(
+            const result = await this.db.query<UserAuthData>(
                 'SELECT user_id, username, email, created_at, last_login FROM user_auth_index WHERE user_id = $user_id',
                 { user_id }
             );
-            return result || null;
+            return result.result?.[0] as UserAuthData || null;
         } catch (error) {
             console.error('Failed to get user data:', error);
             return null;
@@ -185,13 +185,13 @@ export class AuthService {
                 RETURN $update;
             `;
 
-            const [result] = await this.db.query(query, {
+            const result = await this.db.query(query, {
                 user_id,
                 current_password,
                 new_password
             });
 
-            return !!result;
+            return !!result.result?.[0];
         } catch (error) {
             console.error('Password update failed:', error);
             throw new Error('Password update failed');
@@ -213,13 +213,13 @@ export class AuthService {
                 RETURN $update;
             `;
 
-            const [result] = await this.db.query(query, {
+            const result = await this.db.query(query, {
                 user_id,
                 new_email,
                 password
             });
 
-            return !!result;
+            return !!result.result?.[0];
         } catch (error) {
             console.error('Email update failed:', error);
             throw new Error('Email update failed');

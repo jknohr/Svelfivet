@@ -219,11 +219,20 @@ export interface TransitionConfig {
   };
 }
 
+export interface VirtualizationConfig {
+  enabled: boolean;
+  overscan: number;
+  chunkSize: number;
+  scrollThreshold: number;
+  measureTimeout: number;
+}
+
 export interface ThemeConfig {
   colors: ColorConfig;
   typography: TypographyConfig;
   components: ComponentConfig;
   transitionConfig: TransitionConfig;
+  virtualization?: VirtualizationConfig;
   effects: {
     glass: GlassEffectConfig;
     lightingConfig: {
@@ -243,6 +252,16 @@ export interface ThemeConfig {
       popup: number;
       modal: number;
       overlay: number;
+      // Custom depth levels
+      custom1: number;
+      custom2: number;
+      custom3: number;
+      custom4: number;
+      custom5: number;
+      custom6: number;
+      custom7: number;
+      custom8: number;
+      custom9: number;
     };
     space3d?: {
       layerGap: number;

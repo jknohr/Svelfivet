@@ -41,12 +41,24 @@
     "dist"
   ],
   "dependencies": {
+    "@speechmatics/auth": "^0.0.1",
+    "@speechmatics/flow-client": "^0.2.1",
+    "@speechmatics/real-time-client": "^5.0.9",
+    "@sveltejs/kit": "^2.5.0",
     "@types/d3": "^7.4.3",
+    "@types/exif": "^0.6.5",
+    "@types/exif-js": "^2.3.1",
+    "@types/jsonwebtoken": "^9.0.8",
+    "@types/socket.io-client": "^3.0.0",
     "d3": "^7.9.0",
     "exifreader": "^4.26.1",
+    "jsonwebtoken": "^9.0.2",
+    "socket.io-client": "^4.8.1",
     "surrealdb.js": "^1.0.0",
     "svelte": "^5.19.5",
-    "svelte-lazy": "^1.2.11"
+    "svelte-dnd-action": "^0.9.57",
+    "svelte-lazy": "^1.2.11",
+    "telnyx": "^2.0.0"
   },
   "devDependencies": {
     "@playwright/test": "^1.50.0",

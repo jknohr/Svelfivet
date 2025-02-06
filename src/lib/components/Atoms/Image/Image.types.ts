@@ -45,47 +45,32 @@ export interface ImageProps {
 }
 
 export interface ExpandedTags {
-  Advisory?: string | null;
-  Author?: string | null;
-  BaseURL?: string | null;
-  CreateDate?: Date | null;
-  CreatorTool?: string | null;
-  Description?: string | null;
-  Format?: string | null;
-  Identifier?: string | null;
-  Keywords?: string | null;
-  Label?: string | null;
-  MetadataDate?: Date | null;
-  ModifyDate?: Date | null;
-  Nickname?: string | null;
-  Rating?: number | null;
-  RatingPercent?: number | null;
-  Thumbnails?: {
-    Format?: string | null;
-    Height?: number | null;
-    URL?: string | null;
-    Width?: number | null;
-  } | null;
-  
-    Title?: string | null;
-    CreatorCity?: string | null;
-    CreatorCountry?: string | null;
-    CreatorAddress?: string | null;
-    CreatorPostalCode?: string | null;
-    CreatorRegion?: string | null;
-    CreatorWorkEmail?: string | null;
-    CreatorWorkTelephone?: string | null;
-    CreatorWorkURL?: string | null;
-    Location?: string | null;
-    Scene?: string | null;
-    SubjectCode?: string | null;
-    XMP?: {
-        Rating?: number | null;
-        Label?: string | null;
-        Title?: string | null;
-        Description?: string | null;
-        CreatorTool?: string | null;
-        MetadataDate?: Date | null;
-        ModifyDate?: Date | null;
-    } | null;
+  file?: {
+    'FileType'?: 'TIFF' | 'JPEG' | 'PNG' | 'HEIC' | 'AVIF' | 'WebP' | 'GIF';
+    'Bits Per Sample'?: { description: string; value: number };
+    'Image Height'?: { description: string; value: number };
+    'Image Width'?: { description: string; value: number };
+    'Color Components'?: { description: string; value: number };
+    'Subsampling'?: { description: string; value: number[] };
+  };
+  exif?: {
+    'ImageDescription'?: { id: number; description: string; value: string[] };
+    'Make'?: { id: number; description: string; value: string[] };
+    'Model'?: { id: number; description: string; value: string[] };
+    'Software'?: { id: number; description: string; value: string[] };
+    'ModifyDate'?: { id: number; description: string; value: string[] };
+    'AltTextAccessibility'?: { scene?: string; value?: string };
+    'Scene'?: { scene?: string; value?: string };
+    [key: string]: { id?: number; description: string; value: any } | undefined;
+  };
+  xmp?: {
+    _raw: string;
+    [key: string]: any;
+  };
+  iptc?: {
+    [key: string]: { id: number; description: string; value: any };
+  };
+  icc?: {
+    [key: string]: { description: string; value: string };
+  };
 }

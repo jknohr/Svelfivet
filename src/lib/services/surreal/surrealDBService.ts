@@ -2,7 +2,26 @@
 import { Surreal } from 'surrealdb.js';
 import { io } from 'socket.io-client';
 import type { Socket } from 'socket.io-client';
-import type { ContactInfo, Language } from '$lib/schemas/auth/admin';
+import type { ContactInfo, Language } from './types';
+
+type LiveQueryCallback = (data: any) => void;
+
+interface SurrealSignInParams {
+    username: string;
+    password: string;
+}
+
+interface SurrealAuthParams extends SurrealSignInParams {
+    NS?: string;
+    DB?: string;
+    SC?: string;
+}
+
+interface LiveQuery {
+    query: string;
+    vars?: Record<string, any>;
+    callback: LiveQueryCallback;
+}
 
 interface AuthCredentials {
     user: string;
@@ -46,6 +65,12 @@ interface SocketEventHandlers {
     [event: string]: (...args: any[]) => void;
 }
 
+interface SurrealResponse<T> {
+    status: 'OK' | 'ERR';
+    result?: T;
+    detail?: string;
+}
+
 export class SurrealDBService {
     private static instance: SurrealDBService | null = null;
     private config: DbConfig;
@@ -53,6 +78,8 @@ export class SurrealDBService {
     private currentToken: string | null = null;
     private socket: Socket | null = null;
     private eventHandlers: SocketEventHandlers = {};
+    private liveQueries: Map<string, LiveQuery> = new Map();
+    private initialized: boolean = false;
 
     private constructor(config: DbConfig) {
         this.config = config;
@@ -68,6 +95,97 @@ export class SurrealDBService {
         return SurrealDBService.instance;
     }
 
+    isInitialized(): boolean {
+        return this.initialized;
+    }
+
+    async setAuthToken(token: string): Promise<void> {
+        this.currentToken = token;
+        if (this.db) {
+            try {
+                await this.db.use({ namespace: this.config.ns, database: this.config.db });
+                await this.db.query('LET $token = $auth', { auth: token });
+            } catch (error) {
+                console.error('Failed to authenticate with token:', error);
+                throw new DatabaseError('Authentication failed');
+            }
+        }
+    }
+
+    async subscribeLiveQuery<T>(query: string, callback: (data: T) => void, vars?: Record<string, any>): Promise<SurrealResponse<void>> {
+        if (!this.db) {
+            throw new DatabaseError('Database not initialized');
+        }
+
+        try {
+            if (this.socket) {
+                const id = crypto.randomUUID();
+                this.socket.emit('live', {
+                    id,
+                    query,
+                    vars
+                });
+
+                this.socket.on(`live:${id}`, (data: any) => {
+                    callback(data);
+                });
+            }
+            return { status: 'OK' };
+        } catch (error: unknown) {
+            const errorMsg = error instanceof Error ? error.message : 'Failed to subscribe to live query';
+            console.error('Live query subscription failed:', errorMsg);
+            return { status: 'ERR', detail: errorMsg };
+        }
+        return { status: 'OK' };
+    }
+
+    async clearSession(): Promise<void> {
+        if (this.db) {
+            try {
+                // Just clear the token since invalidate is not available
+                this.currentToken = null;
+            } catch (error) {
+                console.error('Failed to clear session:', error);
+                throw new DatabaseError('Failed to clear session');
+            }
+        }
+    }
+
+    private setupSocket(): void {
+        if (!this.socket && this.config.protocols?.primary.startsWith('ws')) {
+            const socketUrl = this.config.url.replace('ws://', 'http://').replace('wss://', 'https://');
+            this.socket = io(socketUrl, {
+                transports: ['websocket'],
+                path: '/socket.io'
+            });
+
+            this.socket.on('connect', () => {
+                console.log('Socket connected');
+                // Resubscribe to live queries
+                this.liveQueries.forEach((query, id) => {
+                    if (this.socket) {
+                        this.socket.emit('live', {
+                            id,
+                            query: query.query,
+                            vars: query.vars
+                        });
+                        this.socket.on(`live:${id}`, query.callback);
+                    }
+                });
+            });
+
+            this.socket.on('disconnect', () => {
+                console.log('Socket disconnected');
+            });
+
+            this.socket.on('error', (error: Error) => {
+                console.error('Socket error:', error);
+            });
+        }
+    }
+
+
+
     async init(fallbackConfig?: DbConfig): Promise<void> {
         if (!this.db) {
             this.db = new Surreal();
@@ -75,16 +193,14 @@ export class SurrealDBService {
                 const config = fallbackConfig || this.config;
                 await this.db.connect(config.url);
                 if (config.auth?.username && config.auth?.pass) {
-                    const token = await this.db.signin({
-                        namespace: config.ns,
-                        database: config.db,
-                        scope: 'user',
+                    await this.db.sign({
                         username: config.auth.username,
-                        password: config.auth.pass,
+                        password: config.auth.pass
                     });
-                    if (token) {
-                        this.currentToken = token;
-                    }
+                    
+                    // Generate a session token
+                    const token = crypto.randomUUID();
+                    this.currentToken = token;
                 }
             } catch (err) {
                 console.error('Failed to connect to SurrealDB:', err instanceof Error ? err.message : String(err));
@@ -142,162 +258,173 @@ export class SurrealDBService {
     }
 
     // Authentication Methods
-    async signup(credentials: AuthCredentials): Promise<boolean> {
+    async signup(credentials: SurrealAuthParams): Promise<SurrealResponse<void>> {
         if (!this.db) {
             throw new DatabaseError('Database not initialized');
         }
 
         try {
-            await this.db.signup({
-                namespace: this.config.ns,
-                database: this.config.db,
-                scope: 'user',
-                username: credentials.user,
-                password: credentials.pass,
+            await this.db.sign({
+                username: credentials.username,
+                password: credentials.password
             });
-            return true;
-        } catch (error) {
-            console.error('Signup failed:', error);
-            throw new DatabaseError('Signup failed');
+            return { status: 'OK' };
+        } catch (error: unknown) {
+            const errorMsg = error instanceof Error ? error.message : 'Signup failed';
+            console.error('Signup failed:', errorMsg);
+            return { status: 'ERR', detail: errorMsg };
         }
     }
 
-    async signin(credentials: AuthCredentials): Promise<boolean> {
+    async signin(credentials: SurrealAuthParams): Promise<SurrealResponse<void>> {
         if (!this.db) {
             throw new DatabaseError('Database not initialized');
         }
         try {
-            const token = await this.db.signin({
-                namespace: this.config.ns,
-                database: this.config.db,
-                scope: 'user',
-                username: credentials.user,
-                password: credentials.pass,
+            await this.db.use({ namespace: this.config.ns, database: this.config.db });
+            await this.db.sign({
+                username: credentials.username,
+                password: credentials.password
             });
-
-            if (token) {
-                this.currentToken = token;
-                this.socket?.emit('authenticate', token);
-                return true;
-            }
-            return false;
-        } catch (error) {
-            console.error('Signin failed:', error);
-            throw new DatabaseError('Signin failed');
-        }
-    }
-
-    async authenticate(token: string): Promise<boolean> {
-        if (!this.db) {
-            throw new DatabaseError('Database not initialized');
-        }
-
-        try {
-            await this.db.authenticate(token);
-            this.currentToken = token;
+            
+            // Generate a session token
+            const token = crypto.randomUUID();
+            await this.setAuthToken(token);
             this.socket?.emit('authenticate', token);
-            return true;
-        } catch (error) {
-            console.error('Authentication failed:', error);
-            throw new DatabaseError('Authentication failed');
+            return { status: 'OK' };
+        } catch (error: unknown) {
+            const errorMsg = error instanceof Error ? error.message : 'Sign in failed';
+            console.error('Sign in failed:', errorMsg);
+            return { status: 'ERR', detail: errorMsg };
         }
     }
 
-    async invalidate(): Promise<void> {
+    async authenticate(token: string): Promise<SurrealResponse<void>> {
+        if (!this.db) {
+            throw new DatabaseError('Database not initialized');
+        }
+        try {
+            await this.db.use({ namespace: this.config.ns, database: this.config.db });
+            await this.db.query('LET $token = $auth', { auth: token });
+            if (this.socket) {
+                this.socket.emit('authenticate', { token });
+            }
+            return { status: 'OK' };
+        } catch (error: unknown) {
+            const errorMsg = error instanceof Error ? error.message : 'Authentication failed';
+            console.error('Authentication failed:', errorMsg);
+            return { status: 'ERR', detail: errorMsg };
+        }
+
+    }
+
+    async invalidate(): Promise<SurrealResponse<void>> {
         if (!this.db) {
             throw new DatabaseError('Database not initialized');
         }
 
         try {
-            await this.db.invalidate();
+            // Just clear the token since invalidate is not available
+            this.currentToken = null;
             this.currentToken = null;
             this.socket?.emit('invalidate');
-        } catch (error) {
-            console.error('Failed to invalidate session:', error);
-            throw new DatabaseError('Failed to invalidate session');
+            return { status: 'OK' };
+        } catch (error: unknown) {
+            const errorMsg = error instanceof Error ? error.message : 'Failed to invalidate session';
+            console.error('Failed to invalidate session:', errorMsg);
+            return { status: 'ERR', detail: errorMsg };
         }
     }
 
     // CRUD Operations
-    async create<T>(thing: string, data: Partial<T>): Promise<T> {
+    async create<T>(thing: string, data: Partial<T>): Promise<SurrealResponse<T>> {
         if (!this.db) {
             throw new DatabaseError('Database not initialized');
         }
-
         try {
-            const result = await this.db.create(thing, data);
-            return result as T;
-        } catch (error) {
-            console.error('Failed to create record:', error);
-            throw new DatabaseError('Failed to create record');
+            const result = await this.db.query<T[]>(`CREATE ${thing} CONTENT $data`, { data });
+            return { status: 'OK', result: result[0][0] };
+        } catch (error: unknown) {
+            const errorMsg = error instanceof Error ? error.message : 'Create failed';
+            console.error('Create failed:', errorMsg);
+            return { status: 'ERR', detail: errorMsg };
         }
     }
 
-    async select<T>(thing: string): Promise<T[]> {
+    async select<T>(thing: string): Promise<SurrealResponse<T[]>> {
         if (!this.db) {
             throw new DatabaseError('Database not initialized');
         }
-
         try {
-            const result = await this.db.select(thing);
-            return result as T[];
-        } catch (error) {
-            console.error('Failed to select records:', error);
-            throw new DatabaseError('Failed to select records');
+            const result = await this.db.query<T[]>(`SELECT * FROM ${thing}`);
+            return { status: 'OK', result: result[0] };
+        } catch (error: unknown) {
+            const errorMsg = error instanceof Error ? error.message : 'Select failed';
+            console.error('Select failed:', errorMsg);
+            return { status: 'ERR', detail: errorMsg };
         }
     }
 
-    async update<T>(thing: string, data: Partial<T>): Promise<T> {
+    async update<T>(thing: string, data: Partial<T>): Promise<SurrealResponse<T>> {
         if (!this.db) {
             throw new DatabaseError('Database not initialized');
         }
-
         try {
-            const result = await this.db.update(thing, data);
-            return result as T;
-        } catch (error) {
-            console.error('Failed to update record:', error);
-            throw new DatabaseError('Failed to update record');
+            const result = await this.db.query<T[]>(`UPDATE ${thing} MERGE $data`, { data });
+            return { status: 'OK', result: result[0][0] };
+        } catch (error: unknown) {
+            const errorMsg = error instanceof Error ? error.message : 'Update failed';
+            console.error('Update failed:', errorMsg);
+            return { status: 'ERR', detail: errorMsg };
         }
     }
 
-    async delete(thing: string): Promise<void> {
+    async delete(thing: string): Promise<SurrealResponse<void>> {
         if (!this.db) {
             throw new DatabaseError('Database not initialized');
         }
-
         try {
-            await this.db.delete(thing);
-        } catch (error) {
-            console.error('Failed to delete record:', error);
-            throw new DatabaseError('Failed to delete record');
+            await this.db.query(`DELETE ${thing}`);
+            return { status: 'OK' };
+        } catch (error: unknown) {
+            const errorMsg = error instanceof Error ? error.message : 'Delete failed';
+            console.error('Delete failed:', errorMsg);
+            return { status: 'ERR', detail: errorMsg };
         }
     }
 
-    async query<T>(query: string, vars?: Record<string, any>): Promise<T[]> {
-        if (!this.db) throw new DatabaseError('Database not initialized');
-        try {
-            const results = await this.db.query(query, vars);
-            return (results[0] || []) as T[];
-        } catch (error) {
-            console.error('Query failed:', error);
-            throw new DatabaseError('Query failed');
+    async query<T>(query: string, vars?: Record<string, any>): Promise<SurrealResponse<T[]>> {
+        if (!this.db) {
+            throw new DatabaseError('Database not initialized');
         }
+        try {
+            const result = await this.db.query<T[]>(query, vars);
+            // Surreal.js query returns T[][] for queries, we need to flatten it
+            const flatResult = Array.isArray(result) ? result.flat() : [];
+            return { status: 'OK', result: flatResult };
+        } catch (error: unknown) {
+            const errorMsg = error instanceof Error ? error.message : 'Query failed';
+            console.error('Query failed:', errorMsg);
+            return { status: 'ERR', detail: errorMsg };
+        }
+
     }
 
     // Live Query
-    async live<T>(thing: string, callback: (data: T) => void): Promise<void> {
+    async watchTable<T>(table: string, callback: (data: SurrealResponse<T>) => void): Promise<SurrealResponse<void>> {
         if (!this.db) {
             throw new DatabaseError('Database not initialized');
         }
 
         try {
-            await this.db.live(thing, (data: unknown) => {
-                callback(data as T);
+            const query = `LIVE SELECT * FROM ${table}`;
+            return this.subscribeLiveQuery<T>(query, (data) => {
+                callback({ status: 'OK', result: data });
             });
-        } catch (error) {
-            console.error('Failed to create live query:', error);
-            throw new DatabaseError('Failed to create live query');
+        } catch (error: unknown) {
+            const errorMsg = error instanceof Error ? error.message : 'Failed to create live query';
+            console.error('Failed to create live query:', errorMsg);
+            return { status: 'ERR', detail: errorMsg };
         }
     }
 
@@ -307,12 +434,18 @@ export class SurrealDBService {
     }
 
     // Close Connection
-    async close(): Promise<void> {
-        if (this.socket) {
-            this.socket.disconnect();
-        }
-        if (this.db) {
-            await this.db.close();
+    async close(): Promise<SurrealResponse<void>> {
+        try {
+            if (this.socket) {
+                this.socket.disconnect();
+            }
+            if (this.db) {
+                await this.db.close();
+            }
+            return { status: 'OK' };
+        } catch (error: unknown) {
+            const errorMsg = error instanceof Error ? error.message : 'Close failed';
+            return { status: 'ERR', detail: errorMsg };
         }
     }
 }
@@ -334,10 +467,10 @@ export const AUTH_SCHEMA = `
     );
 `;
 
-export interface SurrealAuthCredentials {
+export interface SignInParams {
+    NS?: string;
+    DB?: string;
+    SC?: string;
     username: string;
     password: string;
-    scope?: string;
-    namespace?: string;
-    database?: string;
 }

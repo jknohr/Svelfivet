@@ -72,6 +72,15 @@ export interface SpatialRatios {
   major: number;
 }
 
+// Spatial Constraints
+export interface SpatialConstraints {
+  minScale: number;
+  maxScale: number;
+  minDistance: number;
+  maxDistance: number;
+  viewingAngle: number;
+}
+
 // Spatial Configuration
 export interface SpatialConfig {
   base: {

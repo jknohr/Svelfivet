@@ -163,7 +163,17 @@ export const defaultTheme: ThemeConfig = {
       floating: 10,
       popup: 100,
       modal: 1000,
-      overlay: 10000
+      overlay: 10000,
+      // Custom depth levels with exponential spacing
+      custom1: 2,
+      custom2: 5,
+      custom3: 20,
+      custom4: 50,
+      custom5: 200,
+      custom6: 500,
+      custom7: 2000,
+      custom8: 5000,
+      custom9: 20000
     },
     space3d: {
       layerGap: 8,

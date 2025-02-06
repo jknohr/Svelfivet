@@ -1,5 +1,6 @@
 import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vitest/config';
+import { fileURLToPath, URL } from 'url';
 
 export default defineConfig({
 	plugins: [sveltekit()],
@@ -9,5 +10,10 @@ export default defineConfig({
 	},
 	server: {
 		host: true
+	},
+	resolve: {
+		alias: {
+			'$lib': fileURLToPath(new URL('./src/lib', import.meta.url))
+		}
 	}
 });

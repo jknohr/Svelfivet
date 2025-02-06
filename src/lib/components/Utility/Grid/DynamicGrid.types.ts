@@ -1,4 +1,13 @@
-import type { SpatialEnvironment, SpatialAnchorConfig } from '$lib/components/Theme/Theme.types';
+import type { SpatialEnvironment } from '$lib/types/spatial';
+import type { 
+    SpatialAnchorConfig,
+    SpatialConstraints
+} from '$lib/types/spatial';
+import type { 
+    EnvironmentSpatialConfig,
+    SpatialUnderstandingConfig,
+    RoomBoundaryConfig
+} from '$lib/components/Theme/configs/spatialAnchor';
 import type { Snippet } from 'svelte';
 
 export interface GridItem {
@@ -13,8 +22,10 @@ export type GridMode = 'auto' | 'fixed' | 'masonry';
 
 export interface VirtualizationOptions {
     enabled: boolean;
-    itemHeight?: number;
-    overscan?: number;
+    overscan: number;
+    chunkSize: number;
+    scrollThreshold: number;
+    measureTimeout: number;
 }
 
 export interface DynamicGridProps {
@@ -37,7 +48,11 @@ export interface DynamicGridProps {
     // Nesting and environment
     nested?: boolean;
     environment?: SpatialEnvironment;
+    spatialConfig?: Partial<EnvironmentSpatialConfig>;
     spatialAnchor?: SpatialAnchorConfig;
+    spatialUnderstanding?: SpatialUnderstandingConfig;
+    roomBoundary?: RoomBoundaryConfig;
+    spatialConstraints?: SpatialConstraints;
     
     // Performance optimizations
     lazy?: boolean;
@@ -62,6 +77,36 @@ export interface VirtualListState {
     scrollTop: number;
     viewportHeight: number;
     totalHeight: number;
+    itemHeight: number;
+    itemsPerRow: number;
+    bufferRows: number;
+    lastMeasuredIndex: number;
+    spatialData?: {
+        meshes?: Array<{
+            id: string;
+            confidence: number;
+            bounds: {
+                width: number;
+                height: number;
+                depth: number;
+            };
+        }>;
+        boundary?: {
+            center: { x: number; y: number; z: number };
+            dimensions: { width: number; height: number; depth: number };
+            confidence: number;
+        };
+    };
+    chunks: Array<{
+        startRow: number;
+        endRow: number;
+        items: GridItem[];
+        measured: boolean;
+        height: number;
+        depth?: number;
+        angle?: number;
+        distance?: number;
+    }>;
 }
 
 // Grid layout types

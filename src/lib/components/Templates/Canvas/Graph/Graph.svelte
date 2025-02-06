@@ -293,13 +293,7 @@ Design Decisions:
 		} | null;
 	}
 
-	/**
-	 * Event Handlers
-	 * In Svelte 5:
-	 * - Use onclick instead of on:click
-	 * - More aligned with web standards
-	 * - Better TypeScript integration
-	 */
+	// *  Event Handlers  In Svelte 5:  - Use onclick instead of on:click  - More aligned with web standards  - Better TypeScript integration 	 
 	function updateGraphState(updates: Partial<GraphState>) {
 		if (stateManager.state) {
 			Object.assign(stateManager.state, updates);
@@ -325,12 +319,7 @@ Design Decisions:
 		handleResize(event);
 	}
 
-	/**
-	 * Effects in Svelte 5
-	 * - Use $effect instead of onMount/onDestroy
-	 * - Cleaner syntax for cleanup
-	 * - Automatically tracks dependencies
-	 */
+	// *  Effects in Svelte 5  - Use $effect instead of onMount/onDestroy  - Cleaner syntax for cleanup  - Automatically tracks dependencies 	 
 	$effect(() => {
 		if (props.graph.syncDimensions) {
 			// DB sync logic here
@@ -401,13 +390,7 @@ Design Decisions:
 		};
 	}
 
-	/**
-	 * Mouse Event Handler
-	 * Svelte 5 Pattern: Direct DOM event handling
-	 * - Uses native onmouseup instead of on:mouseup
-	 * - Handles both mouse and touch events
-	 * - Updates state directly through $state
-	 */
+	// *  Mouse Event Handler  Svelte 5 Pattern: Direct DOM event handling  - Uses native onmouseup instead of on:mouseup  - Handles both mouse and touch events  - Updates state directly through $state 	 
 	function onMouseUp(e: MouseEvent | TouchEvent) {
 		try {
 			if (stateManager.selection.isCreating && stateManager.selection.selectedNode) {
@@ -556,13 +539,7 @@ Design Decisions:
 		}
 	}
 
-	/**
-	 * Keyboard Event Handling
-	 * Svelte 5 Pattern: Direct DOM events
-	 * - Uses onkeydown instead of on:keydown
-	 * - Better event type inference
-	 * - More predictable cleanup
-	 */
+	// *  Keyboard Event Handling  Svelte 5 Pattern: Direct DOM events  - Uses onkeydown instead of on:keydown  - Better event type inference  - More predictable cleanup 	 
 	function handleKeyDown(e: KeyboardEvent) {
 		if (e.target instanceof HTMLElement && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) {
 			return;
