@@ -2,3 +2,4 @@
 export * from './theme';
 export * from './components';
 export * from './shared';
+export * from './canvas';

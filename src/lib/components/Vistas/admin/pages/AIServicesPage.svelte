@@ -63,16 +63,58 @@
             rightSidebarWidth: '250px',
             mainContentWidth: 'auto'
         }}
+        mainContent={null}
+        children={null}
     >
         <div slot="left-panel" class="left-panel">
             <h3>Automation Tools</h3>
             <nav>
-                <ul>
-                    <li class:selected={selectedSection === 'workflows'} onclick={() => selectSection('workflows')}>Workflows</li>
-                    <li class:selected={selectedSection === 'rules'} onclick={() => selectSection('rules')}>Rules</li>
-                    <li class:selected={selectedSection === 'triggers'} onclick={() => selectSection('triggers')}>Triggers</li>
-                    <li class:selected={selectedSection === 'actions'} onclick={() => selectSection('actions')}>Actions</li>
-                    <li class:selected={selectedSection === 'schedules'} onclick={() => selectSection('schedules')}>Schedules</li>
+                <ul role="menu">
+                    <li role="none">
+                        <button
+                            type="button"
+                            role="menuitem"
+                            class:selected={selectedSection === 'workflows'}
+                            onclick={() => selectSection('workflows')}
+                            onkeydown={e => e.key === 'Enter' && selectSection('workflows')}
+                        >Workflows</button>
+                    </li>
+                    <li role="none">
+                        <button
+                            type="button"
+                            role="menuitem"
+                            class:selected={selectedSection === 'rules'}
+                            onclick={() => selectSection('rules')}
+                            onkeydown={e => e.key === 'Enter' && selectSection('rules')}
+                        >Rules</button>
+                    </li>
+                    <li role="none">
+                        <button
+                            type="button"
+                            role="menuitem"
+                            class:selected={selectedSection === 'triggers'}
+                            onclick={() => selectSection('triggers')}
+                            onkeydown={e => e.key === 'Enter' && selectSection('triggers')}
+                        >Triggers</button>
+                    </li>
+                    <li role="none">
+                        <button
+                            type="button"
+                            role="menuitem"
+                            class:selected={selectedSection === 'actions'}
+                            onclick={() => selectSection('actions')}
+                            onkeydown={e => e.key === 'Enter' && selectSection('actions')}
+                        >Actions</button>
+                    </li>
+                    <li role="none">
+                        <button
+                            type="button"
+                            role="menuitem"
+                            class:selected={selectedSection === 'schedules'}
+                            onclick={() => selectSection('schedules')}
+                            onkeydown={e => e.key === 'Enter' && selectSection('schedules')}
+                        >Schedules</button>
+                    </li>
                 </ul>
             </nav>
         </div>
@@ -149,28 +191,32 @@
     }
 
     .left-panel nav ul li {
-        padding: var(--spacing-sm);
+        margin: 0;
+        padding: 0;
+    }
+
+    .left-panel nav ul li button {
+        width: 100%;
+        text-align: left;
         cursor: pointer;
+        padding: var(--spacing-sm);
+        border: none;
+        background: none;
+        border-radius: var(--radius-sm);
+        transition: background-color 0.2s ease;
+        color: inherit;
+        font: inherit;
     }
 
-    .left-panel nav ul li:hover {
+    .left-panel nav ul li button:hover {
         background: var(--surface-hover);
-        border-radius: var(--radius-sm);
     }
 
-    .left-panel nav ul li.selected {
+    .left-panel nav ul li button.selected {
         background: var(--surface-active);
-        border-radius: var(--radius-sm);
     }
 
     .right-panel {
         padding: var(--spacing-sm);
     }
 </style>
-                {#each workflows as workflow}
-                    <p>{workflow.name}</p>
-                {/each}
-            </section>
-        </div>
-    {/if}
-</svelte:boundary>

@@ -174,7 +174,7 @@ Props:
 			const config: NodeConfig = {
 				id: typeof props.id === 'string' ? props.id : props.id?.toString(),
 				position: props.position,
-				dimensions: props.dimensions ?? { props.width, props.height },
+				dimensions: props.dimensions ?? { width: props.width, height: props.height },
 				label: props.label,
 				inputs: props.inputs,
 				outputs: props.outputs,

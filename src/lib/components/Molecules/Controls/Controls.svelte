@@ -18,7 +18,7 @@ Key Features:
 	import { zoomAndTranslate } from '$lib/utils/movers/';
 	import { tracking } from '$lib/components/Templates/Canvas/stores';
 	import Icon from '$lib/assets/icons/Icon.svelte';
-	import { $state, $derived, $props } from 'svelte/state';
+	import { $state, $derived, $props } from 'svelte';
 
 	// Props with TypeScript types
 	interface Props {
@@ -63,7 +63,7 @@ Key Features:
 		bottom: 0
 	});
 
-	const locked = $state(false);
+	let locked = $state(false);
 	const groups = $state({
 		hidden: { nodes: new Set() }
 	});

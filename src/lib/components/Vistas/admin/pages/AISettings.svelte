@@ -1,16 +1,17 @@
 <script lang="ts">
     import BaseSection from './BaseSection.svelte';
     import { createThemeComposition } from '$lib/components/Theme/ThemeComposition';
-    import type { ColorConfig } from '$lib/types/theme';
-    import { db } from '$lib/services/surreal/surrealDBService';
+    import type { ColorConfig } from '$lib/components/Theme/Theme.types';
+    import { SurrealDBService } from '$lib/services/surreal/surrealDBService';
+    const db = SurrealDBService.getInstance();
 
-    interface Props {
+    type Props = {
         title?: string;
         description?: string;
         onClose?: () => void;
     }
 
-    let { title = 'AI Settings' }: Props = $props();
+    let { title = 'AI Settings', description = '', onClose = () => {} } = $props();
 
     // State management
     let errors = $state(new Map<string, string>());
@@ -102,16 +103,21 @@
             text: '#212121',
             textLight: '#757575',
             textDark: '#000000',
-            error: '#D32F2F',
-            success: '#43A047',
             border: '#E0E0E0',
             shadow: 'rgba(0, 0, 0, 0.1)',
-            glass: 'rgba(255, 255, 255, 0.8)',
+            glass: {
+                tint: 'rgba(255, 255, 255, 0.8)',
+                border: 'rgba(255, 255, 255, 0.2)',
+                glow: 'rgba(255, 255, 255, 0.1)',
+                shadow: 'rgba(0, 0, 0, 0.1)',
+                highlight: 'rgba(255, 255, 255, 0.2)',
+                backdrop: 'rgba(255, 255, 255, 0.8)'
+            },
             states: {
-                hover: 'rgba(0, 0, 0, 0.04)',
                 focus: 'rgba(0, 0, 0, 0.12)',
-                selected: 'rgba(0, 0, 0, 0.08)',
-                disabled: 'rgba(0, 0, 0, 0.26)'
+                attention: 'rgba(255, 193, 7, 0.2)',
+                error: 'rgba(244, 67, 54, 0.2)',
+                success: 'rgba(76, 175, 80, 0.2)'
             }
         } satisfies ColorConfig
     });
@@ -142,8 +148,8 @@
 
     $effect(() => {
         const handleKeydown = (event: KeyboardEvent) => {
-            if (event.key === 'Escape' && props.onClose) {
-                props.onClose();
+            if (event.key === 'Escape' && onClose) {
+                onClose();
             }
         };
 
@@ -153,8 +159,8 @@
 </script>
 
 <BaseSection
-    title={$props.title ?? 'AI Services Settings'}
-    description={$props.description ?? 'Configure AI services and model management preferences'}
+    title={title}
+    description={description}
 >
     <div class="settings-container">
         {#snippet LLMSection()}

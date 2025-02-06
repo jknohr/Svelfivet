@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { $state } from 'svelte/state'; // Update the import path if necessary
+    import { $state } from 'svelte'; // Update the import path if necessary
     import { on } from 'svelte/event'; // Import the on function for event handling
 
     // Props

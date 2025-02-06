@@ -90,7 +90,7 @@ Features:
 		
 		return (
 			<Anchor 
-				{...state}
+				{...state} >
 				input={isInput}
 				output={!isInput}
 				bgColor={nodeBorderColor}

@@ -38,33 +38,12 @@
         };
     }>();
 
-    // Create theme composition for the section
-    const theme = createThemeComposition({
+    let theme = $state({
         colors: {
-            primary: '#263238',
-            secondary: '#37474F',
-            accent: '#FF5722',
-            background: '#ECEFF1',
-            surface: '#FFFFFF',
-            text: '#263238',
-            textLight: '#78909C',
-            textDark: '#102027',
-            border: '#B0BEC5'
-        },
-        typography: {
-            fontFamily: {
-                base: 'Roboto, system-ui, sans-serif',
-                heading: 'Roboto, system-ui, sans-serif',
-                mono: 'Roboto Mono, monospace'
-            }
-        },
-        glass: {
-            tint: 'rgba(236, 239, 241, 0.7)',
-            border: 'rgba(176, 190, 197, 0.3)',
-            glow: 'rgba(255, 87, 34, 0.2)',
-            shadow: 'rgba(38, 50, 56, 0.1)',
-            highlight: 'rgba(255, 255, 255, 0.1)',
-            backdrop: 'rgba(236, 239, 241, 0.5)'
+            primary: '#2563eb',
+            secondary: '#4f46e5',
+            accent: '#06b6d4',
+            background: '#ffffff'
         }
     });
 </script>
@@ -81,6 +60,7 @@
         mainContent={mainContent}
         leftComponent={leftComponent}
         rightComponent={rightComponent}
+        children={mainContent}
     />
 </section>
 

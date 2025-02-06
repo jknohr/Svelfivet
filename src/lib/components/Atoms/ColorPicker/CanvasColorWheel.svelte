@@ -3,6 +3,7 @@
 
 <script lang="ts">
 	import { getContext } from 'svelte';
+	import { $state, $derived } from 'svelte';
 	import type {
 		Graph,
 		CustomWritable,
@@ -11,14 +12,13 @@
 		HSLString,
 		Node
 	} from '$lib/types';
-	import { calculateRelativeCursor } from '$lib/utils';
-	import { roundNum } from '$lib/utils';
+	import { calculateRelativeCursor, roundNum } from '$lib/utils';
 
 	const graph = getContext<Graph>('graph');
 	const node = getContext<Node>('node');
 
-	const rotation = node.rotation;
-	const cursor = graph.cursor;
+	let rotation = $state(node.rotation);
+	let cursor = $state(graph.cursor);
 
 	// Props
 	let { size = 200, parameterStore = null } = $props<{

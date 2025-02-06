@@ -79,6 +79,40 @@ export interface SocialMediaConfig {
     handle?: string;
 }
 
+// Layout props interface
+export interface LayoutProps {
+    spatialConfig?: any;
+    dimensions?: any;
+    mainContent?: any;
+    leftComponent?: any;
+    rightComponent?: any;
+    children?: any;
+    showNav?: boolean;
+    showLeftSidebar?: boolean;
+    showRightSidebar?: boolean;
+    showFooter?: boolean;
+    showMap?: boolean;
+    showFilters?: boolean;
+    pageTitle?: string;
+    pageDescription?: string;
+    preContent?: any;
+    postContent?: any;
+    leftSidebar?: any;
+    rightSidebar?: any;
+    footerContent?: any;
+    keyboard?: {
+        focusable: boolean;
+        tabIndex?: number;
+        shortcuts?: Record<string, () => void>;
+    };
+    aria?: {
+        role: 'main' | 'navigation' | 'complementary' | 'banner' | 'contentinfo';
+        label: string;
+        description?: string;
+        keyboardShortcuts?: string[];
+    };
+}
+
 // Vista types
 export type VistaType = 'real-estate' | 'aisearch' | 'systemadmin' | 'user';
 

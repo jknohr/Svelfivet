@@ -64,6 +64,11 @@
       label: string;
       description?: string;
     },
+    keyboard: {
+      focusable: boolean;
+      tabIndex?: number;
+      shortcuts?: Record<string, () => void>;
+    },
     mainContent?: Snippet;
   }>({
     showNav: true,
@@ -266,7 +271,7 @@
   // Handle keyboard shortcuts
   function handleKeydown(event: KeyboardEvent) {
     const shortcut = `${event.altKey ? 'Alt+' : ''}${event.key}`;
-    const handler = defaultLayoutProps.keyboard.shortcuts?.[shortcut];
+    const handler = defaultLayoutProps.keyboard?.shortcuts?.[shortcut];
     if (handler) {
       event.preventDefault();
       handler();
@@ -471,7 +476,11 @@
               initialHeight={defaultLayoutProps.dimensions.footerHeight}
               accessibility={{
                 aria: defaultLayoutProps.aria,
-                keyboard: defaultLayoutProps.keyboard
+                keyboard: {
+                  focusable: defaultLayoutProps.keyboard?.focusable ?? true,
+                  tabIndex: defaultLayoutProps.keyboard?.tabIndex,
+                  shortcuts: defaultLayoutProps.keyboard?.shortcuts ?? {}
+                }
               }}
               showBreadcrumbs={true}
               showSocialMedia={true}

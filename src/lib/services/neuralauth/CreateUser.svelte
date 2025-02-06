@@ -6,8 +6,32 @@
     // Props
     let { onComplete = () => {} } = $props();
     
+    interface BaseFormSection {
+        completed: boolean;
+    }
+
+    interface PersonalSection extends BaseFormSection {
+        name: string;
+        email: string;
+    }
+
+    interface PreferencesSection extends BaseFormSection {
+        theme: 'light' | 'dark';
+        notifications: boolean;
+    }
+
+    interface VerificationSection extends BaseFormSection {
+        code: string;
+    }
+
+    interface FormData {
+        personal: PersonalSection;
+        preferences: PreferencesSection;
+        verification: VerificationSection;
+    }
+
     // Form data state
-    let formData = $state({
+    let formData = $state<FormData>({
         personal: {
             name: '',
             email: '',
@@ -28,7 +52,7 @@
     let currentSection = $state('personal');
 
     // Save progress for current section
-    function saveSection(section: keyof typeof formData) {
+    function saveSection(section: keyof FormData) {
         formData[section].completed = true;
         // Here you would typically save to backend
         console.log(`Saved section: ${section}`, formData[section]);
@@ -53,7 +77,7 @@
         <button onclick={() => saveSection('personal')}>Save Progress</button>
     </div>
 
-    <Divider 
+    <SectionDivider 
         title="Personal Info Saved" 
         subtitle="Your personal information has been saved" 
         completed={formData.personal.completed} 
@@ -77,7 +101,7 @@
         <button onclick={() => saveSection('preferences')}>Save Progress</button>
     </div>
 
-    <Divider 
+    <SectionDivider 
         title="Preferences Saved" 
         subtitle="Your preferences have been saved" 
         completed={formData.preferences.completed} 
@@ -98,7 +122,7 @@
         }}>Complete Registration</button>
     </div>
 
-    <Divider 
+    <SectionDivider 
         title="Registration Complete" 
         subtitle="Your account has been created" 
         completed={formData.verification.completed} 

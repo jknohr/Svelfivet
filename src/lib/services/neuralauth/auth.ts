@@ -137,7 +137,7 @@ export class AuthService {
 
       const user: User = {
         id: userResult.id,
-        name: userResult.name || '',
+        name: userResult.email.split('@')[0], // Use email username as name if not provided
         email: userResult.email,
         role: userResult.role,
         roles: [userResult.role],
